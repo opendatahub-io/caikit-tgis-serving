@@ -1,9 +1,0 @@
-pre-commit>=3.0.4,<4.0
-pylint>=2.16.2,<3.0
-pytest>=6.2.5,<7.0
-pytest-cov>=2.10.1,<3.0
-pytest-html>=3.1.1,<4.0
-tls_test_tools>=0.1.1
-wheel==0.37.0
-grpcio-tools>=1.35.0,<1.48.0
-Flask>=2.2.3,<3

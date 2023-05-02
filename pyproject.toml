@@ -1,0 +1,23 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "caikit-tgis-backend"
+# Not the actual current version: overwritten by CI
+version = "0.0.1"
+description = "Caikit module backend for models run in TGIS"
+license = {text = "Apache-2.0"}
+readme = "README.md"
+requires-python = "~=3.8"
+classifiers=[
+    "License :: OSI Approved :: Apache Software License"
+]
+dependencies = [
+    "caikit>=0.2.0,<0.3.0", # Core abstractions
+    "grpcio>=1.35.0,<2.0", # Client calls to TGIS
+    "requests>=2.28.2,<3", # Health check calls to TGIS
+]
+
+[project.urls]
+Source = "https://github.com/caikit/caikit-tgis-backend"

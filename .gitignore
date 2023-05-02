@@ -17,3 +17,5 @@ test
 venv/
 # Mac personalization files
 *.DS_Store
+# Tox envs
+.tox

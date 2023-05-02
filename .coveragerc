@@ -1,0 +1,4 @@
+[report]
+omit =
+    caikit_tgis_backend/protobufs/*
+    tests/**
