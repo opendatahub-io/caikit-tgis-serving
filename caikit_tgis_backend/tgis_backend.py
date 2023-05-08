@@ -70,14 +70,16 @@ class TGISBackend(BackendBase):
         self._local_tgis = None
         self._tgis_proc = None
 
-        # Parse the config to see if we"re managing a connection to a remote
+        # Parse the config to see if we're managing a connection to a remote
         # TGIS instance or running a local copy
-        connection_cfg = self.config.get("connection")
-        local_cfg = self.config.get("local") or {}
+        connection_cfg = self.config.get("connection") or {}
+        error.type_check("<TGB20235229E>", dict, connection=connection_cfg)
 
-        if not connection_cfg:
+        local_cfg = self.config.get("local") or {}
+        error.type_check("<TGB20235225E>", dict, local=local_cfg)
+
+        if not connection_cfg or not connection_cfg.get("hostname"):
             log.info("<TGB20235227I>", "Managing local TGIS instance")
-            error.type_check("<TGB20235225E>", dict, local=local_cfg)
             self._local_tgis = True
 
             # Members that are only used when booting TGIS locally
@@ -98,9 +100,6 @@ class TGISBackend(BackendBase):
 
         else:
             log.info("<TGB20235226I>", "Managing remote TGIS connection")
-            error.type_check(
-                "<TGB20235229E>", dict, allow_none=True, connection=connection_cfg
-            )
             self._local_tgis = False
             self._hostname = connection_cfg.get("hostname")
             error.type_check("<TGB20235230E>", str, hostname=self._hostname)
