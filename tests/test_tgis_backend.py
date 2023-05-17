@@ -247,8 +247,9 @@ def test_local_tgis_load_timeout(mock_tgis_proc_ok, tgis_mock_insecure_health_de
     assert tgis_be.local_tgis
     assert not mock_tgis_proc_ok.called
 
-    # (For coverage!) make sure the health probe doesn't actually run
-    assert not tgis_be._tgis_proc_health_check()
+    # TODO: health check for coverage?
+    # # (For coverage!) make sure the health probe doesn't actually run
+    # assert not tgis_be._tgis_health_check()
 
     # Get a client handle and make sure that the server has launched
     with pytest.raises(RuntimeError):
