@@ -111,16 +111,24 @@ class TGISMockServicer(generation_pb2_grpc.GenerationServiceServicer):
 
 class TGISMock:
     tgis_server: grpc.Server = None
-    healtcheck_server: FlaskServerThread = None
+    healthcheck_server: FlaskServerThread = None
     # parameters used to connect to the server(s)
     hostname: str
+    grpc_port: Optional[int] = None
     http_port: Optional[int] = None
+    ca_key: Optional[str] = None
     ca_cert: Optional[str] = None
     ca_cert_file: Optional[str] = None
+    server_key: Optional[str] = None
+    server_cert: Optional[str] = None
     client_key: Optional[str] = None
     client_key_file: Optional[str] = None
     client_cert: Optional[str] = None
     client_cert_file: Optional[str] = None
+
+    # save input parameters needed to re-create the servers
+    health_delay: float = 0.0
+    prompt_responses: Optional[Dict[str, str]] = None
     # holds the temp directory for TLS files
     _tls_dir = Optional[str]
 
@@ -131,52 +139,34 @@ class TGISMock:
         prompt_responses: Optional[Dict[str, str]] = None,
         health_delay: float = 0.0,
     ):
-        # create the gRPC server
-        self.tgis_server = grpc.server(ThreadPoolExecutor(max_workers=1))
-        generation_pb2_grpc.add_GenerationServiceServicer_to_server(
-            TGISMockServicer(prompt_responses),
-            self.tgis_server,
-        )
+        self.prompt_responses = prompt_responses
+        self.health_delay = health_delay
 
-        grpc_port = tls_test_tools.open_port()
-        self.hostname = f"localhost:{grpc_port}"
+        # find ports for the servers
+        self.grpc_port = tls_test_tools.open_port()
+        self.hostname = f"localhost:{self.grpc_port}"
+
+        self.http_port = tls_test_tools.open_port()
+
+        # generate TLS certificates
         if tls or mtls:
-            ca_key = tls_test_tools.generate_key()[0]
-            self.ca_cert = tls_test_tools.generate_ca_cert(ca_key)
-            server_key, server_cert = tls_test_tools.generate_derived_key_cert_pair(ca_key)
-
-            creds_kwargs = {}
-            if mtls:
-                creds_kwargs["root_certificates"] = self.ca_cert
-                creds_kwargs["require_client_auth"] = True
-
-            server_creds = grpc.ssl_server_credentials(
-                [(server_key.encode("utf-8"), server_cert.encode("utf-8"))],
-                **creds_kwargs,
-            )
-            log.debug("Adding secure port %d %s mTLS", grpc_port, "WITH" if mtls else "WITHOUT")
-            self.tgis_server.add_secure_port(self.hostname, server_creds)
-        else:
-            self.tgis_server.add_insecure_port(self.hostname)
+            self.ca_key = tls_test_tools.generate_key()[0]
+            self.ca_cert = tls_test_tools.generate_ca_cert(self.ca_key)
+            (
+                self.server_key,
+                self.server_cert,
+            ) = tls_test_tools.generate_derived_key_cert_pair(self.ca_key)
 
         # generate these now, write them out to disk in start()
         if mtls:
-            self.client_key, self.client_cert = tls_test_tools.generate_derived_key_cert_pair(
-                ca_key,
+            (
+                self.client_key,
+                self.client_cert,
+            ) = tls_test_tools.generate_derived_key_cert_pair(
+                self.ca_key,
             )
 
-        # create the healthcheck server
-        self.http_port = tls_test_tools.open_port()
-        app = Flask("tgis-health")
-        @app.route("/health")
-        def health():
-            return "Works!"
-        self.healtcheck_server = FlaskServerThread(app, self.http_port, health_delay)
-
-    def start(self):
-        self.tgis_server.start()
-        self.healtcheck_server.start()
-
+        # write certificates to files to be used by clients
         self._tls_dir = tempfile.TemporaryDirectory()
         if self.ca_cert:
             self.ca_cert_file = os.path.join(self._tls_dir.name, "ca.pem")
@@ -193,14 +183,66 @@ class TGISMock:
             with open(self.client_key_file, "w") as handle:
                 handle.write(self.client_key)
 
-    def stop(self):
-        self.tgis_server.stop(0)
-        self.healtcheck_server.shutdown()
-        if self._tls_dir:
-            self._tls_dir.cleanup()
-            self._tls_dir = None
+    def _create_tgis_server(self):
+        # create the gRPC server
+        self.tgis_server = grpc.server(ThreadPoolExecutor(max_workers=1))
 
-    # implement the context manager interface
+        generation_pb2_grpc.add_GenerationServiceServicer_to_server(
+            TGISMockServicer(self.prompt_responses),
+            self.tgis_server,
+        )
+        # if TLS/mTLS
+        if self.ca_cert:
+            creds_kwargs = {
+                "root_certificates": self.ca_cert,
+                "require_client_auth": self.client_cert is not None,
+            }
+
+            server_creds = grpc.ssl_server_credentials(
+                [(self.server_key.encode("utf-8"), self.server_cert.encode("utf-8"))],
+                **creds_kwargs,
+            )
+            log.debug(
+                "Adding secure port %d %s mTLS",
+                self.grpc_port,
+                "WITH" if self.client_cert else "WITHOUT",
+            )
+            self.tgis_server.add_secure_port(self.hostname, server_creds)
+        else:
+            log.debug("Adding insecure port %d", self.grpc_port)
+            self.tgis_server.add_insecure_port(self.hostname)
+
+    def _create_healthcheck_server(self):
+        app = Flask("tgis-health")
+
+        @app.route("/health")
+        def health():
+            return "Works!"
+
+        self.healthcheck_server = FlaskServerThread(
+            app, self.http_port, self.health_delay
+        )
+
+    def start(self):
+        if self.tgis_server or self.healthcheck_server:
+            raise RuntimeError("start() called twice")
+        log.debug("Creating and booting TGISMock servers")
+        self._create_tgis_server()
+        self.tgis_server.start()
+        self._create_healthcheck_server()
+        self.healthcheck_server.start()
+
+    def stop(self):
+        if self.tgis_server:
+            log.debug("Stopping TGIS gRPC server")
+            self.tgis_server.stop(0)
+            self.tgis_server = None
+        if self.healthcheck_server:
+            log.debug("Stopping HealthCheck server")
+            self.healthcheck_server.shutdown()
+            self.healthcheck_server = None
+
+    # Implement the context manager interface
 
     def __enter__(self) -> Self:
         self.start()
@@ -208,6 +250,9 @@ class TGISMock:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
+        if self._tls_dir:
+            self._tls_dir.cleanup()
+            self._tls_dir = None
 
 
 @pytest.fixture
