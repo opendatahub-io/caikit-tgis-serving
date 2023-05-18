@@ -161,7 +161,7 @@ class TGISBackend(BackendBase):
                     model_path=model_path,
                     grpc_port=self._grpc_port,
                     http_port=self._http_port,
-                    health_poll_delay=timedelta(seconds=self._health_poll_delay),
+                    bootup_poll_delay=timedelta(seconds=self._health_poll_delay),
                     health_poll_timeout=timedelta(seconds=self._health_poll_timeout),
                     load_timeout=timedelta(seconds=self._load_timeout),
                 )
@@ -169,7 +169,7 @@ class TGISBackend(BackendBase):
                 self._managed_tgis.launch()
 
             log.debug2("Waiting for TGIS subprocess to become ready")
-            self._managed_tgis._poll_until_ready()
+            self._managed_tgis.wait_until_ready()
 
         if not self._client:
             self._setup_client()
