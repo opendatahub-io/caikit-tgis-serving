@@ -16,8 +16,8 @@ Unit tests for TGIS backend
 """
 
 # Standard
-from contextlib import contextmanager
 from unittest import mock
+import time
 
 # Third Party
 import grpc
@@ -294,6 +294,66 @@ def test_local_tgis_load_timeout(mock_tgis_fixture: MockTGISFixture):
     assert mock_tgis_fixture.server_launched()
     assert tgis_be.local_tgis
     assert not tgis_be.model_loaded
+
+
+def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
+    """Test that the backend can automatically restart the TGIS subprocess if it
+    crashes
+    """
+    # mock the subprocess to be our mock server and to come up working
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+    tgis_be = TGISBackend(
+        {
+            "local": {
+                "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                "http_port": mock_tgis_server.http_port,
+                "health_poll_delay": 0.01,
+                "health_poll_timeout": 0.01,
+            },
+        }
+    )
+    assert tgis_be.local_tgis
+
+    # Get a client handle and make sure that the server has launched
+    tgis_client = tgis_be.get_client("")
+
+    assert mock_tgis_fixture.server_launched()
+
+    # requests should succeed
+    tgis_client.Generate(
+        generation_pb2.BatchedGenerationRequest(
+            requests=[
+                generation_pb2.GenerationRequest(text="Hello world"),
+            ],
+        ),
+    )
+
+    # "kill" the mock server
+    mock_tgis_server.stop()
+
+    # request should fail, which triggers the auto-recovery
+    with pytest.raises(grpc.RpcError):
+        tgis_client.Generate(
+            generation_pb2.BatchedGenerationRequest(
+                requests=[
+                    generation_pb2.GenerationRequest(text="Hello world"),
+                ],
+            ),
+        )
+
+    # wait for the server to reboot
+    # pause this thread to allow the reboot thread to start
+    time.sleep(0.5)
+    tgis_be._managed_tgis.wait_until_ready()
+
+    # request should succeed without recreating the client
+    tgis_client.Generate(
+        generation_pb2.BatchedGenerationRequest(
+            requests=[
+                generation_pb2.GenerationRequest(text="Hello world"),
+            ],
+        ),
+    )
 
 
 ## Failure Tests ###############################################################
