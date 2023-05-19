@@ -15,7 +15,6 @@
 """
 
 # Standard
-from datetime import timedelta
 from threading import Lock
 from typing import Dict, Optional
 import os
@@ -161,9 +160,9 @@ class TGISBackend(BackendBase):
                     model_path=model_path,
                     grpc_port=self._grpc_port,
                     http_port=self._http_port,
-                    bootup_poll_delay=timedelta(seconds=self._health_poll_delay),
-                    health_poll_timeout=timedelta(seconds=self._health_poll_timeout),
-                    load_timeout=timedelta(seconds=self._load_timeout),
+                    bootup_poll_delay=self._health_poll_delay,
+                    health_poll_timeout=self._health_poll_timeout,
+                    load_timeout=self._load_timeout,
                 )
                 log.debug2("Launching TGIS subprocess")
                 self._managed_tgis.launch()
@@ -206,8 +205,9 @@ class TGISBackend(BackendBase):
 
     @property
     def model_loaded(self) -> bool:
-        return not self.local_tgis or (self._managed_tgis is not None and self._managed_tgis.is_ready())
-
+        return not self.local_tgis or (
+            self._managed_tgis is not None and self._managed_tgis.is_ready()
+        )
 
     ## Impl ##
 

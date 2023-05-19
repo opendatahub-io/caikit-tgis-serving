@@ -37,10 +37,6 @@ from tests.tgis_mock import (
     tgis_mock_tls,
 )
 
-import alog
-
-alog.configure(default_level="debug4")
-
 ## Helpers #####################################################################
 
 # for convenience in managing the multiple parts of the fixture
