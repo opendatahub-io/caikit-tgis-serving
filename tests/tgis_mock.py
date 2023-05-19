@@ -17,7 +17,7 @@ TGIS mock
 
 # Standard
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, Optional, Self
+from typing import Dict, Optional
 import os
 import re
 import tempfile
@@ -244,7 +244,7 @@ class TGISMock:
 
     # Implement the context manager interface
 
-    def __enter__(self) -> Self:
+    def __enter__(self):
         self.start()
         return self
 
