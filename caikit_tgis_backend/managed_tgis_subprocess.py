@@ -22,7 +22,6 @@ subprocess.
 # Standard
 from enum import Enum
 from threading import Lock
-from typing import Optional
 import os
 import shlex
 import subprocess
@@ -57,16 +56,10 @@ class ManagedTGISSubprocess:
         model_path: str,
         grpc_port: int = 50055,
         http_port: int = 3000,
-        health_poll_timeout: Optional[float] = None,
-        bootup_poll_delay: Optional[float] = None,
-        load_timeout: Optional[float] = None,
+        health_poll_timeout: float = 1,
+        bootup_poll_delay: float = 1,
+        load_timeout: float = 30,
     ):
-        if bootup_poll_delay is None:
-            bootup_poll_delay = 1
-        if health_poll_timeout is None:
-            health_poll_timeout = 1
-        if load_timeout is None:
-            load_timeout = 30
 
         # parameters of the TGIS subprocess
         self._model_path = model_path
@@ -225,7 +218,7 @@ class ManagedTGISSubprocess:
                 if self._health_check():
                     with self._mutex:
                         # double check that we are still in the booting state
-                        if not self._tgis_state == _TGISState.BOOTING:
+                        if self._tgis_state != _TGISState.BOOTING:
                             return
                         # if the health check passes, we are good to go
                         self._create_grpc_client()
@@ -247,7 +240,7 @@ class ManagedTGISSubprocess:
             if time.time() - start_t >= self._load_timeout:
                 with self._mutex:
                     # double check that we are still in the booting state
-                    if not self._tgis_state == _TGISState.BOOTING:
+                    if self._tgis_state != _TGISState.BOOTING:
                         return
 
                     self._ensure_terminated()
