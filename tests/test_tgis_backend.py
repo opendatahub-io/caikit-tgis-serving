@@ -66,8 +66,7 @@ def mock_tgis_proc_fail():
 def test_tgis_backend_is_registered():
     """Make sure that the TGIS backend is correctly registered with caikit"""
     assert (
-        TGISBackend.backend_type
-        in caikit.core.module_backends.backend_types
+        hasattr(caikit.core.module_backends.backend_types, TGISBackend.backend_type)
     )
 
 
