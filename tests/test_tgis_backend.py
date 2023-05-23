@@ -283,7 +283,7 @@ def test_local_tgis_load_timeout(mock_tgis_fixture: MockTGISFixture):
     # assert not tgis_be._tgis_health_check()
 
     # Get a client handle and make sure that the server has launched
-    with pytest.raises(RuntimeError):
+    with pytest.raises(TimeoutError):
         tgis_be.get_client("")
     assert mock_tgis_fixture.server_launched()
     assert tgis_be.local_tgis

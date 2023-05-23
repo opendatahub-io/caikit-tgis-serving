@@ -117,7 +117,7 @@ class ManagedTGISSubprocess:
         with self._mutex:
             self._launch()
 
-    def wait_until_ready(self, timeout=None) -> bool:
+    def wait_until_ready(self, timeout: float = None):
         """Wait for TGIS to be ready or raise an exception
 
         Args:
@@ -127,25 +127,27 @@ class ManagedTGISSubprocess:
             Exception: If TGIS is detected to be down, the exception that caused the most recent TGIS restart
             TimeoutError: If the timeout is reached
         """
+        if timeout is None:
+            timeout = self._load_timeout
+
         start_t = time.time()
 
-        # wait for the boot monitoring thread if we have one
         if self._bootup_thread:
-            self._bootup_thread.join(timeout)
+            self._bootup_thread.join(timeout=timeout)
 
         while True:
             log.debug("wait_until_ready saw state [%s]", self._tgis_state)
             if self._tgis_state == _TGISState.READY:
-                return True
+                return
 
             if self._tgis_state == _TGISState.STOPPED:
                 # raise the bootup exception if we captured one
                 if self._bootup_exc:
                     raise self._bootup_exc
-                return False
+                return
 
             if time.time() - start_t >= timeout:
-                return False
+                raise TimeoutError
 
             time.sleep(self._bootup_poll_delay)
 
