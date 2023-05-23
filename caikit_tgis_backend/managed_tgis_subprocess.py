@@ -12,12 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Managed TGIS subprocess with automatic failure recovery
-
-Creates a wrapped gRPC client that knows that the gRPC server is managed as a
-subprocess. When the client observes errors, it can trigger a restart of the
-subprocess.
-"""
+"""Provides the ManagedTGISSubprocess class"""
 
 # Standard
 from enum import Enum
@@ -51,6 +46,13 @@ class _TGISState(Enum):
 
 # pylint: disable=too-many-instance-attributes
 class ManagedTGISSubprocess:
+    """Managed TGIS subprocess with automatic failure recovery
+
+    Creates a wrapped gRPC client that knows that the gRPC server is managed as a
+    subprocess. When the client observes errors, it can trigger a restart of the
+    subprocess.
+    """
+
     def __init__(
         self,
         model_path: str,
@@ -60,7 +62,16 @@ class ManagedTGISSubprocess:
         bootup_poll_delay: float = 1,
         load_timeout: float = 30,
     ):
+        """Create a ManagedTGISSubprocess
 
+        Args:
+            model_path (str): path to model files on disk to be loaded by TGIS
+            grpc_port (int, optional): port TGIS will listen on for gRPC requests. Defaults to 50055.
+            http_port (int, optional): port TGIS will listen on for HTTP requests. Defaults to 3000.
+            health_poll_timeout (float, optional): number of seconds to wait for a health check request. Defaults to 1.
+            bootup_poll_delay (float, optional): number of seconds between health checks during bootup. Defaults to 1.
+            load_timeout (float, optional): number of seconds to wait for TGIS to boot before cancelling. Defaults to 30.
+        """
         # parameters of the TGIS subprocess
         self._model_path = model_path
         self._grpc_port = grpc_port
@@ -95,18 +106,27 @@ class ManagedTGISSubprocess:
 
         if self._tgis_client:
             # create a wrapped gRPC client stub that defers to self._tgis_client
-            self._wrapped_client = GenerationServiceStubWrapper(self)
+            self._wrapped_client = AutoRecoveringGenerationServiceStub(self)
             return self._wrapped_client
 
         log.warning("<MTS7717800W>", "get_client called with _tgis_client set to None")
         return None
 
     def launch(self):
-        """Launch the subprocess or restart it if it exists"""
+        """Launch the subprocess or restart it if it already exists"""
         with self._mutex:
             self._launch()
 
     def wait_until_ready(self, timeout=None) -> bool:
+        """Wait for TGIS to be ready or raise an exception
+
+        Args:
+            timeout (float, optional): maximum duration to wait for. Defaults to the load_timeout.
+
+        Raises:
+            Exception: If TGIS is detected to be down, the exception that caused the most recent TGIS restart
+            TimeoutError: If the timeout is reached
+        """
         start_t = time.time()
 
         # wait for the boot monitoring thread if we have one
@@ -143,7 +163,8 @@ class ManagedTGISSubprocess:
             if self._tgis_proc:
                 self._tgis_proc.terminate()
                 self._tgis_proc = None
-                # disown the bootup thread (but keep the exception if one was captured)
+                # disown the bootup thread
+                # (but keep self._bootup_exc if one is captured)
                 self._bootup_thread = None
             log.debug("_ensure_terminated setting the state to STOPPED")
             self._tgis_state = _TGISState.STOPPED
@@ -265,12 +286,13 @@ class ManagedTGISSubprocess:
         return resp.status_code == 200
 
     def _create_grpc_client(self):
+        """Creates a new grpc client for TGIS"""
         log.debug("Connecting to TGIS at [%s] INSECURE", self._hostname)
         channel = grpc.insecure_channel(self._hostname)
         self._tgis_client = generation_pb2_grpc.GenerationServiceStub(channel)
 
     def _handle_autorecovery(self):
-        """Check if the subprocess might be unhealthy and recover"""
+        """Check if the subprocess is unhealthy and restart it"""
 
         # if we are booting, do nothing
         if self._tgis_state == _TGISState.BOOTING:
@@ -313,17 +335,35 @@ class _MockRPCError(grpc.RpcError):
 
 # used to create closures over the subprocess that can be called like a
 # client stub, but have a auto-recovering client to the subprocess
-class _WrappedRPC:
-    managed_tgis: ManagedTGISSubprocess
-    rpc_name: str
+class _FaultDetectingRPC:
+    """Wrap a generated gRPC client to restart the gRPC server if there are errors
 
-    def __init__(self, managed_tgis, rpc_name):
+    Raises:
+        _MockRPCError: A grpc.RpcError with a code
+        grpc.RPcError: An error generated from the wrapped gRPC client
+    """
+
+    def __init__(self, managed_tgis: ManagedTGISSubprocess, rpc_name: str):
         self.managed_tgis = managed_tgis
         self.rpc_name = rpc_name
 
     def __call__(self, request, context=None):
-        # TODO: should wait for the subprocess up until the deadline if booting?
+        """Send a gRPC request
+
+        Args:
+            request (gRPC message): message to send
+            context (gRPC context, optional): gRPC request context. Defaults to None.
+
+        Raises:
+            _MockRPCError: _description_
+            grpc.RPcError: An error generated from the wrapped gRPC client
+
+        Returns:
+            gRPC response
+        """
+
         if not self.managed_tgis.is_ready():
+            # TODO: should wait for the subprocess up until the deadline if booting?
             raise _MockRPCError(grpc.StatusCode.UNAVAILABLE)
 
         try:
@@ -347,8 +387,9 @@ class _WrappedRPC:
             error("<MTS86992919W>", exc_chain)
             raise rpc_error
 
+class AutoRecoveringGenerationServiceStub:
+    """GenerationServiceStub that will restart TGIS if it is unhealthy"""
 
-class GenerationServiceStubWrapper:
     def __init__(self, managed_tgis: ManagedTGISSubprocess):
         # use the attributes of the Servicer to discover the names of the RPCs
         # the Stub creates its rpcs as attributes in __init__, so we can't use that
@@ -359,6 +400,7 @@ class GenerationServiceStubWrapper:
             and not func.startswith("__")
         ]
 
+        # create closures over the ManagedTGISSubprocess that act as RPCs
         for rpc_name in rpc_names:
             log.debug3("Creating wrapped RPC call for [%s]", rpc_name)
-            setattr(self, rpc_name, _WrappedRPC(managed_tgis, rpc_name))
+            setattr(self, rpc_name, _FaultDetectingRPC(managed_tgis, rpc_name))
