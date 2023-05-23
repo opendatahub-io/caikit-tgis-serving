@@ -80,7 +80,7 @@ def _launch_mock_tgis_proc_as_side_effect(mock_tgis_server: TGISMock):
 
 @pytest.fixture
 def mock_tgis_fixture():
-    mock_tgis = TGISMock(tls=False, mtls=False, health_delay=0.05)
+    mock_tgis = TGISMock(tls=False, mtls=False)
     with mock.patch("subprocess.Popen") as mock_popen_func:
         # when called, launch the mock_tgis server
         mock_popen_func.side_effect = _launch_mock_tgis_proc_as_side_effect(mock_tgis)
@@ -201,8 +201,7 @@ def test_local_tgis_run(mock_tgis_fixture: MockTGISFixture):
             "local": {
                 "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
                 "http_port": mock_tgis_server.http_port,
-                "health_poll_delay": 0.01,
-                "health_poll_timeout": 0.01,
+                "health_poll_delay": 0.1,
             },
         }
     )
@@ -271,8 +270,7 @@ def test_local_tgis_load_timeout(mock_tgis_fixture: MockTGISFixture):
             "local": {
                 "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
                 "http_port": mock_tgis_server.http_port,
-                "health_poll_delay": 0.01,
-                "health_poll_timeout": 0.01,
+                "health_poll_delay": 0.1,
                 "load_timeout": 0.05,
             },
         }
@@ -303,8 +301,8 @@ def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
             "local": {
                 "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
                 "http_port": mock_tgis_server.http_port,
-                "health_poll_delay": 0.01,
-                "health_poll_timeout": 0.01,
+                "health_poll_delay": 0.1,
+                "health_poll_timeout": 1,
             },
         }
     )

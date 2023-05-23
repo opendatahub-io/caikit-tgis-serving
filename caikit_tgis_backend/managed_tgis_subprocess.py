@@ -250,7 +250,9 @@ class ManagedTGISSubprocess:
             except requests.exceptions.RequestException as e:
                 # Ignore ConnectionErrors that are expected during boot up
                 if isinstance(e, requests.exceptions.ConnectionError):
+                    log.debug2("Ignoring ConnectionError from _health_check")
                     continue
+
                 log.warning(
                     "<MTS96271549W>",
                     "TGIS health check failed in _monitor_bootup: %s",
@@ -277,6 +279,9 @@ class ManagedTGISSubprocess:
             log.debug2("_health_check called without subprocess running")
             return False
 
+        log.debug2(
+            "sending health probe request with timeout [%s]", self._health_poll_timeout
+        )
         resp = requests.get(
             f"http://localhost:{self._http_port}/health",
             timeout=self._health_poll_timeout,
