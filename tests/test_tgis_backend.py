@@ -16,11 +16,11 @@ Unit tests for TGIS backend
 """
 
 # Standard
-from contextlib import contextmanager
-from typing import Optional
 from unittest import mock
+import time
 
 # Third Party
+import grpc
 import pytest
 
 # First Party
@@ -30,6 +30,7 @@ import caikit
 from caikit_tgis_backend import TGISBackend
 from caikit_tgis_backend.protobufs import generation_pb2
 from tests.tgis_mock import (
+    TGISMock,
     tgis_mock_insecure,
     tgis_mock_insecure_health_delay,
     tgis_mock_mtls,
@@ -38,26 +39,55 @@ from tests.tgis_mock import (
 
 ## Helpers #####################################################################
 
+# for convenience in managing the multiple parts of the fixture
+class MockTGISFixture:
+    def __init__(
+        self,
+        mock_popen: mock.MagicMock,
+        mock_proc: mock.Mock,
+        mock_tgis_server: TGISMock,
+    ):
+        self.mock_poppen = mock_popen
+        self.mock_proc = mock_proc
+        self.mock_tgis_server = mock_tgis_server
+        self._configure_mock_proc()
 
-@contextmanager
-def mock_tgis_proc(poll_return: Optional[int] = None):
-    with mock.patch("subprocess.Popen") as mock_proc:
+    def server_launched(self) -> bool:
+        return self.mock_poppen.called
+
+    def set_poll_return(self, poll_return):
+        self._configure_mock_proc(poll_return)
+
+    def _configure_mock_proc(self, poll_return=None):
+        self.mock_proc.configure_mock(
+            **{
+                "poll.return_value": poll_return,
+                # calls to terminate stop the mock server
+                # NOTE: return value of terminate is not used
+                "terminate.side_effect": self.mock_tgis_server.stop,
+            }
+        )
+
+
+def _launch_mock_tgis_proc_as_side_effect(mock_tgis_server: TGISMock):
+    # function is passed the same args as the mock
+    def side_effect(*args, **kwargs):
+        mock_tgis_server.start()
+        return mock.DEFAULT
+
+    return side_effect
+
+
+@pytest.fixture
+def mock_tgis_fixture():
+    mock_tgis = TGISMock(tls=False, mtls=False)
+    with mock.patch("subprocess.Popen") as mock_popen_func:
+        # when called, launch the mock_tgis server
+        mock_popen_func.side_effect = _launch_mock_tgis_proc_as_side_effect(mock_tgis)
         process_mock = mock.Mock()
-        process_mock.configure_mock(**{"poll.return_value": poll_return})
-        mock_proc.return_value = process_mock
-        yield mock_proc
-
-
-@pytest.fixture
-def mock_tgis_proc_ok():
-    with mock_tgis_proc() as proc:
-        yield proc
-
-
-@pytest.fixture
-def mock_tgis_proc_fail():
-    with mock_tgis_proc(123) as proc:
-        yield proc
+        mock_popen_func.return_value = process_mock
+        yield MockTGISFixture(mock_popen_func, process_mock, mock_tgis)
+    mock_tgis.stop()
 
 
 ## Happy Path Tests ############################################################
@@ -159,22 +189,21 @@ def test_construct_run_local():
     assert TGISBackend({"connection": ""}).local_tgis
 
 
-def test_local_tgis_run(mock_tgis_proc_ok, tgis_mock_insecure_health_delay):
+def test_local_tgis_run(mock_tgis_fixture: MockTGISFixture):
     """Test that a "local tgis" (mocked) can be booted and maintained"""
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+
     tgis_be = TGISBackend(
         {
             "local": {
-                "grpc_port": int(
-                    tgis_mock_insecure_health_delay.hostname.split(":")[-1]
-                ),
-                "http_port": tgis_mock_insecure_health_delay.http_port,
-                "health_poll_delay": 0.01,
-                "health_poll_timeout": 0.01,
+                "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                "http_port": mock_tgis_server.http_port,
+                "health_poll_delay": 0.1,
             },
         }
     )
     assert tgis_be.local_tgis
-    assert not mock_tgis_proc_ok.called
+    assert not mock_tgis_fixture.server_launched()
 
     # Get a client handle and make sure that the server has launched
     tgis_be.get_client("").Generate(
@@ -184,26 +213,27 @@ def test_local_tgis_run(mock_tgis_proc_ok, tgis_mock_insecure_health_delay):
             ],
         ),
     )
-    assert mock_tgis_proc_ok.called
+    assert mock_tgis_fixture.server_launched()
 
 
-def test_local_tgis_unload(mock_tgis_proc_ok, tgis_mock_insecure):
+def test_local_tgis_unload(mock_tgis_fixture: MockTGISFixture):
     """Test that a "local tgis" (mocked) can unload and reload itself"""
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
     tgis_be = TGISBackend(
         {
             "local": {
-                "grpc_port": int(tgis_mock_insecure.hostname.split(":")[-1]),
-                "http_port": tgis_mock_insecure.http_port,
+                "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                "http_port": mock_tgis_server.http_port,
             },
         }
     )
     assert tgis_be.local_tgis
-    assert not mock_tgis_proc_ok.called
+    assert not mock_tgis_fixture.server_launched()
 
     # Boot up the client
     model_id = "foobar"
     tgis_be.get_client(model_id)
-    assert mock_tgis_proc_ok.called
+    assert mock_tgis_fixture.server_launched()
     assert tgis_be.model_loaded
 
     # Unload the model
@@ -217,42 +247,104 @@ def test_local_tgis_unload(mock_tgis_proc_ok, tgis_mock_insecure):
     assert tgis_be.model_loaded
 
 
-def test_local_tgis_fail_start(mock_tgis_proc_fail):
+def test_local_tgis_fail_start(mock_tgis_fixture: MockTGISFixture):
     """Test that when tgis fails to boot, an exception is raised"""
     tgis_be = TGISBackend({})
+    mock_tgis_fixture.set_poll_return(1)
     with pytest.raises(RuntimeError):
         tgis_be.get_client("")
 
 
-def test_local_tgis_load_timeout(mock_tgis_proc_ok, tgis_mock_insecure_health_delay):
+def test_local_tgis_load_timeout(mock_tgis_fixture: MockTGISFixture):
     """Test that if a local tgis model takes too long to load, it fails
     gracefully
     """
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+    # increase the health poll delay to greater than the load timeout
+    mock_tgis_server.health_delay = 1
     tgis_be = TGISBackend(
         {
             "local": {
-                "grpc_port": int(
-                    tgis_mock_insecure_health_delay.hostname.split(":")[-1]
-                ),
-                "http_port": tgis_mock_insecure_health_delay.http_port,
-                "health_poll_delay": 0.01,
-                "health_poll_timeout": 0.01,
+                "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                "http_port": mock_tgis_server.http_port,
+                "health_poll_delay": 0.1,
                 "load_timeout": 0.05,
             },
         }
     )
     assert tgis_be.local_tgis
-    assert not mock_tgis_proc_ok.called
+    assert not mock_tgis_fixture.server_launched()
 
-    # (For coverage!) make sure the health probe doesn't actually run
-    assert not tgis_be._tgis_proc_health_check()
+    # TODO: health check for coverage?
+    # # (For coverage!) make sure the health probe doesn't actually run
+    # assert not tgis_be._tgis_health_check()
 
     # Get a client handle and make sure that the server has launched
-    with pytest.raises(RuntimeError):
+    with pytest.raises(TimeoutError):
         tgis_be.get_client("")
-    assert mock_tgis_proc_ok.called
+    assert mock_tgis_fixture.server_launched()
     assert tgis_be.local_tgis
     assert not tgis_be.model_loaded
+
+
+def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
+    """Test that the backend can automatically restart the TGIS subprocess if it
+    crashes
+    """
+    # mock the subprocess to be our mock server and to come up working
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+    tgis_be = TGISBackend(
+        {
+            "local": {
+                "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                "http_port": mock_tgis_server.http_port,
+                "health_poll_delay": 0.1,
+                "health_poll_timeout": 1,
+            },
+        }
+    )
+    assert tgis_be.local_tgis
+
+    # Get a client handle and make sure that the server has launched
+    tgis_client = tgis_be.get_client("")
+
+    assert mock_tgis_fixture.server_launched()
+
+    # requests should succeed
+    tgis_client.Generate(
+        generation_pb2.BatchedGenerationRequest(
+            requests=[
+                generation_pb2.GenerationRequest(text="Hello world"),
+            ],
+        ),
+    )
+
+    # "kill" the mock server
+    mock_tgis_server.stop()
+
+    # request should fail, which triggers the auto-recovery
+    with pytest.raises(grpc.RpcError):
+        tgis_client.Generate(
+            generation_pb2.BatchedGenerationRequest(
+                requests=[
+                    generation_pb2.GenerationRequest(text="Hello world"),
+                ],
+            ),
+        )
+
+    # wait for the server to reboot
+    # pause this thread to allow the reboot thread to start
+    time.sleep(0.5)
+    tgis_be._managed_tgis.wait_until_ready()
+
+    # request should succeed without recreating the client
+    tgis_client.Generate(
+        generation_pb2.BatchedGenerationRequest(
+            requests=[
+                generation_pb2.GenerationRequest(text="Hello world"),
+            ],
+        ),
+    )
 
 
 ## Failure Tests ###############################################################

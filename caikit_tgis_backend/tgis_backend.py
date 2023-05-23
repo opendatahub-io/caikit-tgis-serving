@@ -18,13 +18,9 @@
 from threading import Lock
 from typing import Dict, Optional
 import os
-import shlex
-import subprocess
-import time
 
 # Third Party
 import grpc
-import requests
 
 # First Party
 from caikit.core.module_backends.backend_types import register_backend_type
@@ -33,6 +29,7 @@ from caikit.core.toolkit.errors import error_handler
 import alog
 
 # Local
+from .managed_tgis_subprocess import ManagedTGISSubprocess
 from .protobufs import generation_pb2_grpc
 
 log = alog.use_channel("TGISBKND")
@@ -66,9 +63,9 @@ class TGISBackend(BackendBase):
 
         # NOTE: Needs to be set before any possible errors since it's used in
         #   the destructor
-        self._proc_mutex = Lock()
+        self._mutex = Lock()
         self._local_tgis = None
-        self._tgis_proc = None
+        self._managed_tgis = None
 
         # Parse the config to see if we're managing a connection to a remote
         # TGIS instance or running a local copy
@@ -91,13 +88,8 @@ class TGISBackend(BackendBase):
             self._num_gpus = local_cfg.get("num_gpus", 1)
             log.debug("Managing local TGIS with %d GPU(s)", self._num_gpus)
 
-            # Placeholder for the process that will boot lazily
-            self._tgis_proc = None
-
-            # Shared members that need to be set for the client
-            self._ca_cert, self._client_cert, self._client_key = [None] * 3
-            self._hostname = f"localhost:{self._grpc_port}"
-
+            # the local TGIS subprocess will be created later
+            self._managed_tgis = None
         else:
             log.info("<TGB20235226I>", "Managing remote TGIS connection")
             self._local_tgis = False
@@ -148,26 +140,36 @@ class TGISBackend(BackendBase):
         self._client = None
         self.unload_model("")  # TODO: Clear all models for multi-model
 
-    ## Block user interface ##
+    ## Backend user interface ##
 
     def get_client(self, model_path: str) -> generation_pb2_grpc.GenerationServiceStub:
         if self.local_tgis:
             # TODO: This will need to change for multi-model / multi-client support.
             # With local TGIS, limit the backend to a single managed TGIS process. This is to
             # simplify tracking of loads/unloads needed to support Model Mesh dynamics.
-            with self._proc_mutex:
+            with self._mutex:
                 # ValueError if a TGIS process is already running
                 error.value_check(
                     "<TGB27123275E>",
-                    self._tgis_proc is None,
+                    self._managed_tgis is None,
                     "TODO: The TGIS backend running with a local TGIS process "
                     + "only supports a single client currently",
                 )
 
-                self._initialize_tgis_proc(model_path)
+                self._managed_tgis = ManagedTGISSubprocess(
+                    model_path=model_path,
+                    grpc_port=self._grpc_port,
+                    http_port=self._http_port,
+                    bootup_poll_delay=self._health_poll_delay,
+                    health_poll_timeout=self._health_poll_timeout,
+                    load_timeout=self._load_timeout,
+                    num_gpus=self._num_gpus,
+                )
+                log.debug2("Launching TGIS subprocess")
+                self._managed_tgis.launch()
 
-            # wait for the tgis server to load, but don't hold the lock the whole time
-            self._poll_until_tgis_proc_ready(model_path)
+            log.debug2("Waiting for TGIS subprocess to become ready")
+            self._managed_tgis.wait_until_ready()
 
         if not self._client:
             self._setup_client()
@@ -182,10 +184,10 @@ class TGISBackend(BackendBase):
     def unload_model(self, model_path: str):
         """Unload the model from TGIS"""
         if self.local_tgis:
-            with self._proc_mutex:
-                if self._tgis_proc:
-                    self._tgis_proc.terminate()
-                    self._tgis_proc = None
+            with self._mutex:
+                if self._managed_tgis:
+                    self._managed_tgis.terminate()
+                    self._managed_tgis = None
                     # reset the client so the connection is re-created
                     # the next time TGIS is launched
                     self._client = None
@@ -204,91 +206,11 @@ class TGISBackend(BackendBase):
 
     @property
     def model_loaded(self) -> bool:
-        return not self.local_tgis or self._tgis_proc is not None
+        return not self.local_tgis or (
+            self._managed_tgis is not None and self._managed_tgis.is_ready()
+        )
 
     ## Impl ##
-
-    def _initialize_tgis_proc(self, model_path: str):
-        """Launches a local TGIS process to load and serve the  model"""
-        # NB: This function should be called with self._proc_mutex locked
-
-        log.debug("Initializing TGIS instance for model [%s]", model_path)
-
-        # Launch TGIS
-        launch_cmd = " ".join(
-            [
-                "text-generation-launcher",
-                f"--num-shard {self._num_gpus}",
-                f"--model-name {model_path}",
-                f"--port {self._http_port}",
-            ]
-        )
-        log.debug2("TGIS Command: [%s]", launch_cmd)
-        env = os.environ.copy()
-        env["GRPC_PORT"] = str(self._grpc_port)
-        # Long running process
-        # pylint: disable=consider-using-with
-        self._tgis_proc = subprocess.Popen(shlex.split(launch_cmd), env=env)
-
-    def _poll_until_tgis_proc_ready(self, model_path: str):
-        """Monitor the boot up of the TGIS process"""
-        # Wait for the server to be ready
-        start_t = time.time()
-        while True:
-            time.sleep(self._health_poll_delay)
-
-            # if the health check passes, we are good to go
-            if self._tgis_proc_health_check(bootup=True):
-                log.debug("TGIS booted for model [%s]", model_path)
-                break
-
-            # check if the process stopped while waiting
-            try:
-                if self._tgis_proc.poll() is not None:
-                    error(
-                        "<TGB11752287E>",
-                        RuntimeError(
-                            "TGIS failed to boot up with the model. See logs for details"
-                        ),
-                    )
-            except AttributeError:
-                error(
-                    "<TGB26557152E>",
-                    RuntimeError(
-                        "TGIS process removed while waiting for it to boot with the model"
-                    ),
-                )
-
-            # limit how long we wait before giving up
-            if time.time() - start_t >= self._load_timeout:
-                # unload to clean up the failed load
-                self.unload_model(model_path)
-                error(
-                    "<TGB23188245E>",
-                    RuntimeError(
-                        "TGIS failed to boot up with the model within the timeout"
-                    ),
-                )
-
-    def _tgis_proc_health_check(self, bootup=False):
-        """Health check to locally running TGIS server"""
-        if self._tgis_proc is None:
-            return False
-
-        try:
-            resp = requests.get(
-                f"http://localhost:{self._http_port}/health",
-                timeout=self._health_poll_timeout,
-            )
-        except requests.exceptions.RequestException as e:
-            # Ignore ConnectionErrors that are expected during bootup
-            if bootup and isinstance(e, requests.exceptions.ConnectionError):
-                return False
-
-            log.warning("<TGB96271549W>", "TGIS health check failed: %s", e)
-            return False
-
-        return resp.status_code == 200
 
     @staticmethod
     def _load_tls_file(file_path: Optional[str]) -> Optional[bytes]:
@@ -309,7 +231,12 @@ class TGISBackend(BackendBase):
                 return handle.read()
 
     def _setup_client(self):
-        if self._client is None:
+        if self._client is not None:
+            return
+
+        if self._local_tgis:
+            self._client = self._managed_tgis.get_client()
+        else:
             log.info(
                 "<TGB20236231I>",
                 "Initializing TGIS connection to [%s]. TLS enabled? %s. mTLS Enabled? %s",
