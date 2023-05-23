@@ -65,12 +65,17 @@ class ManagedTGISSubprocess:
         """Create a ManagedTGISSubprocess
 
         Args:
-            model_path (str): path to model files on disk to be loaded by TGIS
-            grpc_port (int, optional): port TGIS will listen on for gRPC requests. Defaults to 50055.
-            http_port (int, optional): port TGIS will listen on for HTTP requests. Defaults to 3000.
-            health_poll_timeout (float, optional): number of seconds to wait for a health check request. Defaults to 1.
-            bootup_poll_delay (float, optional): number of seconds between health checks during bootup. Defaults to 1.
-            load_timeout (float, optional): number of seconds to wait for TGIS to boot before cancelling. Defaults to 30.
+            model_path (str): path to model files on disk to be loaded by TGIS.
+            grpc_port (int, optional): port TGIS will listen on for gRPC requests.
+                Defaults to 50055.
+            http_port (int, optional): port TGIS will listen on for HTTP requests.
+                Defaults to 3000.
+            health_poll_timeout (float, optional): number of seconds to wait for a
+                health check request. Defaults to 1.
+            bootup_poll_delay (float, optional): number of seconds between health
+                checks during bootup. Defaults to 1.
+            load_timeout (float, optional): number of seconds to wait for TGIS to
+                boot before cancelling. Defaults to 30.
         """
         # parameters of the TGIS subprocess
         self._model_path = model_path
@@ -124,7 +129,8 @@ class ManagedTGISSubprocess:
             timeout (float, optional): maximum duration to wait for. Defaults to the load_timeout.
 
         Raises:
-            Exception: If TGIS is detected to be down, the exception that caused the most recent TGIS restart
+            Exception: If TGIS is detected to be down, the exception that caused
+                the most recent TGIS restart
             TimeoutError: If the timeout is reached
         """
         if timeout is None:
