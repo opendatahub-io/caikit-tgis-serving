@@ -324,8 +324,6 @@ class ManagedTGISSubprocess:
             log.warning("Autorecovery is restarting TGIS")
             self._launch()
 
-        return
-
 
 class _MockRPCError(grpc.RpcError):
     """Mocks an RpcError but is generated outside the gRPC code"""
@@ -376,20 +374,25 @@ class _FaultDetectingRPC:
                 request, context
             )
         except grpc.RpcError as rpc_error:
-            if rpc_error.code() == grpc.StatusCode.CANCELLED:
-                raise rpc_error
+            log.warning(
+                "<MTS52181395W>", "Handling RPC error with code [%s]:", rpc_error.code()
+            )
 
-            if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
-                # trigger a check on the process
+            # error codes that trigger an auto-recovery check
+            if rpc_error.code() in [
+                grpc.StatusCode.ABORTED,
+                grpc.StatusCode.DEADLINE_EXCEEDED,
+                grpc.StatusCode.INTERNAL,
+                grpc.StatusCode.UNAVAILABLE,
+                grpc.StatusCode.UNKNOWN,
+            ]:
+                log.debug("Triggering an auto-recovery check")
                 threading.Thread(
                     target=self.managed_tgis._handle_autorecovery, daemon=True
                 ).start()
-                raise rpc_error
 
-            exc_chain = RuntimeError("Unhandled RPC error")
-            exc_chain.__cause__ = rpc_error
-            error("<MTS86992919W>", exc_chain)
             raise rpc_error
+
 
 class AutoRecoveringGenerationServiceStub:
     """GenerationServiceStub that will restart TGIS if it is unhealthy"""
