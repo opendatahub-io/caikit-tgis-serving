@@ -218,23 +218,20 @@ class ManagedTGISSubprocess:
 
             # check if the process stopped/crashed
             with self._mutex:
-                try:
-                    if self._tgis_proc.poll() is not None:
-                        if self._tgis_state != _TGISState.STOPPED:
-                            self._ensure_terminated()
-                        exc = RuntimeError(
-                            "TGIS failed to boot up with the model. See logs for details"
-                        )
-                        self._bootup_exc = exc
-                        error("<MTS11752287E>", exc)
-                except AttributeError:
-                    if self._tgis_state != _TGISState.STOPPED:
-                        self._ensure_terminated()
+                if self._tgis_proc is None:
                     exc = RuntimeError(
                         "TGIS process terminated while waiting for it to boot with the model"
                     )
                     self._bootup_exc = exc
                     error("<MTS26557152E>", exc)
+
+                if self._tgis_proc.poll() is not None:
+                    self._ensure_terminated()
+                    exc = RuntimeError(
+                        "TGIS failed to boot up with the model. See logs for details"
+                    )
+                    self._bootup_exc = exc
+                    error("<MTS11752287E>", exc)
 
             # see if we can get a passing health check request
             try:
