@@ -163,6 +163,7 @@ class TGISBackend(BackendBase):
                     bootup_poll_delay=self._health_poll_delay,
                     health_poll_timeout=self._health_poll_timeout,
                     load_timeout=self._load_timeout,
+                    num_gpus=self._num_gpus,
                 )
                 log.debug2("Launching TGIS subprocess")
                 self._managed_tgis.launch()

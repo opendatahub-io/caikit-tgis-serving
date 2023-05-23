@@ -61,6 +61,7 @@ class ManagedTGISSubprocess:
         health_poll_timeout: float = 1,
         bootup_poll_delay: float = 1,
         load_timeout: float = 30,
+        num_gpus: int = 1,
     ):
         """Create a ManagedTGISSubprocess
 
@@ -84,6 +85,7 @@ class ManagedTGISSubprocess:
         self._bootup_poll_delay = bootup_poll_delay
         self._health_poll_timeout = health_poll_timeout
         self._load_timeout = load_timeout
+        self._num_gpus = num_gpus
 
         self._hostname = f"localhost:{self._grpc_port}"
         self._mutex = Lock()
@@ -188,7 +190,7 @@ class ManagedTGISSubprocess:
         launch_cmd = " ".join(
             [
                 "text-generation-launcher",
-                "--num-shard 1",
+                f"--num-shard {self._num_gpus}",
                 f"--model-name {self._model_path}",
                 f"--port {self._http_port}",
             ]
