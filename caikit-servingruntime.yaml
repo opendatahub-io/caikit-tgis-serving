@@ -1,0 +1,26 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: caikit-runtime
+spec:
+  containers:
+  - env:
+    - name: RUNTIME_LOCAL_MODELS_DIR
+      value: /mnt/models
+    # TODO: This will eventually point to the official image
+    image: quay.io/spryor/caikit-serving@sha256:6c5358edc460436880d87fa40f76e1fdeb5a0410d87824c0eb8965cfde641c0d
+    name: kserve-container
+    ports:
+    # Note, KServe only allows a single port, this is the gRPC port. Subject to change in the future
+    - containerPort: 8085
+      name: h2c
+      protocol: TCP
+    resources:
+      requests:
+        cpu: 8
+        memory: 16Gi
+  multiModel: false
+  supportedModelFormats:
+  # Note: this currently *only* supports caikit format models
+  - autoSelect: true
+    name: caikit
