@@ -1,5 +1,6 @@
 ## Installation
 
+
 Setting up an OpenShift cluster is outside the scope of this document
 
 1. Set up Istio: [Istio install doc](https://knative.dev/docs/install/installing-istio)
