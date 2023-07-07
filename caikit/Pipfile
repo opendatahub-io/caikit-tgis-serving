@@ -1,0 +1,12 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+caikit-nlp = {editable = true, ref = "dc43d07323b0d6c21b5b177bbde9b56d7f23c5ad", git = "https://github.com/opendatahub-io/caikit-nlp.git"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
