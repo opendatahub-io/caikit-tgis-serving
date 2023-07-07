@@ -1,27 +1,20 @@
-FROM quay.io/opendatahub/text-generation-inference
+FROM quay.io/opendatahub/text-generation-inference@sha256:412e837401a56c6aee0872f1a3cd32f3a0e60d3fa93a0f09352f3b9f2ae7c59d
 
-ARG CAIKIT_NLP_REPO=https://github.com/caikit/caikit-nlp
+WORKDIR /caikit
+COPY caikit /caikit
 
 # caikit-nlp has caikit and caikit-tgis-backend as dependencies
 # In future this will be replaced with just standard pip installs
 RUN yum -y install git && \
-    git clone ${CAIKIT_NLP_REPO} && \
-    pip install --no-cache-dir ./caikit-nlp && \
+    pip install pipenv && \
+    pipenv install --system && \
     mkdir -p /opt/models && \
-    mkdir -p /caikit/config && \
-    adduser caikit
-
-# Copy config file template into place, this config
-# covers enabling TGIS
-COPY caikit-tgis.template.yml /caikit/config
-# start-serving.sh 
-COPY start-serving.sh /
-
-RUN chown -R caikit:caikit /caikit
+    adduser caikit && \
+    chown -R caikit:caikit /caikit /opt/models
 
 USER caikit
 
 ENV RUNTIME_LIBRARY='caikit_nlp' \
     RUNTIME_LOCAL_MODELS_DIR='/opt/models'
 
-CMD [ "/start-serving.sh" ]
+CMD [ "./start-serving.sh" ]
