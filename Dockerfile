@@ -1,4 +1,4 @@
-FROM quay.io/opendatahub/text-generation-inference@sha256:412e837401a56c6aee0872f1a3cd32f3a0e60d3fa93a0f09352f3b9f2ae7c59d
+FROM quay.io/opendatahub/text-generation-inference
 
 WORKDIR /caikit
 COPY caikit /caikit
