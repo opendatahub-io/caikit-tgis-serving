@@ -5,6 +5,5 @@ default:
 
 
 .PHONY: refresh-piplock-files
-
 refresh-piplock-files:
 	cd caikit && pipenv lock

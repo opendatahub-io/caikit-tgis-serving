@@ -4,7 +4,7 @@ WORKDIR /caikit
 COPY caikit /caikit
 
 # caikit-nlp has caikit and caikit-tgis-backend as dependencies
-# In future this will be replaced with just standard pip installs
+# In future this will be replaced with just standard pip installs 
 RUN yum -y install git && \
     pip install pipenv && \
     pipenv install --system && \
