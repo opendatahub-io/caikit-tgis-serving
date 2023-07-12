@@ -5,7 +5,8 @@ USER root
 WORKDIR /caikit
 COPY caikit /caikit
 
-RUN yum -y install git && yum clean all && \
+RUN yum -y install git git-lfs && yum clean all && \
+    git lfs install && \
     pip install pipenv && \
     pipenv install --system && \
     rm -rf ~/.cache && \
