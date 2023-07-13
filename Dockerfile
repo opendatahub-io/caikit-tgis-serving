@@ -1,4 +1,4 @@
-FROM quay.io/opendatahub/text-generation-inference
+FROM quay.io/opendatahub/text-generation-inference:fast-836fa5f
 
 WORKDIR /caikit
 COPY caikit /caikit
