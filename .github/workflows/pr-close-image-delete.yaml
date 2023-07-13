@@ -1,8 +1,20 @@
 name: Delete quay image on PR closed
 on:
-  pull_request:
-    types:
-      - closed
+  pull_request_target:
+    types: [ closed ]
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'Makefile'
+      - '.github/**'
+      - 'docs/**'
+      - 'demo/**'
+             
 
 env:
   QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
