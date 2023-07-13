@@ -1,11 +1,23 @@
 name: Delete quay image on PR closed
 on:
-  pull_request:
-    types:
-      - closed
+  pull_request_target:
+    types: [ closed ]
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'Makefile'
+      - '.github/**'
+      - 'docs/**'
+      - 'demo/**'
+             
 
 env:
-  QUAY_ODH_DASHBOARD_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
+  QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
 
 jobs:
   delete-pr-quay-image:
@@ -26,10 +38,10 @@ jobs:
           QUAY_TOKEN: ${{ secrets.QUAY_ROBOT_TOKEN }}
           QUAY_ROBOT_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
         run: |
-         skopeo login quay.io -u ${QUAY_ROBOT_USERNAME} -p ${QUAY_TOKEN}
+         skopeo login quay.io -u "$QUAY_ROBOT_USERNAME" -p "$QUAY_TOKEN"
       - name: Delete PR image
         shell: bash
         env:
           PR: ${{ github.event.pull_request.number }}
         run: |
-          skopeo delete docker://${QUAY_CAIKIT_TGIS_SERVING_IMAGE_REPO}:pr-${{ env.PR }}
+          skopeo delete docker://${QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO}:pr-${PR}
