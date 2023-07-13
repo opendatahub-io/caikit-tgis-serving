@@ -2,8 +2,8 @@ name: Delete quay image on PR closed
 on:
   pull_request:
     types:
-      - closed
-
+      - opened
+  workflow_dispatch: {}  #
 env:
   QUAY_ODH_DASHBOARD_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
 
@@ -25,7 +25,9 @@ jobs:
         env:
           QUAY_TOKEN: ${{ secrets.QUAY_ROBOT_TOKEN }}
           QUAY_ROBOT_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          TEST: ${{ secrets.TEST }}
         run: |
+         echo "$TEST"
          skopeo login quay.io -u ${QUAY_ROBOT_USERNAME} -p ${QUAY_TOKEN}
       - name: Delete PR image
         shell: bash
