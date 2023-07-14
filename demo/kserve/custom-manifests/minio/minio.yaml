@@ -31,6 +31,6 @@ spec:
         - name: MINIO_SECRET_KEY
           value: <secretkey>
       # image: quay.io/jooholee/modelmesh-minio-examples:openvino
-      image: quay.io/jooholee/minio-examples:caikit
+      image: quay.io/jooholee/minio-examples:caikit-flan-t5
       imagePullPolicy: Always
       name: minio
