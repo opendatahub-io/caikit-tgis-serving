@@ -8,4 +8,5 @@ spec:
     - knative-serving
     - kserve
     - kserve-demo
+    - opendatahub
     - auth-provider
