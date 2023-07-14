@@ -48,7 +48,7 @@ oc create ns knative-serving
 oc apply -f custom-manifests/service-mesh/smmr.yaml
 oc apply -f custom-manifests/service-mesh/peer-authentication.yaml # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 
-oc apply -f custom-manifests/serverless/operator.yaml
+oc apply -f custom-manifests/serverless/operators.yaml
 sleep 30
 oc wait --for=condition=ready pod -l name=knative-openshift -n openshift-serverless --timeout=300s
 oc wait --for=condition=ready pod -l name=knative-openshift-ingress -n openshift-serverless --timeout=300s
@@ -84,11 +84,12 @@ oc apply -f custom-manifests/serverless/gateways.yaml
 ## Deploy KServe with OpenDataHub Operator
 ~~~
 oc create -f custom-manifests/opendatahub/operators.yaml
-oc create -f custom-manifests/opendatahub/kfdef-kserve.yaml
+sleep 30
+oc create -f custom-manifests/opendatahub/kfdef-kserve-op.yaml
 ~~~
 
 
-## Deploy Bloom-560m model with Caikit+TGIS Serving runtime
+## Deploy flan-t5-small model with Caikit+TGIS Serving runtime
 ~~~
 # Minio Deploy
 ACCESS_KEY_ID=THEACCESSKEY
@@ -112,7 +113,7 @@ oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n kserve-demo
 ## gRPC Test
 ~~~
 export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -o jsonpath='{.status.url}' | cut -d'/' -f3)
-grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: bloom-560m" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
 
 
