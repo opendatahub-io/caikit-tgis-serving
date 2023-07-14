@@ -21,10 +21,11 @@
 ## Steps
 ### Prerequisite installation
 ~~~
-git clone https://github.com/ReToCode/knative-kserve
+git clone https://github.com/opendatahub-io/caikit-tgis-serving
+cd caikit-tgis-serving/demo/kserve
 
 # Install Service Mesh operators
-oc apply -f knative-kserve/service-mesh/operators.yaml
+oc apply -f custom-manifests/service-mesh/operators.yaml
 sleep 30
 oc wait --for=condition=ready pod -l name=istio-operator -n openshift-operators --timeout=300s
 oc wait --for=condition=ready pod -l name=jaeger-operator -n openshift-operators --timeout=300s
@@ -44,17 +45,17 @@ oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 oc create ns kserve
 oc create ns kserve-demo
 oc create ns knative-serving
-oc apply -f knative-kserve/service-mesh/smmr.yaml
-oc apply -f knative-kserve/service-mesh/peer-authentication.yaml # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
+oc apply -f custom-manifests/service-mesh/smmr.yaml
+oc apply -f custom-manifests/service-mesh/peer-authentication.yaml # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 
-oc apply -f knative-kserve/serverless/operator.yaml
+oc apply -f custom-manifests/serverless/operator.yaml
 sleep 30
 oc wait --for=condition=ready pod -l name=knative-openshift -n openshift-serverless --timeout=300s
 oc wait --for=condition=ready pod -l name=knative-openshift-ingress -n openshift-serverless --timeout=300s
 oc wait --for=condition=ready pod -l name=knative-operator -n openshift-serverless --timeout=300s
 
 # Create a Knative Serving installation
-oc apply -f knative-kserve/serverless/knativeserving-istio.yaml
+oc apply -f custom-manifests/serverless/knativeserving-istio.yaml
 sleep 15
 oc wait --for=condition=ready pod -l app=controller -n knative-serving --timeout=300s
 oc wait --for=condition=ready pod -l app=net-istio-controller -n knative-serving --timeout=300s
@@ -78,7 +79,6 @@ mkdir ${BASE_DIR}
 # Create the Knative gateways
 oc create secret tls wildcard-certs --cert=${BASE_DIR}/wildcard.crt --key=${BASE_DIR}/wildcard.key -n istio-system
 oc apply -f custom-manifests/serverless/gateways.yaml
-
 ~~~
 
 ## Deploy KServe with OpenDataHub Operator
@@ -122,7 +122,6 @@ grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}
 *Deploy KServe with OpenDataHub manifests for test purpose.*
 ~~~
 # KServe Kfdef
-#git clone --branch add-kserve-manifests git@github.com:ReToCode/odh-manifests.git
 git clone git@github.com:opendatahub-io/odh-manifests.git
 rm -rf  custom-manifests/opendatahub/.cache  custom-manifests/opendatahub/kustomize /tmp/odh-manifests.gzip
 tar czvf /tmp/odh-manifests.gzip odh-manifests
