@@ -1,0 +1,55 @@
+---
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: odh-mesh
+  namespace: opendatahub
+spec:
+  plugins:
+    - kind: KfOssmPlugin
+      spec:
+        mesh:
+          name: minimal
+          namespace: istio-system
+          certificate:
+            generate: true
+        auth:
+          name: authorino
+          namespace: auth-provider
+          authorino:
+            topic: authorino/topic=odh
+  applications:
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-common
+      name: odh-common
+    - kustomizeConfig:
+        overlays:
+          - service-mesh
+          - dev
+        repoRef:
+          name: manifests
+          path: odh-dashboard
+      name: odh-dashboard
+    - kustomizeConfig:
+        overlays:
+          - service-mesh
+        repoRef:
+          name: manifests
+          path: odh-notebook-controller
+      name: odh-notebook-controller
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-project-controller
+      name: odh-project-controller
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: notebook-images
+      name: notebook-images
+  repos:
+    - name: manifests
+      uri: https://github.com/maistra/odh-manifests/tarball/ossm_plugin_templates
+  version: ossm_plugin_templates

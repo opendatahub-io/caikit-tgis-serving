@@ -1,0 +1,30 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: kserve
+  namespace: kserve
+spec:
+  applications:
+    - kustomizeConfig:
+        parameters:
+        - name: kserve-alibi-explainer
+          value: kserve/alibi-explainer
+        - name: kserve-art-explainer
+          value: kserve/art-explainer
+        - name: kserve-agent
+          value: kserve/agent
+        - name: kserve-router
+          value: kserve/router
+        - name: kserve-storage-initializer
+          value: kserve/storage-initializer
+        - name: kserve-controller
+          value: quay.io/jooholee/kserve-controller:latest
+        repoRef:
+          name: manifests
+          path: kserve
+      name: kserve
+  repos:
+    - name: manifests
+      uri: file:///tmp/odh-manifests.gzip
+      # uri: https://api.github.com/repos/Jooho/kserve/tarball/manifests
+  version: master

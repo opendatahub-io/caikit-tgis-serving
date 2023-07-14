@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  ports:
+    - name: minio-client-port
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+  selector:
+    app: minio
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: minio
+    maistra.io/expose-route: 'true'
+  annotations:
+    sidecar.istio.io/inject: 'true'
+  name: minio
+spec:
+  containers:
+    - args:
+        - server
+        - /data1
+      env:
+        - name: MINIO_ACCESS_KEY
+          value:  THEACCESSKEY
+        - name: MINIO_SECRET_KEY
+          value: <secretkey>
+      # image: quay.io/jooholee/modelmesh-minio-examples:openvino
+      image: quay.io/jooholee/minio-examples:caikit
+      imagePullPolicy: Always
+      name: minio
