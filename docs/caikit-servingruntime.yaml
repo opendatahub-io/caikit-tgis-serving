@@ -8,7 +8,7 @@ spec:
     - name: RUNTIME_LOCAL_MODELS_DIR
       value: /mnt/models
     # TODO: This will eventually point to the official image
-    image: quay.io/spryor/caikit-serving@sha256:6c5358edc460436880d87fa40f76e1fdeb5a0410d87824c0eb8965cfde641c0d
+    image: quay.io/opendatahub/caikit-tgis-serving@sha256:20cbc7b312e0dc63903d4a2c7d70b741135ffea31113af63dd8691da4baae0f9
     name: kserve-container
     ports:
     # Note, KServe only allows a single port, this is the gRPC port. Subject to change in the future
