@@ -1,7 +1,6 @@
 kserve/
 knative-kserve/
 odh-manifests/
-minio-current.yaml
-minio-secret-current.yaml
+*-current.yaml
 .cache/
 kustomize/

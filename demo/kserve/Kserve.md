@@ -18,8 +18,7 @@
 - https://github.com/ReToCode/knative-kserve#installation-with-istio--mesh
 - https://knative.dev/docs/install/operator/knative-with-operators/#create-the-knative-serving-custom-resource
   
-## Steps
-### Prerequisite installation
+## Prerequisite installation
 ~~~
 git clone https://github.com/opendatahub-io/caikit-tgis-serving
 cd caikit-tgis-serving/demo/kserve
@@ -43,10 +42,10 @@ oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 
 # kserve/knative
 oc create ns kserve
-oc create ns kserve-demo
 oc create ns knative-serving
-oc apply -f custom-manifests/service-mesh/smmr.yaml
-oc apply -f custom-manifests/service-mesh/peer-authentication.yaml # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication.yaml | tee ./peer-authentication-current.yaml | oc apply -f -
+# we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 
 oc apply -f custom-manifests/serverless/operators.yaml
 sleep 30
@@ -134,29 +133,50 @@ oc apply -f ./custom-manifests/metrics/caikit-metrics-service.yaml
 oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml
 ```
 
+## Deploy Minio for example LLM model
 
-## Deploy flan-t5-small model with Caikit+TGIS Serving runtime
 ~~~
-# Minio Deploy
 ACCESS_KEY_ID=THEACCESSKEY
 SECRET_ACCESS_KEY=$(openssl rand -hex 32)
+MINIO_NS=minio
 
-oc new-project minio
-sed "s/<accesskey>/$ACCESS_KEY_ID/g"  ./custom-manifests/minio/minio.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" | tee ./minio-current.yaml | oc -n minio apply -f -
-sed "s/<accesskey>/$ACCESS_KEY_ID/g" ./custom-manifests/minio/minio-secret.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" | tee ./minio-secret-current.yaml | oc -n minio apply -f - 
+oc new-project ${MINIO_NS}
+sed "s/<accesskey>/$ACCESS_KEY_ID/g"  ./custom-manifests/minio/minio.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" | tee ./minio-current.yaml | oc -n ${MINIO_NS} apply -f -
+sed "s/<accesskey>/$ACCESS_KEY_ID/g" ./custom-manifests/minio/minio-secret.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" |sed "s/<minio_ns>/$MINIO_NS/g" | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f - 
 
-# Create Caikit Serving runtime
-oc project kserve-demo
-oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml
-
-# Deploy model
-oc apply -f ./minio-secret-current.yaml 
-oc create -f ./custom-manifests/minio/serviceaccount-minio.yaml
-
-oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n kserve-demo
+sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yaml | tee ./serviceaccount-minio-current.yaml 
 ~~~
 
-## gRPC Test
+## Deploy flan-t5-small model with Caikit+TGIS Serving runtime
+
+If you have installed prerequisites(servicemesh,serverless,kserve and minio), you can start here.
+
+### Setup ISTIO configuration for the test demo namespace
+
+~~~
+export TEST_NS=kserve-demo
+oc new-project ${TEST_NS}
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr-test-ns.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-tests-ns.yaml | tee ./peer-authentication-test-ns-current.yaml | oc apply -f -
+# we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
+~~~
+
+### Create Caikit ServingRuntime
+
+~~~
+oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml
+~~~
+
+### Deploy example model(flan-t5-samll)
+
+~~~
+oc apply -f ./minio-secret-current.yaml 
+oc create -f ./serviceaccount-minio-current.yaml
+
+oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
+~~~
+
+### gRPC Test
 ~~~
 export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -o jsonpath='{.status.url}' | cut -d'/' -f3)
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
