@@ -5,6 +5,4 @@ metadata:
   namespace: istio-system
 spec:
   members:
-    - knative-serving
-    - kserve
     - <test_ns>
