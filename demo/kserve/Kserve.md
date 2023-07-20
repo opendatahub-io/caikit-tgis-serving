@@ -88,6 +88,52 @@ sleep 30
 oc create -f custom-manifests/opendatahub/kfdef-kserve-op.yaml
 ~~~
 
+## Enable metrics for caikit serving
+
+Note: We are currently enabling metrics by setting a port-level `permissive` mTLS to be able to scrape caikit metrics from the 8086 port of `kserve-container`
+### Prerequisites
+*cluster-admin is needed to enable user-workload-monitoring*
+#### Enable User Workload Monitoring
+~~~
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+~~~
+#### Configure User Workload Monitoring
+~~~
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-workload-monitoring-config
+  namespace: openshift-user-workload-monitoring
+data:
+  config.yaml: |
+    prometheus:
+      logLevel: debug 
+      retention: 15d #Change as needed
+~~~
+### Adding resources to configure monitoring
+
+*Resources are created assuming the inferenceservice is deployed in `kserve-demo`. Change files accordingly if the inferenceservice namespace is different*
+
+```
+oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml
+```
+Edit the `peerauthentication-caikit-metrics` file to apply the appropriate `matchLabel` according to your `serving.knative.dev/service` label
+
+```
+oc apply -f ./custom-manifests/metrics/peerauthentication-caikit-metrics.yaml
+```
+```
+oc apply -f ./custom-manifests/metrics/caikit-metrics-service.yaml
+oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml
+```
+
 
 ## Deploy flan-t5-small model with Caikit+TGIS Serving runtime
 ~~~
@@ -116,6 +162,17 @@ export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -o jsonpath='{.
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
 
+## Verifying Caikit Metrics
+
+[Prerequisites](#enable-metrics-for-caikit-serving)
+
+- Navigate to Openshift Console --> Observe --> Targets
+  - Search by Label `namespace=kserve-demo`
+  - Verify `caikit-example-isvc-predictor-default-sm` has `status : up`
+- Navigate to Openshift Console --> Observe --> Metrics
+  - Search for `predict_caikit_library_duration_seconds_created` and verify metric values exist
+
+All caikit produced metrics should successfully show up in Openshift UserWorkload Monitoring now
 
 ---
 **Tip.**
