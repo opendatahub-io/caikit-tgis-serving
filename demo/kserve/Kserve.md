@@ -118,19 +118,18 @@ data:
 ~~~
 ### Adding resources to configure monitoring
 
-*Resources are created assuming the inferenceservice is deployed in `kserve-demo`. Change files accordingly if the inferenceservice namespace is different*
 
 ```
-oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml
+oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml -n ${TEST_NS}
 ```
 Edit the `peerauthentication-caikit-metrics` file to apply the appropriate `matchLabel` according to your `serving.knative.dev/service` label
 
 ```
-oc apply -f ./custom-manifests/metrics/peerauthentication-caikit-metrics.yaml
+oc apply -f ./custom-manifests/metrics/peerauthentication-caikit-metrics.yaml -n ${TEST_NS}
 ```
 ```
-oc apply -f ./custom-manifests/metrics/caikit-metrics-service.yaml
-oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml
+oc apply -f ./custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
+oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
 ```
 
 ## Deploy Minio for example LLM model

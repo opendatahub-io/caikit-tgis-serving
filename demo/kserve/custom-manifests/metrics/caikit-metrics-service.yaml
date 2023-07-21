@@ -2,7 +2,6 @@ kind: Service
 apiVersion: v1
 metadata:
   name: caikit-example-isvc-predictor-default-sm
-  namespace: kserve-demo
   labels:
     name: caikit-example-isvc-predictor-default-sm
 spec:

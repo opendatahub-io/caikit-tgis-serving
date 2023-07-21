@@ -2,7 +2,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: caikit-example-isvc-predictor-default-sm
-  namespace: kserve-demo
 spec:
   endpoints:
     - port: caikit-metrics
