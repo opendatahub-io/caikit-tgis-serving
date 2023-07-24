@@ -156,7 +156,7 @@ If you have installed prerequisites(servicemesh,serverless,kserve and minio), yo
 export TEST_NS=kserve-demo
 oc new-project ${TEST_NS}
 sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr-test-ns.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
-sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-tests-ns.yaml | tee ./peer-authentication-test-ns-current.yaml | oc apply -f -
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-test-ns.yaml | tee ./peer-authentication-test-ns-current.yaml | oc apply -f -
 # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 ~~~
 
