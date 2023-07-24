@@ -147,30 +147,41 @@ class TGISBackend(BackendBase):
 
     ## Backend user interface ##
 
-    def get_connection(self, model_id: str) -> Optional[TGISConnection]:
+    def get_connection(
+        self, model_id: str, create: bool = True
+    ) -> Optional[TGISConnection]:
         """Get the TGISConnection object for the given model"""
-        return self._model_connections.get(model_id)
+        model_conn = self._model_connections.get(model_id)
+        if (
+            not model_conn
+            and create
+            and not self.local_tgis
+            and self._base_connection_cfg
+        ):
+            with self._mutex:
+                model_conn = self._model_connections.setdefault(
+                    model_id,
+                    TGISConnection.from_config(model_id, self._base_connection_cfg),
+                )
+        return model_conn
 
     def get_client(self, model_id: str) -> generation_pb2_grpc.GenerationServiceStub:
-        model_conn = self._model_connections.get(model_id)
-        if model_conn is None:
-            if self.local_tgis:
-                with self._mutex:
-                    log.debug2("Launching TGIS subprocess")
-                    self._managed_tgis.launch(model_id)
+        model_conn = self.get_connection(model_id)
+        if model_conn is None and self.local_tgis:
+            with self._mutex:
+                log.debug2("Launching TGIS subprocess")
+                self._managed_tgis.launch(model_id)
 
-                log.debug2("Waiting for TGIS subprocess to become ready")
-                self._managed_tgis.wait_until_ready()
-                model_conn = self._managed_tgis.get_connection()
-                self._model_connections[model_id] = model_conn
-            elif self._base_connection_cfg:
-                with self._mutex:
-                    model_conn = self._model_connections.setdefault(
-                        model_id,
-                        TGISConnection.from_config(model_id, self._base_connection_cfg),
-                    )
-            else:
-                raise ValueError(f"Unknown Model: {model_id}")
+            log.debug2("Waiting for TGIS subprocess to become ready")
+            self._managed_tgis.wait_until_ready()
+            model_conn = self._managed_tgis.get_connection()
+            self._model_connections[model_id] = model_conn
+        error.value_check(
+            "<TGB09142406E>",
+            model_conn is not None,
+            "Unknown model_id: {}",
+            model_id,
+        )
 
         # Mark the backend as started
         self.start()
