@@ -21,9 +21,11 @@ import pytest
 # Local
 from caikit_tgis_backend.tgis_connection import TGISConnection
 
+## Happy Paths #################################################################
+
 
 def test_happy_path_no_tls():
-    conn = TGISConnection.from_config({TGISConnection.HOSTNAME_KEY: "foo.bar:1234"})
+    conn = TGISConnection.from_config("", {TGISConnection.HOSTNAME_KEY: "foo.bar:1234"})
     assert conn.hostname == "foo.bar:1234"
     assert conn.ca_cert_file is None
     assert conn.client_tls is None
@@ -33,9 +35,9 @@ def test_happy_path_template():
     template_piece = "{{{}}}".format(TGISConnection.HOSTNAME_TEMPLATE_MODEL_ID)
     template = f"foo.{template_piece}.bar.{template_piece}"
     model_id = "some/model"
-    conn = TGISConnection.from_template(
+    conn = TGISConnection.from_config(
         model_id,
-        {TGISConnection.HOSTNAME_TEMPLATE_KEY: template},
+        {TGISConnection.HOSTNAME_KEY: template},
     )
     assert conn.hostname == template.format(
         **{TGISConnection.HOSTNAME_TEMPLATE_MODEL_ID: model_id}
@@ -44,10 +46,11 @@ def test_happy_path_template():
 
 def test_happy_path_tls():
     conn = TGISConnection.from_config(
+        "",
         {
             TGISConnection.HOSTNAME_KEY: "foo.bar:1234",
             TGISConnection.CA_CERT_FILE_KEY: "ca.crt",
-        }
+        },
     )
     assert conn.hostname == "foo.bar:1234"
     assert conn.ca_cert_file is "ca.crt"
@@ -56,12 +59,13 @@ def test_happy_path_tls():
 
 def test_happy_path_mtls():
     conn = TGISConnection.from_config(
+        "",
         {
             TGISConnection.HOSTNAME_KEY: "foo.bar:1234",
             TGISConnection.CA_CERT_FILE_KEY: "ca.crt",
             TGISConnection.CLIENT_CERT_FILE_KEY: "client.crt",
             TGISConnection.CLIENT_KEY_FILE_KEY: "client.key",
-        }
+        },
     )
     assert conn.hostname == "foo.bar:1234"
     assert conn.ca_cert_file is "ca.crt"
