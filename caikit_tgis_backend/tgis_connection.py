@@ -16,6 +16,10 @@
 # Standard
 from dataclasses import dataclass
 from typing import Optional
+import os
+
+# Third Party
+import grpc
 
 # First Party
 from caikit.core.toolkit.errors import error_handler
@@ -70,7 +74,33 @@ class TGISConnection:
             log.debug2("CA Cert File: %s", ca_cert)
             log.debug2("Client Cert File: %s", client_cert)
             log.debug2("Client Key File: %s", client_key)
-
+            error.type_check(
+                "<TGB73210861E>",
+                str,
+                allow_none=True,
+                **{cls.CA_CERT_FILE_KEY: ca_cert},
+            )
+            error.type_check(
+                "<TGB73210862E>",
+                str,
+                allow_none=True,
+                **{cls.CLIENT_CERT_FILE_KEY: client_cert},
+            )
+            error.type_check(
+                "<TGB73210863E>",
+                str,
+                allow_none=True,
+                **{cls.CLIENT_KEY_FILE_KEY: client_key},
+            )
+            error.value_check(
+                "<TGB73210864E>", ca_cert is None or os.path.isfile(ca_cert)
+            )
+            error.value_check(
+                "<TGB73210865E>", client_cert is None or os.path.isfile(client_cert)
+            )
+            error.value_check(
+                "<TGB73210866E>", client_key is None or os.path.isfile(client_key)
+            )
             error.value_check(
                 "<TGB79518571E>",
                 ca_cert or (not client_cert and not client_key),
@@ -99,11 +129,7 @@ class TGISConnection:
 
     @property
     def mtls_enabled(self) -> bool:
-        return None not in [
-            self.ca_cert_file,
-            self.client_cert_file,
-            self.client_key_file,
-        ]
+        return None not in [self.ca_cert_file, self.client_tls]
 
     def get_client(self) -> generation_pb2_grpc.GenerationServiceStub:
         """Get a grpc client for the connection"""
@@ -126,10 +152,10 @@ class TGISConnection:
                 if self.mtls_enabled:
                     log.debug("Enabling mTLS for TGIS connection")
                     creds_kwargs["certificate_chain"] = self._load_tls_file(
-                        self.client_cert_file
+                        self.client_tls.cert_file
                     )
                     creds_kwargs["private_key"] = self._load_tls_file(
-                        self.client_key_file
+                        self.client_tls.key_file
                     )
                 credentials = grpc.ssl_channel_credentials(**creds_kwargs)
                 channel = grpc.secure_channel(self.hostname, credentials=credentials)

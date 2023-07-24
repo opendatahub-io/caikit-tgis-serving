@@ -17,10 +17,6 @@
 # Standard
 from threading import Lock
 from typing import Dict, Optional
-import os
-
-# Third Party
-import grpc
 
 # First Party
 from caikit.core.module_backends.backend_types import register_backend_type
@@ -31,6 +27,7 @@ import alog
 # Local
 from .managed_tgis_subprocess import ManagedTGISSubprocess
 from .protobufs import generation_pb2_grpc
+from .tgis_connection import TGISConnection
 
 log = alog.use_channel("TGISBKND")
 error = error_handler.get(log)
@@ -66,53 +63,61 @@ class TGISBackend(BackendBase):
         self._mutex = Lock()
         self._local_tgis = None
         self._managed_tgis = None
+        self._model_connections = {}
 
         # Parse the config to see if we're managing a connection to a remote
         # TGIS instance or running a local copy
         connection_cfg = self.config.get("connection") or {}
         error.type_check("<TGB20235229E>", dict, connection=connection_cfg)
-
+        remote_models_cfg = self.config.get("remote_models") or {}
+        error.type_check("<TGB20235338E>", dict, connection=remote_models_cfg)
         local_cfg = self.config.get("local") or {}
         error.type_check("<TGB20235225E>", dict, local=local_cfg)
 
-        if not connection_cfg or not connection_cfg.get("hostname"):
-            log.info("<TGB20235227I>", "Managing local TGIS instance")
-            self._local_tgis = True
+        # The base connection config is valid IFF there's a hostname
+        conn_hname = connection_cfg.get("hostname")
+        self._base_connection_cfg = connection_cfg if conn_hname else None
+        error.value_check(
+            "<TGB20235231E>",
+            not conn_hname or ":" in self._base_connection_cfg.get("hostname", ""),
+            "Invalid base configuration: {}",
+            self._base_connection_cfg,
+        )
+        error.value_check(
+            "<TGB45582311E>",
+            self._base_connection_cfg is None
+            or TGISConnection.from_config("__TEST__", self._base_connection_cfg)
+            is not None,
+            "Invalid base connection: {}",
+            self._base_connection_cfg,
+        )
 
-            # Members that are only used when booting TGIS locally
-            self._grpc_port = local_cfg.get("grpc_port") or self.TGIS_LOCAL_GRPC_PORT
-            self._http_port = local_cfg.get("http_port") or self.TGIS_LOCAL_HTTP_PORT
-            self._health_poll_delay = local_cfg.get("health_poll_delay", 1.0)
-            self._health_poll_timeout = local_cfg.get("health_poll_timeout", 10)
-            self._load_timeout = local_cfg.get("load_timeout", 30)
-            self._num_gpus = local_cfg.get("num_gpus", 1)
-            log.debug("Managing local TGIS with %d GPU(s)", self._num_gpus)
-
-            # the local TGIS subprocess will be created later
-            self._managed_tgis = None
-        else:
-            log.info("<TGB20235226I>", "Managing remote TGIS connection")
-            self._local_tgis = False
-            self._hostname = connection_cfg.get("hostname")
-            error.type_check("<TGB20235230E>", str, hostname=self._hostname)
+        # Parse connection objects for all model-specific connections
+        for model_id, model_conn_cfg in remote_models_cfg.items():
+            model_conn = TGISConnection.from_config(model_id, model_conn_cfg)
             error.value_check(
-                "<TGB20235231E>",
-                ":" in self._hostname,
-                "Invalid hostname: %s",
-                self._hostname,
+                "<TGB90377847E>",
+                model_conn is not None,
+                "Invalid connection config for {}",
+                model_id,
             )
+            self._model_connections[model_id] = model_conn
 
-            # Pull TLS config if present
-            self._ca_cert = self._load_tls_file(connection_cfg.get("ca_cert_file"))
-            self._client_cert = self._load_tls_file(
-                connection_cfg.get("client_cert_file")
-            )
-            self._client_key = self._load_tls_file(
-                connection_cfg.get("client_key_file")
-            )
+        # We manage a local TGIS instance if there are no remote connections
+        # specified as either a valid base connection or remote_connections
+        self._local_tgis = not self._base_connection_cfg and not self._model_connections
+        log.info("Running %s TGIS backend", "LOCAL" if self._local_tgis else "REMOTE")
 
-        # Placeholder for the client
-        self._client = None
+        if self._local_tgis:
+            log.info("<TGB20235227I>", "Managing local TGIS instance")
+            self._managed_tgis = ManagedTGISSubprocess(
+                grpc_port=local_cfg.get("grpc_port") or self.TGIS_LOCAL_GRPC_PORT,
+                http_port=local_cfg.get("http_port") or self.TGIS_LOCAL_HTTP_PORT,
+                bootup_poll_delay=local_cfg.get("health_poll_delay", 1.0),
+                health_poll_timeout=local_cfg.get("health_poll_timeout", 10),
+                load_timeout=local_cfg.get("load_timeout", 30),
+                num_gpus=local_cfg.get("num_gpus", 1),
+            )
 
     def __del__(self):
         # TODO: When adding multi-model support, we'll need to call this for
@@ -131,74 +136,59 @@ class TGISBackend(BackendBase):
 
     def start(self):
         """Start backend, initializing the client"""
-        self._setup_client()
         self._started = True
 
     def stop(self):
         """Stop backend and unload all models"""
         self._started = False
-        self._client = None
-        self.unload_model("")  # TODO: Clear all models for multi-model
+        for model_id in list(self._model_connections.keys()):
+            log.debug("Unloading model %s on stop", model_id)
+            self.unload_model(model_id)
 
     ## Backend user interface ##
 
-    def get_client(self, model_path: str) -> generation_pb2_grpc.GenerationServiceStub:
-        if self.local_tgis:
-            # TODO: This will need to change for multi-model / multi-client support.
-            # With local TGIS, limit the backend to a single managed TGIS process. This is to
-            # simplify tracking of loads/unloads needed to support Model Mesh dynamics.
-            with self._mutex:
-                # ValueError if a TGIS process is already running
-                error.value_check(
-                    "<TGB27123275E>",
-                    self._managed_tgis is None,
-                    "TODO: The TGIS backend running with a local TGIS process "
-                    + "only supports a single client currently",
-                )
+    def get_connection(self, model_id: str) -> Optional[TGISConnection]:
+        """Get the TGISConnection object for the given model"""
+        return self._model_connections.get(model_id)
 
-                self._managed_tgis = ManagedTGISSubprocess(
-                    model_path=model_path,
-                    grpc_port=self._grpc_port,
-                    http_port=self._http_port,
-                    bootup_poll_delay=self._health_poll_delay,
-                    health_poll_timeout=self._health_poll_timeout,
-                    load_timeout=self._load_timeout,
-                    num_gpus=self._num_gpus,
-                )
-                log.debug2("Launching TGIS subprocess")
-                self._managed_tgis.launch()
+    def get_client(self, model_id: str) -> generation_pb2_grpc.GenerationServiceStub:
+        model_conn = self._model_connections.get(model_id)
+        if model_conn is None:
+            if self.local_tgis:
+                with self._mutex:
+                    log.debug2("Launching TGIS subprocess")
+                    self._managed_tgis.launch(model_id)
 
-            log.debug2("Waiting for TGIS subprocess to become ready")
-            self._managed_tgis.wait_until_ready()
+                log.debug2("Waiting for TGIS subprocess to become ready")
+                self._managed_tgis.wait_until_ready()
+                model_conn = self._managed_tgis.get_connection()
+                self._model_connections[model_id] = model_conn
+            elif self._base_connection_cfg:
+                with self._mutex:
+                    model_conn = self._model_connections.setdefault(
+                        model_id,
+                        TGISConnection.from_config(model_id, self._base_connection_cfg),
+                    )
+            else:
+                raise ValueError(f"Unknown Model: {model_id}")
 
-        if not self._client:
-            self._setup_client()
-
-        # Make sure the server itself is running
+        # Mark the backend as started
         self.start()
 
         # Return the client to the server
-        return self._client
+        return model_conn.get_client()
 
     # pylint: disable=unused-argument
-    def unload_model(self, model_path: str):
+    def unload_model(self, model_id: str):
         """Unload the model from TGIS"""
+        # If running locally, shut down the managed instance
         if self.local_tgis:
             with self._mutex:
                 if self._managed_tgis:
                     self._managed_tgis.terminate()
-                    self._managed_tgis = None
-                    # reset the client so the connection is re-created
-                    # the next time TGIS is launched
-                    self._client = None
 
-    @property
-    def tls_enabled(self) -> bool:
-        return self._ca_cert is not None
-
-    @property
-    def mtls_enabled(self) -> bool:
-        return None not in [self._ca_cert, self._client_cert, self._client_key]
+        # Remove the connection for this model
+        self._model_connections.pop(model_id, None)
 
     @property
     def local_tgis(self) -> bool:
@@ -209,54 +199,6 @@ class TGISBackend(BackendBase):
         return not self.local_tgis or (
             self._managed_tgis is not None and self._managed_tgis.is_ready()
         )
-
-    ## Impl ##
-
-    @staticmethod
-    def _load_tls_file(file_path: Optional[str]) -> Optional[bytes]:
-        error.type_check(
-            "<TGB20235227E>",
-            str,
-            allow_none=True,
-            file_path=file_path,
-        )
-        if file_path is not None:
-            error.value_check(
-                "<TGB20235228E>",
-                os.path.isfile(file_path),
-                "Invalid TLS file path: {}",
-                file_path,
-            )
-            with open(file_path, "rb") as handle:
-                return handle.read()
-
-    def _setup_client(self):
-        if self._client is not None:
-            return
-
-        if self._local_tgis:
-            self._client = self._managed_tgis.get_client()
-        else:
-            log.info(
-                "<TGB20236231I>",
-                "Initializing TGIS connection to [%s]. TLS enabled? %s. mTLS Enabled? %s",
-                self._hostname,
-                self.tls_enabled,
-                self.mtls_enabled,
-            )
-            if not self.tls_enabled:
-                log.debug("Connecting to TGIS at [%s] INSECURE", self._hostname)
-                channel = grpc.insecure_channel(self._hostname)
-            else:
-                log.debug("Connecting to TGIS at [%s] SECURE", self._hostname)
-                creds_kwargs = {"root_certificates": self._ca_cert}
-                if self.mtls_enabled:
-                    log.debug("Enabling mTLS for TGIS connection")
-                    creds_kwargs["certificate_chain"] = self._client_cert
-                    creds_kwargs["private_key"] = self._client_key
-                credentials = grpc.ssl_channel_credentials(**creds_kwargs)
-                channel = grpc.secure_channel(self._hostname, credentials=credentials)
-            self._client = generation_pb2_grpc.GenerationServiceStub(channel)
 
 
 # Register local backend

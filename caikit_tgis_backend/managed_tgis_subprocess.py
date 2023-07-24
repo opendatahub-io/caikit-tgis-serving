@@ -17,6 +17,7 @@
 # Standard
 from enum import Enum
 from threading import Lock
+from typing import Optional
 import os
 import shlex
 import subprocess
@@ -33,6 +34,7 @@ import alog
 
 # Local
 from .protobufs import generation_pb2_grpc
+from .tgis_connection import TGISConnection
 
 log = alog.use_channel("TGISPROC")
 error = error_handler.get(log)
@@ -55,7 +57,6 @@ class ManagedTGISSubprocess:
 
     def __init__(
         self,
-        model_path: str,
         grpc_port: int = 50055,
         http_port: int = 3000,
         health_poll_timeout: float = 1,
@@ -66,7 +67,6 @@ class ManagedTGISSubprocess:
         """Create a ManagedTGISSubprocess
 
         Args:
-            model_path (str): path to model files on disk to be loaded by TGIS.
             grpc_port (int, optional): port TGIS will listen on for gRPC requests.
                 Defaults to 50055.
             http_port (int, optional): port TGIS will listen on for HTTP requests.
@@ -79,13 +79,14 @@ class ManagedTGISSubprocess:
                 boot before cancelling. Defaults to 30.
         """
         # parameters of the TGIS subprocess
-        self._model_path = model_path
+        self._model_id = None
         self._grpc_port = grpc_port
         self._http_port = http_port
         self._bootup_poll_delay = bootup_poll_delay
         self._health_poll_timeout = health_poll_timeout
         self._load_timeout = load_timeout
         self._num_gpus = num_gpus
+        log.debug("Managing local TGIS with %d GPU(s)", self._num_gpus)
 
         self._hostname = f"localhost:{self._grpc_port}"
         self._mutex = Lock()
@@ -103,6 +104,13 @@ class ManagedTGISSubprocess:
         """Return true if a request can be propagated to the subprocess"""
         return self._tgis_state == _TGISState.READY and self._tgis_client
 
+    def get_connection(self):
+        """Get the TGISConnection object for this local connection"""
+        return TGISConnection(
+            hostname=self._hostname,
+            _client=self.get_client(),
+        )
+
     def get_client(self):
         """Creates a gRPC client to the subprocess
 
@@ -119,9 +127,11 @@ class ManagedTGISSubprocess:
         log.warning("<MTS7717800W>", "get_client called with _tgis_client set to None")
         return None
 
-    def launch(self):
+    def launch(self, model_path: Optional[str] = None):
         """Launch the subprocess or restart it if it already exists"""
         with self._mutex:
+            if model_path:
+                self._model_id = model_path
             self._launch()
 
     def wait_until_ready(self, timeout: float = None):
@@ -191,7 +201,7 @@ class ManagedTGISSubprocess:
             [
                 "text-generation-launcher",
                 f"--num-shard {self._num_gpus}",
-                f"--model-name {self._model_path}",
+                f"--model-name {self._model_id}",
                 f"--port {self._http_port}",
             ]
         )
@@ -252,7 +262,7 @@ class ManagedTGISSubprocess:
                         self._create_grpc_client()
                         log.debug("_monitor_bootup setting state to READY")
                         self._tgis_state = _TGISState.READY
-                        log.debug("TGIS booted for model [%s]", self._model_path)
+                        log.debug("TGIS booted for model [%s]", self._model_id)
                         return
             except requests.exceptions.RequestException as e:
                 # Ignore ConnectionErrors that are expected during boot up
