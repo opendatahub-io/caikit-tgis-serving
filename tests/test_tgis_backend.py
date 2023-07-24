@@ -91,7 +91,7 @@ def mock_tgis_fixture():
     mock_tgis.stop()
 
 
-## Happy Path Tests ############################################################
+## Conn Config #################################################################
 
 
 def test_tgis_backend_is_registered():
@@ -186,14 +186,17 @@ def test_stop():
     tgis_be.get_client(model_id1)
     tgis_be.get_client(model_id2)
     assert tgis_be.is_started
-    assert tgis_be.get_connection(model_id1)
-    assert tgis_be.get_connection(model_id2)
+    assert tgis_be.get_connection(model_id1, False)
+    assert tgis_be.get_connection(model_id2, False)
 
     # Stop the backend and make sure both models get removed
     tgis_be.stop()
     assert not tgis_be.is_started
-    assert not tgis_be.get_connection(model_id1)
-    assert not tgis_be.get_connection(model_id2)
+    assert not tgis_be.get_connection(model_id1, False)
+    assert not tgis_be.get_connection(model_id2, False)
+
+
+## Local Subprocess ############################################################
 
 
 def test_construct_run_local():
@@ -364,6 +367,99 @@ def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
             ],
         ),
     )
+
+
+## Remote Models ###############################################################
+
+
+def test_tgis_backend_config_remote_models_only():
+    """Make sure that config works with only remote models"""
+    tgis_be = TGISBackend(
+        {
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert not tgis_be.local_tgis
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    assert not tgis_be.get_connection("baz")
+
+
+def test_tgis_backend_config_remote_models_with_connection():
+    """Make sure thatconfig works with only remote models and a connection
+    template
+    """
+    tgis_be = TGISBackend(
+        {
+            "connection": {"hostname": "foobar.{model_id}:123"},
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert not tgis_be.local_tgis
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    baz_conn = tgis_be.get_connection("baz")
+    assert baz_conn
+    assert baz_conn.hostname == "foobar.baz:123"
+
+
+def test_tgis_multi_model_client():
+    """Make sure that TGISBackend can manage multiple simultaneous client
+    objects to different running TGIS servers
+    """
+    prompt = "hello"
+    with TGISMock(prompt_responses={prompt: "foo"}) as tgis_foo:
+        with TGISMock(prompt_responses={prompt: "bar"}) as tgis_bar:
+            tgis_be = TGISBackend(
+                {
+                    "remote_models": {
+                        "foo": {"hostname": f"localhost:{tgis_foo.grpc_port}"},
+                        "bar": {"hostname": f"localhost:{tgis_bar.grpc_port}"},
+                    },
+                }
+            )
+            assert not tgis_be.local_tgis
+            assert tgis_be.get_connection("foo")
+            assert tgis_be.get_connection("bar")
+            foo_client = tgis_be.get_client("foo")
+            bar_client = tgis_be.get_client("bar")
+            for client, exp_res in [(foo_client, "foo"), (bar_client, "bar")]:
+                resp = client.Generate(
+                    generation_pb2.BatchedGenerationRequest(
+                        requests=[
+                            generation_pb2.GenerationRequest(text=prompt),
+                        ],
+                    ),
+                )
+                assert len(resp.responses) == 1
+                assert resp.responses[0].text == exp_res
+
+
+def test_tgis_backend_unload_multi_connection():
+    """Make sure that connections can be unloaded individually"""
+    tgis_be = TGISBackend(
+        {
+            "connection": {"hostname": "foobar.{model_id}:123"},
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    tgis_be.unload_model("foo")
+    assert not tgis_be.get_connection("foo", False)
+    assert tgis_be.get_connection("bar", False)
+    tgis_be.unload_model("bar")
+    assert not tgis_be.get_connection("foo", False)
+    assert not tgis_be.get_connection("bar", False)
 
 
 ## Failure Tests ###############################################################
