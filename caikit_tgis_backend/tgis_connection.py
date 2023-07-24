@@ -59,7 +59,6 @@ class TGISConnection:
         """Create an instance from a connection template and a model_id"""
         hostname = config.get(cls.HOSTNAME_KEY)
         if hostname:
-            template_raw = f"{cls.HOSTNAME_TEMPLATE_MODEL_ID}"
             hostname = hostname.format(
                 **{
                     cls.HOSTNAME_TEMPLATE_MODEL_ID: model_id,
