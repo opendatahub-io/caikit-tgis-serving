@@ -119,8 +119,6 @@ data:
       retention: 15d #Change as needed
 ~~~
 ### Adding resources to configure monitoring
-
-
 ```
 oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml -n ${TEST_NS}
 ```
@@ -164,7 +162,11 @@ sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-t
 ~~~
 
 ### Create Caikit ServingRuntime
-
+Before running the next line: if you are going to serve the model using CPU and not GPU, you need to set the following parameter in the runtime config (you find a comment in the YAML file too):
+```
+- name: DTYPE_STR
+  value: float32
+```
 ~~~
 oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
 ~~~
