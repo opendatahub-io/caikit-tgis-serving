@@ -134,6 +134,7 @@ oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${T
 
 ## Deploy Minio for example LLM model
 
+You have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
 ~~~
 ACCESS_KEY_ID=THEACCESSKEY
 SECRET_ACCESS_KEY=$(openssl rand -hex 32)
@@ -167,7 +168,7 @@ oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
 ~~~
 
 ### Deploy example model(flan-t5-samll)
-
+You have your model in another S3-like object storage (e.g., AWS S3), you can change according the connection data in the minio-secret.yaml and serviceaccount-minio.yaml from caikit-tgis-serving/demo/kserve/custom-manifests/minio/ path
 ~~~
 oc apply -f ./minio-secret-current.yaml -n ${TEST_NS} 
 oc create -f ./serviceaccount-minio-current.yaml -n ${TEST_NS}
