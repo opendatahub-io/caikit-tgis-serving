@@ -136,7 +136,7 @@ oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${T
 
 ## Deploy Minio for example LLM model
 
-You have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
+If you have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
 ~~~
 ACCESS_KEY_ID=THEACCESSKEY
 SECRET_ACCESS_KEY=$(openssl rand -hex 32)
