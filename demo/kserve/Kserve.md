@@ -6,6 +6,8 @@
 - CLI tools
   - oc cli
 
+- http2 enabled in the cluster
+
 - [Installed operators](#prerequisite-installation)
   - [Kiali](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
   - [Red Hat OpenShift distributed tracing platform](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
@@ -177,10 +179,34 @@ oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
 ~~~
 
 ### gRPC Test
+Ensure http2 protocol is enabled in the cluster
+~~~
+oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
+~~~
+
+If the annotation is either set to false or not present, enable it:
+~~~
+oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
+~~~
+
+If everything is set fine, you can run the following grpcurl command:
 ~~~
 export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
+The expected answer is something similar to:
+~~~
+{
+  "generated_token_count": "5",
+  "text": "74 degrees F",
+  "stop_reason": "EOS_TOKEN",
+  "producer_id": {
+    "name": "Text Generation",
+    "version": "0.1.0"
+  }
+}
+~~~
+
 
 ## Verifying Caikit Metrics
 
