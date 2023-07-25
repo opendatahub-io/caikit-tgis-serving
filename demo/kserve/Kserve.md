@@ -163,14 +163,14 @@ sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-t
 ### Create Caikit ServingRuntime
 
 ~~~
-oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml
+oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
 ~~~
 
 ### Deploy example model(flan-t5-samll)
 
 ~~~
-oc apply -f ./minio-secret-current.yaml 
-oc create -f ./serviceaccount-minio-current.yaml
+oc apply -f ./minio-secret-current.yaml -n ${TEST_NS} 
+oc create -f ./serviceaccount-minio-current.yaml -n ${TEST_NS}
 
 oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
 ~~~
