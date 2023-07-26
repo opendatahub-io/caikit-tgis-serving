@@ -3,6 +3,7 @@
 ## Prerequisite
 - Openshift Cluster 
   - This doc is written based on ROSA cluster
+  - many of the tasks in this tutorial require cluster-admin permission level (e.g., install operators, set service-mesh configuration, enable http2, etc)
 - CLI tools
   - oc cli
 
