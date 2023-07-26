@@ -3,8 +3,11 @@
 ## Prerequisite
 - Openshift Cluster 
   - This doc is written based on ROSA cluster
+  - many of the tasks in this tutorial require cluster-admin permission level (e.g., install operators, set service-mesh configuration, enable http2, etc)
 - CLI tools
   - oc cli
+
+- http2 enabled in the cluster
 
 - [Installed operators](#prerequisite-installation)
   - [Kiali](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
@@ -117,8 +120,6 @@ data:
       retention: 15d #Change as needed
 ~~~
 ### Adding resources to configure monitoring
-
-
 ```
 oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml -n ${TEST_NS}
 ```
@@ -134,6 +135,7 @@ oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${T
 
 ## Deploy Minio for example LLM model
 
+If you have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
 ~~~
 ACCESS_KEY_ID=THEACCESSKEY
 SECRET_ACCESS_KEY=$(openssl rand -hex 32)
@@ -155,31 +157,59 @@ If you have installed prerequisites(servicemesh,serverless,kserve and minio), yo
 ~~~
 export TEST_NS=kserve-demo
 oc new-project ${TEST_NS}
-sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr-test-ns.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
+oc patch smmr/default -n istio-system --type='json' -p="[{'op': 'add', 'path': '/spec/members/-', 'value': \"$TEST_NS\"}]"
 sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-test-ns.yaml | tee ./peer-authentication-test-ns-current.yaml | oc apply -f -
 # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 ~~~
 
 ### Create Caikit ServingRuntime
-
+Before running the next line: if you are going to serve the model using CPU and not GPU, you need to set the following parameter in the runtime config (you find a comment in the YAML file too):
+```
+- name: DTYPE_STR
+  value: float32
+```
 ~~~
-oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml
+oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
 ~~~
 
 ### Deploy example model(flan-t5-samll)
-
+You have your model in another S3-like object storage (e.g., AWS S3), you can change according the connection data in the minio-secret.yaml and serviceaccount-minio.yaml from caikit-tgis-serving/demo/kserve/custom-manifests/minio/ path
 ~~~
-oc apply -f ./minio-secret-current.yaml 
-oc create -f ./serviceaccount-minio-current.yaml
+oc apply -f ./minio-secret-current.yaml -n ${TEST_NS} 
+oc create -f ./serviceaccount-minio-current.yaml -n ${TEST_NS}
 
 oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
 ~~~
 
 ### gRPC Test
+Ensure http2 protocol is enabled in the cluster
 ~~~
-export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -o jsonpath='{.status.url}' | cut -d'/' -f3)
+oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
+~~~
+
+If the annotation is either set to false or not present, enable it:
+~~~
+oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
+~~~
+
+If everything is set fine, you can run the following grpcurl command:
+~~~
+export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
+The expected answer is something similar to:
+~~~
+{
+  "generated_token_count": "5",
+  "text": "74 degrees F",
+  "stop_reason": "EOS_TOKEN",
+  "producer_id": {
+    "name": "Text Generation",
+    "version": "0.1.0"
+  }
+}
+~~~
+
 
 ## Verifying Caikit Metrics
 
