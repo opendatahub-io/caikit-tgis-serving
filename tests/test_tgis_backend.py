@@ -17,6 +17,7 @@ Unit tests for TGIS backend
 
 # Standard
 from unittest import mock
+import os
 import time
 
 # Third Party
@@ -90,7 +91,7 @@ def mock_tgis_fixture():
     mock_tgis.stop()
 
 
-## Happy Path Tests ############################################################
+## Conn Config #################################################################
 
 
 def test_tgis_backend_is_registered():
@@ -103,7 +104,8 @@ def test_tgis_backend_config_valid_insecure(tgis_mock_insecure):
     blob for an insecure server
     """
     tgis_be = TGISBackend({"connection": {"hostname": tgis_mock_insecure.hostname}})
-    tgis_be.get_client("").Generate(
+    model_id = "test-model"
+    tgis_be.get_client(model_id).Generate(
         generation_pb2.BatchedGenerationRequest(
             requests=[
                 generation_pb2.GenerationRequest(text="Hello world"),
@@ -111,8 +113,10 @@ def test_tgis_backend_config_valid_insecure(tgis_mock_insecure):
         ),
     )
     assert tgis_be.is_started
-    assert not tgis_be.tls_enabled
-    assert not tgis_be.mtls_enabled
+    conn = tgis_be.get_connection(model_id)
+    assert conn
+    assert not conn.tls_enabled
+    assert not conn.mtls_enabled
 
 
 def test_tgis_backend_config_valid_tls(tgis_mock_tls):
@@ -127,7 +131,8 @@ def test_tgis_backend_config_valid_tls(tgis_mock_tls):
             },
         }
     )
-    tgis_be.get_client("").Generate(
+    model_id = "test-model"
+    tgis_be.get_client(model_id).Generate(
         generation_pb2.BatchedGenerationRequest(
             requests=[
                 generation_pb2.GenerationRequest(text="Hello world"),
@@ -135,8 +140,10 @@ def test_tgis_backend_config_valid_tls(tgis_mock_tls):
         ),
     )
     assert tgis_be.is_started
-    assert tgis_be.tls_enabled
-    assert not tgis_be.mtls_enabled
+    conn = tgis_be.get_connection(model_id)
+    assert conn
+    assert conn.tls_enabled
+    assert not conn.mtls_enabled
 
 
 def test_tgis_backend_config_valid_mtls(tgis_mock_mtls):
@@ -153,7 +160,8 @@ def test_tgis_backend_config_valid_mtls(tgis_mock_mtls):
             },
         }
     )
-    tgis_be.get_client("").Generate(
+    model_id = "test-model"
+    tgis_be.get_client(model_id).Generate(
         generation_pb2.BatchedGenerationRequest(
             requests=[
                 generation_pb2.GenerationRequest(text="Hello world"),
@@ -161,20 +169,34 @@ def test_tgis_backend_config_valid_mtls(tgis_mock_mtls):
         ),
     )
     assert tgis_be.is_started
-    assert tgis_be.tls_enabled
-    assert tgis_be.mtls_enabled
+    conn = tgis_be.get_connection(model_id)
+    assert conn
+    assert conn.tls_enabled
+    assert conn.mtls_enabled
 
 
 def test_stop():
-    """Make sure that a working backend instance can be stopped (cov!)"""
-    tgis_be = TGISBackend({"connection": {"hostname": "localhost:12345"}})
+    """Make sure that a working backend instance can be stopped"""
+    tgis_be = TGISBackend({"connection": {"hostname": "foo.bar.{model_id}:12345"}})
     assert not tgis_be.is_started
-    tgis_be.start()
+
+    # Add two models with get_client
+    model_id1 = "foo"
+    model_id2 = "bar"
+    tgis_be.get_client(model_id1)
+    tgis_be.get_client(model_id2)
     assert tgis_be.is_started
-    assert tgis_be._client is not None
+    assert tgis_be.get_connection(model_id1, False)
+    assert tgis_be.get_connection(model_id2, False)
+
+    # Stop the backend and make sure both models get removed
     tgis_be.stop()
     assert not tgis_be.is_started
-    assert tgis_be._client is None
+    assert not tgis_be.get_connection(model_id1, False)
+    assert not tgis_be.get_connection(model_id2, False)
+
+
+## Local Subprocess ############################################################
 
 
 def test_construct_run_local():
@@ -183,6 +205,7 @@ def test_construct_run_local():
     """
     assert TGISBackend({}).local_tgis
     assert TGISBackend({"connection": {}}).local_tgis
+    assert TGISBackend({"remote_models": {}}).local_tgis
 
     # When setting the connection to empty via the env, this is what it looks
     # like, so we want to make sure this doesn't error
@@ -192,7 +215,6 @@ def test_construct_run_local():
 def test_local_tgis_run(mock_tgis_fixture: MockTGISFixture):
     """Test that a "local tgis" (mocked) can be booted and maintained"""
     mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
-
     tgis_be = TGISBackend(
         {
             "local": {
@@ -347,6 +369,99 @@ def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
     )
 
 
+## Remote Models ###############################################################
+
+
+def test_tgis_backend_config_remote_models_only():
+    """Make sure that config works with only remote models"""
+    tgis_be = TGISBackend(
+        {
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert not tgis_be.local_tgis
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    assert not tgis_be.get_connection("baz")
+
+
+def test_tgis_backend_config_remote_models_with_connection():
+    """Make sure thatconfig works with only remote models and a connection
+    template
+    """
+    tgis_be = TGISBackend(
+        {
+            "connection": {"hostname": "foobar.{model_id}:123"},
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert not tgis_be.local_tgis
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    baz_conn = tgis_be.get_connection("baz")
+    assert baz_conn
+    assert baz_conn.hostname == "foobar.baz:123"
+
+
+def test_tgis_multi_model_client():
+    """Make sure that TGISBackend can manage multiple simultaneous client
+    objects to different running TGIS servers
+    """
+    prompt = "hello"
+    with TGISMock(prompt_responses={prompt: "foo"}) as tgis_foo:
+        with TGISMock(prompt_responses={prompt: "bar"}) as tgis_bar:
+            tgis_be = TGISBackend(
+                {
+                    "remote_models": {
+                        "foo": {"hostname": f"localhost:{tgis_foo.grpc_port}"},
+                        "bar": {"hostname": f"localhost:{tgis_bar.grpc_port}"},
+                    },
+                }
+            )
+            assert not tgis_be.local_tgis
+            assert tgis_be.get_connection("foo")
+            assert tgis_be.get_connection("bar")
+            foo_client = tgis_be.get_client("foo")
+            bar_client = tgis_be.get_client("bar")
+            for client, exp_res in [(foo_client, "foo"), (bar_client, "bar")]:
+                resp = client.Generate(
+                    generation_pb2.BatchedGenerationRequest(
+                        requests=[
+                            generation_pb2.GenerationRequest(text=prompt),
+                        ],
+                    ),
+                )
+                assert len(resp.responses) == 1
+                assert resp.responses[0].text == exp_res
+
+
+def test_tgis_backend_unload_multi_connection():
+    """Make sure that connections can be unloaded individually"""
+    tgis_be = TGISBackend(
+        {
+            "connection": {"hostname": "foobar.{model_id}:123"},
+            "remote_models": {
+                "foo": {"hostname": "foo:123"},
+                "bar": {"hostname": "bar:123"},
+            },
+        }
+    )
+    assert tgis_be.get_connection("foo")
+    assert tgis_be.get_connection("bar")
+    tgis_be.unload_model("foo")
+    assert not tgis_be.get_connection("foo", False)
+    assert tgis_be.get_connection("bar", False)
+    tgis_be.unload_model("bar")
+    assert not tgis_be.get_connection("foo", False)
+    assert not tgis_be.get_connection("bar", False)
+
+
 ## Failure Tests ###############################################################
 
 
@@ -357,30 +472,84 @@ def test_no_updated_config():
         tgis_be.register_config({"connection": {"hostname": "localhost:54321"}})
 
 
-def test_invalid_connection():
+@pytest.mark.parametrize(
+    "params",
+    [
+        ("not a dict", TypeError),
+        ({"hostname": "localhost"}, ValueError),
+        ({"hostname": "foo:123", "ca_cert_file": 1}, TypeError),
+        # Missing TLS Files
+        ({"hostname": "foo:123", "ca_cert_file": "not there"}, ValueError),
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_cert_file": "not there",
+                "client_key_file": __file__,
+            },
+            ValueError,
+        ),
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_cert_file": __file__,
+                "client_key_file": "not there",
+            },
+            ValueError,
+        ),
+        # TLS Files as dirs
+        (
+            {"hostname": "foo:123", "ca_cert_file": os.path.dirname(__file__)},
+            ValueError,
+        ),
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_cert_file": os.path.dirname(__file__),
+                "client_key_file": __file__,
+            },
+            ValueError,
+        ),
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_cert_file": __file__,
+                "client_key_file": os.path.dirname(__file__),
+            },
+            ValueError,
+        ),
+        # Bad TLS File combos
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_cert_file": __file__,
+            },
+            ValueError,
+        ),
+        (
+            {
+                "hostname": "foo:123",
+                "ca_cert_file": __file__,
+                "client_key_file": __file__,
+            },
+            ValueError,
+        ),
+        (
+            {
+                "hostname": "foo:123",
+                "client_cert_file": __file__,
+                "client_key_file": __file__,
+            },
+            ValueError,
+        ),
+    ],
+)
+def test_invalid_connection(params):
     """Make sure that invalid connections cause errors"""
-    # All forms of invalid hostname
-    with pytest.raises(TypeError):
-        TGISBackend({"connection": "not a dict"})
-    with pytest.raises(ValueError):
-        TGISBackend({"connection": {"hostname": "localhost"}})
-
-    # All forms of invalid TLS paths
-    with pytest.raises(TypeError):
-        TGISBackend(
-            {
-                "connection": {
-                    "hostname": "localhost:12345",
-                    "ca_cert_file": 12345,
-                },
-            }
-        )
-    with pytest.raises(ValueError):
-        TGISBackend(
-            {
-                "connection": {
-                    "hostname": "localhost:12345",
-                    "ca_cert_file": "not there",
-                },
-            }
-        )
+    conn, error_type = params
+    with pytest.raises(error_type):
+        TGISBackend({"connection": conn})
