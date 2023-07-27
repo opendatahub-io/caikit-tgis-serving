@@ -17,6 +17,7 @@
 from dataclasses import dataclass
 from typing import Optional
 import os
+import shutil
 
 # Third Party
 import grpc
@@ -41,18 +42,31 @@ class TLSFilePair:
 @dataclass
 class TGISConnection:
 
-    # Class members
+    #################
+    # Class members #
+    #################
+
+    # The URL (with port) for the connection
     hostname: str
+    # Path to CA cert when TGIS is running with TLS
     ca_cert_file: Optional[str] = None
+    # Paths to client key/cert pair when TGIS requires mTLS
     client_tls: Optional[TLSFilePair] = None
+    # Mounted directory where TGIS will look for prompt vector artifacts
+    prompt_dir: Optional[str] = None
+    # Private member to hold the client once created
     _client: Optional[generation_pb2_grpc.GenerationServiceStub] = None
 
-    # Class constants
+    ###################
+    # Class constants #
+    ###################
+
     HOSTNAME_KEY = "hostname"
     HOSTNAME_TEMPLATE_MODEL_ID = "model_id"
     CA_CERT_FILE_KEY = "ca_cert_file"
     CLIENT_CERT_FILE_KEY = "client_cert_file"
     CLIENT_KEY_FILE_KEY = "client_key_file"
+    PROMPT_DIR_KEY = "prompt_dir"
 
     @classmethod
     def from_config(cls, model_id: str, config: dict) -> Optional["TGISConnection"]:
@@ -65,6 +79,17 @@ class TGISConnection:
                 }
             )
             log.debug("Resolved hostname [%s] for model %s", hostname, model_id)
+
+            # Look for the prompt dir
+            prompt_dir = config.get(cls.PROMPT_DIR_KEY) or None
+            error.type_check(
+                "<TGB17909870E>",
+                str,
+                allow_none=True,
+                **{cls.PROMPT_DIR_KEY: prompt_dir},
+            )
+            if prompt_dir:
+                error.dir_check("<RGB69837665E>", prompt_dir)
 
             # Pull out the TLS info
             ca_cert = config.get(cls.CA_CERT_FILE_KEY) or None
@@ -120,7 +145,12 @@ class TGISConnection:
                 if client_cert
                 else None
             )
-            return cls(hostname=hostname, ca_cert_file=ca_cert, client_tls=client_tls)
+            return cls(
+                hostname=hostname,
+                ca_cert_file=ca_cert,
+                client_tls=client_tls,
+                prompt_dir=prompt_dir,
+            )
 
     @property
     def tls_enabled(self) -> bool:
@@ -129,6 +159,35 @@ class TGISConnection:
     @property
     def mtls_enabled(self) -> bool:
         return None not in [self.ca_cert_file, self.client_tls]
+
+    def load_prompt_artifacts(self, prompt_id: str, *artifact_paths):
+        """Load the given artifact paths to this TGIS connection
+
+        As implemented, this is a simple copy to the TGIS instance's prompt dir,
+        but it could extend to API interactions in the future.
+
+        TODO: If two copies of the runtime attempt to perform the same copy at
+            the same time, it could race and cause errors with the mounted
+            directory system.
+        """
+        error.value_check(
+            "<TGB07970356E>",
+            self.prompt_dir is not None,
+            "No prompt_dir configured for {}",
+            self.hostname,
+        )
+        error.type_check_all(
+            "<TGB23973965E>",
+            str,
+            artifact_paths=artifact_paths,
+        )
+        target_dir = os.path.join(self.prompt_dir, prompt_id)
+        os.makedirs(target_dir, exist_ok=True)
+        for artifact_path in artifact_paths:
+            error.file_check("<TGB14818050E>", artifact_path)
+            target_file = os.path.join(target_dir, os.path.basename(artifact_path))
+            log.debug3("Copying %s -> %s", artifact_path, target_file)
+            shutil.copyfile(artifact_path, target_file)
 
     def get_client(self) -> generation_pb2_grpc.GenerationServiceStub:
         """Get a grpc client for the connection"""

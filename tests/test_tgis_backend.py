@@ -18,6 +18,7 @@ Unit tests for TGIS backend
 # Standard
 from unittest import mock
 import os
+import tempfile
 import time
 
 # Third Party
@@ -369,6 +370,35 @@ def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
     )
 
 
+def test_local_tgis_with_prompt_dir(mock_tgis_fixture: MockTGISFixture):
+    """Test that a "local tgis" (mocked) can manage prompts"""
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+    with tempfile.TemporaryDirectory() as source_dir:
+        with tempfile.TemporaryDirectory() as prompt_dir:
+            tgis_be = TGISBackend(
+                {
+                    "local": {
+                        "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                        "http_port": mock_tgis_server.http_port,
+                        "health_poll_delay": 0.1,
+                        "prompt_dir": prompt_dir,
+                    },
+                }
+            )
+            assert tgis_be.local_tgis
+            assert not mock_tgis_fixture.server_launched()
+            local_model_id = "local_model"
+            tgis_be.get_client(local_model_id)
+
+            prompt_id = "some-prompt"
+            artifact_fname = "artifact.pt"
+            source_fname = os.path.join(source_dir, artifact_fname)
+            with open(source_fname, "w") as handle:
+                handle.write("stub")
+            tgis_be.load_prompt_artifacts(local_model_id, prompt_id, source_fname)
+            assert os.path.exists(os.path.join(prompt_dir, prompt_id, artifact_fname))
+
+
 ## Remote Models ###############################################################
 
 
@@ -460,6 +490,101 @@ def test_tgis_backend_unload_multi_connection():
     tgis_be.unload_model("bar")
     assert not tgis_be.get_connection("foo", False)
     assert not tgis_be.get_connection("bar", False)
+
+
+def test_tgis_backend_config_load_prompt_artifacts():
+    """Make sure that loading prompt artifacts behaves as expected"""
+    with tempfile.TemporaryDirectory() as source_dir:
+        with tempfile.TemporaryDirectory() as prompt_dir:
+
+            # Make some source files
+            source_fnames = ["prompt1.pt", "prompt2.pt"]
+            source_files = [os.path.join(source_dir, fname) for fname in source_fnames]
+            for source_file in source_files:
+                with open(source_file, "w") as handle:
+                    handle.write("stub")
+
+            # Set up a separate prompt dir for foo and bar
+            foo_prompt_dir = os.path.join(prompt_dir, "foo")
+            bar_prompt_dir = os.path.join(prompt_dir, "bar")
+            os.makedirs(foo_prompt_dir)
+            os.makedirs(bar_prompt_dir)
+
+            # Make the backend with two remotes that support prompts and one
+            # that does not
+            tgis_be = TGISBackend(
+                {
+                    "remote_models": {
+                        "foo": {"hostname": "foo:123", "prompt_dir": foo_prompt_dir},
+                        "bar": {"hostname": "bar:123", "prompt_dir": bar_prompt_dir},
+                        "baz": {"hostname": "bar:123"},
+                    },
+                }
+            )
+
+            # Make sure loading prompts lands on the right model and prompt
+            prompt_id1 = "prompt-one"
+            prompt_id2 = "prompt-two"
+            tgis_be.load_prompt_artifacts("foo", prompt_id1, source_files[0])
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert not os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            assert not os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert not os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            tgis_be.load_prompt_artifacts("foo", prompt_id2, source_files[1])
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            assert not os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert not os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            tgis_be.load_prompt_artifacts("bar", prompt_id1, source_files[0])
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            assert os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert not os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            tgis_be.load_prompt_artifacts("bar", prompt_id2, source_files[1])
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert os.path.exists(
+                os.path.join(foo_prompt_dir, prompt_id2, source_fnames[1])
+            )
+            assert os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id1, source_fnames[0])
+            )
+            assert os.path.exists(
+                os.path.join(bar_prompt_dir, prompt_id2, source_fnames[1])
+            )
+
+            # Make sure non-prompt models raise
+            with pytest.raises(ValueError):
+                tgis_be.load_prompt_artifacts("baz", prompt_id1, source_files[0])
+
+            # Make sure unknown model raises
+            with pytest.raises(ValueError):
+                tgis_be.load_prompt_artifacts("buz", prompt_id1, source_files[0])
 
 
 ## Failure Tests ###############################################################

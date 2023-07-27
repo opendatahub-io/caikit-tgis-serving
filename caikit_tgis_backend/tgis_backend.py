@@ -117,6 +117,7 @@ class TGISBackend(BackendBase):
                 health_poll_timeout=local_cfg.get("health_poll_timeout", 10),
                 load_timeout=local_cfg.get("load_timeout", 30),
                 num_gpus=local_cfg.get("num_gpus", 1),
+                prompt_dir=local_cfg.get("prompt_dir"),
             )
 
     def __del__(self):
@@ -189,7 +190,6 @@ class TGISBackend(BackendBase):
         # Return the client to the server
         return model_conn.get_client()
 
-    # pylint: disable=unused-argument
     def unload_model(self, model_id: str):
         """Unload the model from TGIS"""
         # If running locally, shut down the managed instance
@@ -200,6 +200,16 @@ class TGISBackend(BackendBase):
 
         # Remove the connection for this model
         self._model_connections.pop(model_id, None)
+
+    def load_prompt_artifacts(self, model_id: str, prompt_id: str, *prompt_artifacts):
+        """Load the given prompt artifacts for the given prompt against the base
+        model
+        """
+        conn = self.get_connection(model_id)
+        error.value_check(
+            "<TGB00822514E>", conn is not None, "Unknown model {}", model_id
+        )
+        conn.load_prompt_artifacts(prompt_id, *prompt_artifacts)
 
     @property
     def local_tgis(self) -> bool:
