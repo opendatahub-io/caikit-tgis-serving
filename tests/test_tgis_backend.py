@@ -370,6 +370,35 @@ def test_local_tgis_autorecovery(mock_tgis_fixture: MockTGISFixture):
     )
 
 
+def test_local_tgis_with_prompt_dir(mock_tgis_fixture: MockTGISFixture):
+    """Test that a "local tgis" (mocked) can manage prompts"""
+    mock_tgis_server: TGISMock = mock_tgis_fixture.mock_tgis_server
+    with tempfile.TemporaryDirectory() as source_dir:
+        with tempfile.TemporaryDirectory() as prompt_dir:
+            tgis_be = TGISBackend(
+                {
+                    "local": {
+                        "grpc_port": int(mock_tgis_server.hostname.split(":")[-1]),
+                        "http_port": mock_tgis_server.http_port,
+                        "health_poll_delay": 0.1,
+                        "prompt_dir": prompt_dir,
+                    },
+                }
+            )
+            assert tgis_be.local_tgis
+            assert not mock_tgis_fixture.server_launched()
+            local_model_id = "local_model"
+            tgis_be.get_client(local_model_id)
+
+            prompt_id = "some-prompt"
+            artifact_fname = "artifact.pt"
+            source_fname = os.path.join(source_dir, artifact_fname)
+            with open(source_fname, "w") as handle:
+                handle.write("stub")
+            tgis_be.load_prompt_artifacts(local_model_id, prompt_id, source_fname)
+            assert os.path.exists(os.path.join(prompt_dir, prompt_id, artifact_fname))
+
+
 ## Remote Models ###############################################################
 
 

@@ -63,6 +63,7 @@ class ManagedTGISSubprocess:
         bootup_poll_delay: float = 1,
         load_timeout: float = 30,
         num_gpus: int = 1,
+        prompt_dir: Optional[str] = None,
     ):
         """Create a ManagedTGISSubprocess
 
@@ -77,6 +78,9 @@ class ManagedTGISSubprocess:
                 checks during bootup. Defaults to 1.
             load_timeout (float, optional): number of seconds to wait for TGIS to
                 boot before cancelling. Defaults to 30.
+            num_gpus (int): The number of GPUs to use for this instance
+            prompt_dir (Optional[str]): A directory with write access to use as
+                the prompt cache for this instance
         """
         # parameters of the TGIS subprocess
         self._model_id = None
@@ -86,6 +90,10 @@ class ManagedTGISSubprocess:
         self._health_poll_timeout = health_poll_timeout
         self._load_timeout = load_timeout
         self._num_gpus = num_gpus
+        self._prompt_dir = prompt_dir
+        error.value_check(
+            "<TGB54435438E>", prompt_dir is None or os.path.isdir(prompt_dir)
+        )
         log.debug("Managing local TGIS with %d GPU(s)", self._num_gpus)
 
         self._hostname = f"localhost:{self._grpc_port}"
@@ -108,6 +116,7 @@ class ManagedTGISSubprocess:
         """Get the TGISConnection object for this local connection"""
         return TGISConnection(
             hostname=self._hostname,
+            prompt_dir=self._prompt_dir,
             _client=self.get_client(),
         )
 
@@ -208,6 +217,9 @@ class ManagedTGISSubprocess:
         log.debug2("Launching TGIS with command: [%s]", launch_cmd)
         env = os.environ.copy()
         env["GRPC_PORT"] = str(self._grpc_port)
+        if self._prompt_dir is not None:
+            env["PREFIX_STORE_PATH"] = self._prompt_dir
+
         # Long running process
         # pylint: disable=consider-using-with
         self._tgis_proc = subprocess.Popen(shlex.split(launch_cmd), env=env)

@@ -117,6 +117,7 @@ class TGISBackend(BackendBase):
                 health_poll_timeout=local_cfg.get("health_poll_timeout", 10),
                 load_timeout=local_cfg.get("load_timeout", 30),
                 num_gpus=local_cfg.get("num_gpus", 1),
+                prompt_dir=local_cfg.get("prompt_dir"),
             )
 
     def __del__(self):
