@@ -7,3 +7,10 @@ metadata:
 spec:
   mtls:
     mode: STRICT
+  portLevelMtls:
+    '8086':
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      serving.knative.dev/service: caikit-example-isvc-predictor-default # replace with the appropriate label for your ksvc
+
