@@ -194,7 +194,7 @@ oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enabl
 
 If everything is set fine, you can run the following grpcurl command:
 ~~~
-export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor-default -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
 The expected answer is something similar to:
