@@ -6,6 +6,10 @@
   - many of the tasks in this tutorial require cluster-admin permission level (e.g., install operators, set service-mesh configuration, enable http2, etc)
 - CLI tools
   - oc cli
+- To enable metrics
+  - cluster-admin is needed to enable User Workload Monitoring on the cluster
+  - [Enable User Workload Monitoring](#enable-user-workload-monitoring)
+  - [Configure User Workload Monitoring](#configure-user-workload-monitoring)
 
 - http2 enabled in the cluster
 
@@ -16,6 +20,31 @@
     - ServiceMeshControlPlan
   - [Openshift Serverless](https://docs.openshift.com/serverless/1.29/install/install-serverless-operator.html)
   - [OpenDataHub](https://opendatahub.io/docs/quick-installation/)
+
+#### Enable User Workload Monitoring
+~~~
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+~~~
+#### Configure User Workload Monitoring
+~~~
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-workload-monitoring-config
+  namespace: openshift-user-workload-monitoring
+data:
+  config.yaml: |
+    prometheus:
+      logLevel: debug 
+      retention: 15d #Change as needed
+~~~
 
 ## Reference
 - https://github.com/ReToCode/knative-kserve#installation-with-istio--mesh
@@ -90,48 +119,6 @@ sleep 30
 oc create -f custom-manifests/opendatahub/kfdef-kserve-op.yaml
 ~~~
 
-## Enable metrics for caikit serving
-
-Note: We are currently enabling metrics by setting a port-level `permissive` mTLS to be able to scrape caikit metrics from the 8086 port of `kserve-container`
-### Prerequisites
-*cluster-admin is needed to enable user-workload-monitoring*
-#### Enable User Workload Monitoring
-~~~
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cluster-monitoring-config
-  namespace: openshift-monitoring
-data:
-  config.yaml: |
-    enableUserWorkload: true
-~~~
-#### Configure User Workload Monitoring
-~~~
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: user-workload-monitoring-config
-  namespace: openshift-user-workload-monitoring
-data:
-  config.yaml: |
-    prometheus:
-      logLevel: debug 
-      retention: 15d #Change as needed
-~~~
-### Adding resources to configure monitoring
-```
-oc apply -f ./custom-manifests/metrics/networkpolicy-uwm.yaml -n ${TEST_NS}
-```
-Edit the `peerauthentication-caikit-metrics` file to apply the appropriate `matchLabel` according to your `serving.knative.dev/service` label
-
-```
-oc apply -f ./custom-manifests/metrics/peerauthentication-caikit-metrics.yaml -n ${TEST_NS}
-```
-```
-oc apply -f ./custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
-oc apply -f ./custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
-```
 
 ## Deploy Minio for example LLM model
 
@@ -157,9 +144,15 @@ If you have installed prerequisites(servicemesh,serverless,kserve and minio), yo
 ~~~
 export TEST_NS=kserve-demo
 oc new-project ${TEST_NS}
+sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr-test-ns.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
 oc patch smmr/default -n istio-system --type='json' -p="[{'op': 'add', 'path': '/spec/members/-', 'value': \"$TEST_NS\"}]"
+~~~
+To enable metrics, the PeerAuthentication needs the appropriate service label for `matchLabel`. The expected service label is `<isvc-name>-predictor-default`
+The existing file has been configured to work with the example isvc in this repo.
+~~~
 sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/peer-authentication-test-ns.yaml | tee ./peer-authentication-test-ns-current.yaml | oc apply -f -
 # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
+# oc apply -f custom-manifests/metrics/networkpolicy-uwm.yaml -n ${TEST_NS}
 ~~~
 
 ### Create Caikit ServingRuntime
@@ -179,6 +172,12 @@ oc apply -f ./minio-secret-current.yaml -n ${TEST_NS}
 oc create -f ./serviceaccount-minio-current.yaml -n ${TEST_NS}
 
 oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
+
+# Resources needed to enable metrics for the model 
+# The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`
+# The metrics service in this repo is configured to work with the example model. If you are deploying a different model or using a different model name, change the label accordingly. 
+oc apply -f custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
+oc apply -f custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
 ~~~
 
 ### gRPC Test
