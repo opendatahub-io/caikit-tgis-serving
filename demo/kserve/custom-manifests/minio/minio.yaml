@@ -16,9 +16,6 @@ kind: Pod
 metadata:
   labels:
     app: minio
-    maistra.io/expose-route: 'true'
-  annotations:
-    sidecar.istio.io/inject: 'true'
   name: minio
 spec:
   containers:
@@ -27,10 +24,9 @@ spec:
         - /data1
       env:
         - name: MINIO_ACCESS_KEY
-          value:  THEACCESSKEY
+          value:  <accesskey>
         - name: MINIO_SECRET_KEY
           value: <secretkey>
-      # image: quay.io/jooholee/modelmesh-minio-examples:openvino
-      image: quay.io/jooholee/minio-examples:caikit-flan-t5
+      image: quay.io/opendatahub/modelmesh-minio-examples:caikit-flan-t5
       imagePullPolicy: Always
       name: minio

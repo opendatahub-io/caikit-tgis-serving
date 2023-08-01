@@ -7,4 +7,3 @@ spec:
   members:
     - knative-serving
     - kserve
-    - <test_ns>
