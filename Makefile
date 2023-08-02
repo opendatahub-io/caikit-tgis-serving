@@ -23,7 +23,6 @@ refresh-piplock-files:
 
 docker-test: default
 	podman run -it --rm \
-		-e DTYPE_STR=float32 \
 		--name caikit-tgis-serving-test-$$(git rev-parse --short HEAD) \
 		--volume $$(pwd)/test:/tmp/test:z --volume $$(pwd)/utils:/tmp/utils:z \
 		caikit-tgis-serving:$$(git rev-parse --short HEAD) \
@@ -34,7 +33,6 @@ docker-test: default
 
 shell: default
 	podman run -it --rm \
-		-e DTYPE_STR=float32 \
 		--name caikit-tgis-serving-test-$$(git rev-parse --short HEAD) \
 		--volume $$(pwd)/test:/tmp/test:z --volume $$(pwd)/utils:/tmp/utils:z \
 		caikit-tgis-serving:$$(git rev-parse --short HEAD) \
