@@ -7,11 +7,6 @@ spec:
   - env:
     - name: RUNTIME_LOCAL_MODELS_DIR
       value: /mnt/models
-    # Use this to enable CPU-only inferencing
-    # - name: DTYPE_STR 
-    #   value: float32
-    # TODO: This will eventually point to the official image
-    # Note: This is currently the latest image, this can change frequently
     image: quay.io/opendatahub/caikit-tgis-serving:stable-4d0134e
     name: kserve-container
     ports:
