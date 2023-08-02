@@ -1,11 +1,12 @@
-FROM quay.io/opendatahub/text-generation-inference:fast-836fa5f
+FROM quay.io/opendatahub/text-generation-inference:fast-ec05689
 
 USER root
 
 WORKDIR /caikit
 COPY caikit /caikit
 
-RUN yum -y install git && yum clean all && \
+RUN yum -y install git git-lfs && yum clean all && \
+    git lfs install && \
     pip install pipenv && \
     pipenv install --system && \
     rm -rf ~/.cache && \
@@ -16,7 +17,8 @@ RUN yum -y install git && yum clean all && \
 
 USER 1001
 
-ENV RUNTIME_LIBRARY='caikit_nlp' \
+ENV TRANSFORMERS_CACHE="/tmp/transformers_cache" \
+    RUNTIME_LIBRARY='caikit_nlp' \
     RUNTIME_LOCAL_MODELS_DIR='/opt/models'
 
 CMD [ "./start-serving.sh" ]

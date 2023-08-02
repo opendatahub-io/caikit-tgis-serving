@@ -12,17 +12,21 @@ inference_plugin:
     max_loading_concurrency: 1
     latency_based_autoscaling_enabled: false
 
-module_backends:
-  load_priority:
-    - type: TGIS
+model_management:
+  initializers:
+    default:
+      type: LOCAL
       config:
-        local:
-          load_timeout: 120
-          grpc_port: null
-          http_port: null
-          health_poll_delay: 1.0
-        connection:
-          hostname: "TGIS_HOSTNAME"
-          ca_cert_file: null
-          client_cert_file: null
-          client_key_file: null
+        backend_priority:
+          - type: TGIS
+            config:
+              local:
+                load_timeout: 120
+                grpc_port: null
+                http_port: null
+                health_poll_delay: 1.0
+              connection:
+                hostname: "TGIS_HOSTNAME"
+                ca_cert_file: null
+                client_cert_file: null
+                client_key_file: null
