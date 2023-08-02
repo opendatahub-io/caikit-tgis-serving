@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: caikit-example-isvc-predictor-default-sm
+  labels:
+    name: caikit-example-isvc-predictor-default-sm
+spec:
+  ports:
+    - name: caikit-metrics
+      protocol: TCP
+      port: 8086
+      targetPort: 8086
+  type: ClusterIP
+  selector:
+    serving.knative.dev/service: caikit-example-isvc-predictor-default

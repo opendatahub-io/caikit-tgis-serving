@@ -1,0 +1,58 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+ name: odh-mesh
+spec:
+ applications:
+ - kustomizeConfig:
+      parameters:
+        - name: namespace
+          value: istio-system
+      repoRef:
+        name: manifests
+        path: service-mesh/control-plane
+   name: control-plane
+ - kustomizeConfig:
+      overlays:
+        - service-mesh
+      repoRef:
+        name: manifests
+        path: odh-common
+   name: odh-common
+ - kustomizeConfig:
+      overlays:
+        - service-mesh
+        - dev
+      repoRef:
+        name: manifests
+        path: odh-dashboard
+   name: odh-dashboard
+ - kustomizeConfig:
+      overlays:
+        - service-mesh
+      repoRef:
+        name: manifests
+        path: odh-notebook-controller
+   name: odh-notebook-controller
+ - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odh-project-controller
+   name: odh-project-controller
+ - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: notebook-images
+   name: notebook-images
+ - kustomizeConfig:
+      parameters:
+        - name: namespace
+          value: auth-provider
+      repoRef:
+        name: manifests
+        path: service-mesh/authorino
+   name: authorino
+ repos:
+ - name: manifests
+   uri: https://github.com/maistra/odh-manifests/tarball/service-mesh-integration
+ version: service-mesh-integration

@@ -1,0 +1,23 @@
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: minimal
+  namespace: istio-system
+spec:
+  addons:
+    grafana:
+      enabled: false
+    kiali:
+      name: kiali
+      enabled: true
+    prometheus:
+      enabled: true
+    jaeger: 
+      name: jaeger
+  security:
+    dataPlane:
+      mtls: false # otherwise inference-graph will not work. We use PeerAuthentication resources to force mTLS
+    identity:
+      type: ThirdParty        
+  profiles:
+    - default

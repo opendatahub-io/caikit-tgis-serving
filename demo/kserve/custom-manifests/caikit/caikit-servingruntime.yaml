@@ -7,8 +7,12 @@ spec:
   - env:
     - name: RUNTIME_LOCAL_MODELS_DIR
       value: /mnt/models
+    # Use this to enable CPU-only inferencing
+    # - name: DTYPE_STR 
+    #   value: float32
     # TODO: This will eventually point to the official image
-    image: quay.io/opendatahub/caikit-tgis-serving@sha256:20cbc7b312e0dc63903d4a2c7d70b741135ffea31113af63dd8691da4baae0f9
+    # Note: This is currently the latest image, this can change frequently
+    image: quay.io/opendatahub/caikit-tgis-serving:pr-25
     name: kserve-container
     ports:
     # Note, KServe only allows a single port, this is the gRPC port. Subject to change in the future
@@ -17,8 +21,8 @@ spec:
       protocol: TCP
     resources:
       requests:
-        cpu: 8
-        memory: 16Gi
+        cpu: 4
+        memory: 8Gi
   multiModel: false
   supportedModelFormats:
   # Note: this currently *only* supports caikit format models

@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: caikit-example-isvc-predictor-default-sm
+spec:
+  endpoints:
+    - port: caikit-metrics
+      scheme: http
+  namespaceSelector: {}
+  selector:
+    matchLabels:
+      name: caikit-example-isvc-predictor-default-sm
