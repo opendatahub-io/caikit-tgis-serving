@@ -144,7 +144,6 @@ If you have installed prerequisites(servicemesh,serverless,kserve and minio), yo
 ~~~
 export TEST_NS=kserve-demo
 oc new-project ${TEST_NS}
-sed "s/<test_ns>/$TEST_NS/g" custom-manifests/service-mesh/smmr-test-ns.yaml | tee ./smmr-current.yaml | oc -n istio-system apply -f -
 oc patch smmr/default -n istio-system --type='json' -p="[{'op': 'add', 'path': '/spec/members/-', 'value': \"$TEST_NS\"}]"
 ~~~
 To enable metrics, the PeerAuthentication needs the appropriate service label for `matchLabel`. The expected service label is `<isvc-name>-predictor-default`
