@@ -29,6 +29,11 @@ class GenerationServiceStub(object):
                 request_serializer=generation__pb2.BatchedTokenizeRequest.SerializeToString,
                 response_deserializer=generation__pb2.BatchedTokenizeResponse.FromString,
                 )
+        self.ModelInfo = channel.unary_unary(
+                '/fmaas.GenerationService/ModelInfo',
+                request_serializer=generation__pb2.ModelInfoRequest.SerializeToString,
+                response_deserializer=generation__pb2.ModelInfoResponse.FromString,
+                )
 
 
 class GenerationServiceServicer(object):
@@ -55,6 +60,13 @@ class GenerationServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ModelInfo(self, request, context):
+        """Model info
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GenerationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -72,6 +84,11 @@ def add_GenerationServiceServicer_to_server(servicer, server):
                     servicer.Tokenize,
                     request_deserializer=generation__pb2.BatchedTokenizeRequest.FromString,
                     response_serializer=generation__pb2.BatchedTokenizeResponse.SerializeToString,
+            ),
+            'ModelInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.ModelInfo,
+                    request_deserializer=generation__pb2.ModelInfoRequest.FromString,
+                    response_serializer=generation__pb2.ModelInfoResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -131,5 +148,22 @@ class GenerationService(object):
         return grpc.experimental.unary_unary(request, target, '/fmaas.GenerationService/Tokenize',
             generation__pb2.BatchedTokenizeRequest.SerializeToString,
             generation__pb2.BatchedTokenizeResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ModelInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/fmaas.GenerationService/ModelInfo',
+            generation__pb2.ModelInfoRequest.SerializeToString,
+            generation__pb2.ModelInfoResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
