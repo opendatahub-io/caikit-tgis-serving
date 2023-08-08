@@ -678,3 +678,26 @@ def test_invalid_connection(params):
     conn, error_type = params
     with pytest.raises(error_type):
         TGISBackend({"connection": conn})
+
+
+def test_tgis_backend_conn_testing_enabled(tgis_mock_insecure):
+    """Make sure that the TGIS backend can be configured with a valid config
+    blob for an insecure server and connection testing enabled
+    """
+    tgis_be = TGISBackend(
+        {
+            "connection": {"hostname": tgis_mock_insecure.hostname},
+            "test_connections": True,
+        }
+    )
+    model_id = "test-model"
+    tgis_be.get_client(model_id).Generate(
+        generation_pb2.BatchedGenerationRequest(
+            requests=[
+                generation_pb2.GenerationRequest(text="Hello world"),
+            ],
+        ),
+    )
+    assert tgis_be.is_started
+    conn = tgis_be.get_connection(model_id)
+    conn.test_connection()
