@@ -116,6 +116,7 @@ class ManagedTGISSubprocess:
         """Get the TGISConnection object for this local connection"""
         return TGISConnection(
             hostname=self._hostname,
+            model_id=self._model_id,
             prompt_dir=self._prompt_dir,
             _client=self.get_client(),
         )

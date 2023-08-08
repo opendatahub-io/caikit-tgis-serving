@@ -48,6 +48,8 @@ class TGISConnection:
 
     # The URL (with port) for the connection
     hostname: str
+    # The model_id associated with this connection
+    model_id: str
     # Path to CA cert when TGIS is running with TLS
     ca_cert_file: Optional[str] = None
     # Paths to client key/cert pair when TGIS requires mTLS
@@ -147,6 +149,7 @@ class TGISConnection:
             )
             return cls(
                 hostname=hostname,
+                model_id=model_id,
                 ca_cert_file=ca_cert,
                 client_tls=client_tls,
                 prompt_dir=prompt_dir,
@@ -225,7 +228,7 @@ class TGISConnection:
         grpc.RpcError will be raised
         """
         client = self.get_client()
-        client.ModelInfo(generation_pb2.ModelInfoRequest())
+        client.ModelInfo(generation_pb2.ModelInfoRequest(model_id=self.model_id))
 
     @staticmethod
     def _load_tls_file(file_path: Optional[str]) -> Optional[bytes]:

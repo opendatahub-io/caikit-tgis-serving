@@ -186,14 +186,14 @@ def test_load_prompt_artifacts_no_prompt_dir():
 
 def test_connection_valid_endpoint(tgis_mock_insecure):
     """Make sure that a connection test works with a valid server"""
-    conn = TGISConnection(hostname=tgis_mock_insecure.hostname)
+    conn = TGISConnection(hostname=tgis_mock_insecure.hostname, model_id="asdf")
     conn.test_connection()
 
 
 def test_connection_invalid_endpoint():
     """Make sure that a connection test works with a valid server"""
     hostname = f"localhost:{tls_test_tools.open_port()}"
-    conn = TGISConnection(hostname=hostname)
+    conn = TGISConnection(hostname=hostname, model_id="foobar")
     with pytest.raises(grpc.RpcError):
         conn.test_connection()
 
