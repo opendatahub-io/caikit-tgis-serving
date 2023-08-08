@@ -27,7 +27,7 @@ from caikit.core.toolkit.errors import error_handler
 import alog
 
 # Local
-from .protobufs import generation_pb2_grpc
+from .protobufs import generation_pb2, generation_pb2_grpc
 
 log = alog.use_channel("TGCONN")
 error = error_handler.get(log)
@@ -219,6 +219,13 @@ class TGISConnection:
                 channel = grpc.secure_channel(self.hostname, credentials=credentials)
             self._client = generation_pb2_grpc.GenerationServiceStub(channel)
         return self._client
+
+    def test_connection(self):
+        """Test whether the connection is valid. If not valid, an appropriate
+        grpc.RpcError will be raised
+        """
+        client = self.get_client()
+        client.ModelInfo(generation_pb2.ModelInfoRequest())
 
     @staticmethod
     def _load_tls_file(file_path: Optional[str]) -> Optional[bytes]:

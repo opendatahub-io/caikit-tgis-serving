@@ -90,6 +90,9 @@ class TGISMockServicer(generation_pb2_grpc.GenerationServiceServicer):
             responses=[self._gen_resp(req.text) for req in request.requests],
         )
 
+    def ModelInfo(self, request, context):
+        return generation_pb2.ModelInfoResponse()
+
     def _gen_resp(self, request_text: str) -> generation_pb2.GenerationResponse:
         """Generate a single response"""
 

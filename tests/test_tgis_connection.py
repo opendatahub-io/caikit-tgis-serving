@@ -20,10 +20,13 @@ import os
 import tempfile
 
 # Third Party
+import grpc
 import pytest
+import tls_test_tools
 
 # Local
 from caikit_tgis_backend.tgis_connection import TGISConnection
+from tests.tgis_mock import tgis_mock_insecure
 
 
 @contextmanager
@@ -179,6 +182,20 @@ def test_load_prompt_artifacts_no_prompt_dir():
         prompt_id = "some-prompt-id"
         with pytest.raises(ValueError):
             conn.load_prompt_artifacts(prompt_id, *source_files)
+
+
+def test_connection_valid_endpoint(tgis_mock_insecure):
+    """Make sure that a connection test works with a valid server"""
+    conn = TGISConnection(hostname=tgis_mock_insecure.hostname)
+    conn.test_connection()
+
+
+def test_connection_invalid_endpoint():
+    """Make sure that a connection test works with a valid server"""
+    hostname = f"localhost:{tls_test_tools.open_port()}"
+    conn = TGISConnection(hostname=hostname)
+    with pytest.raises(grpc.RpcError):
+        conn.test_connection()
 
 
 # NOTE: All failure cases are exercised by test_invalid_connection in
