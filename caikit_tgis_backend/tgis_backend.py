@@ -18,6 +18,9 @@
 from threading import Lock
 from typing import Dict, Optional
 
+# Third Party
+import grpc
+
 # First Party
 from caikit.core.module_backends.backend_types import register_backend_type
 from caikit.core.module_backends.base import BackendBase
@@ -38,8 +41,9 @@ class TGISBackend(BackendBase):
     details are given, this backend will manage an instance of the TGIS as a
     subprocess for the lifecycle of the model that needs it.
 
-    NOTE: Currently TGIS does not support multiple models, so calls to get a
-        client for a model _other_ than the first one will fail!
+    NOTE: Currently TGIS does not support multiple models, so when running TGIS
+        locally, calls to get a client for a model _other_ than the first one
+        will fail!
 
     TODO: To handle multi-model TGIS, we can maintain an independent process for
         each model. To do this, we'd need to dynamically generate the port and
@@ -64,6 +68,7 @@ class TGISBackend(BackendBase):
         self._local_tgis = None
         self._managed_tgis = None
         self._model_connections = {}
+        self._test_connections = self.config.get("test_connections", False)
 
         # Parse the config to see if we're managing a connection to a remote
         # TGIS instance or running a local copy
@@ -101,7 +106,20 @@ class TGISBackend(BackendBase):
                 "Invalid connection config for {}",
                 model_id,
             )
-            self._model_connections[model_id] = model_conn
+            if self._test_connections:
+                try:
+                    model_conn.test_connection()
+                except grpc.RpcError as err:
+                    log.warning(
+                        "<TGB95244222W>",
+                        "Unable to connect to model %s: %s",
+                        model_id,
+                        err,
+                        exc_info=True,
+                    )
+                    model_conn = None
+            if model_conn is not None:
+                self._model_connections[model_id] = model_conn
 
         # We manage a local TGIS instance if there are no remote connections
         # specified as either a valid base connection or remote_connections
@@ -159,11 +177,25 @@ class TGISBackend(BackendBase):
             and not self.local_tgis
             and self._base_connection_cfg
         ):
-            with self._mutex:
-                model_conn = self._model_connections.setdefault(
-                    model_id,
-                    TGISConnection.from_config(model_id, self._base_connection_cfg),
-                )
+            model_conn = TGISConnection.from_config(model_id, self._base_connection_cfg)
+            if self._test_connections:
+                try:
+                    model_conn.test_connection()
+                except grpc.RpcError as err:
+                    log.warning(
+                        "<TGB50048960W>",
+                        "Unable to connect to model %s: %s",
+                        model_id,
+                        err,
+                        exc_info=True,
+                    )
+                    model_conn = None
+            if model_conn is not None:
+                # NOTE: setdefault used here to avoid the need to hold the mutex
+                #   when running the connection test. It's possible that two
+                #   threads would stimulate the creation of the connection
+                #   concurrently, so just keep whichever dict update lands first
+                self._model_connections.setdefault(model_id, model_conn)
         return model_conn
 
     def get_client(self, model_id: str) -> generation_pb2_grpc.GenerationServiceStub:

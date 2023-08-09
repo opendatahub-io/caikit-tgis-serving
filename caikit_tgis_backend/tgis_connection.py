@@ -27,7 +27,7 @@ from caikit.core.toolkit.errors import error_handler
 import alog
 
 # Local
-from .protobufs import generation_pb2_grpc
+from .protobufs import generation_pb2, generation_pb2_grpc
 
 log = alog.use_channel("TGCONN")
 error = error_handler.get(log)
@@ -48,6 +48,8 @@ class TGISConnection:
 
     # The URL (with port) for the connection
     hostname: str
+    # The model_id associated with this connection
+    model_id: str
     # Path to CA cert when TGIS is running with TLS
     ca_cert_file: Optional[str] = None
     # Paths to client key/cert pair when TGIS requires mTLS
@@ -147,6 +149,7 @@ class TGISConnection:
             )
             return cls(
                 hostname=hostname,
+                model_id=model_id,
                 ca_cert_file=ca_cert,
                 client_tls=client_tls,
                 prompt_dir=prompt_dir,
@@ -219,6 +222,13 @@ class TGISConnection:
                 channel = grpc.secure_channel(self.hostname, credentials=credentials)
             self._client = generation_pb2_grpc.GenerationServiceStub(channel)
         return self._client
+
+    def test_connection(self):
+        """Test whether the connection is valid. If not valid, an appropriate
+        grpc.RpcError will be raised
+        """
+        client = self.get_client()
+        client.ModelInfo(generation_pb2.ModelInfoRequest(model_id=self.model_id))
 
     @staticmethod
     def _load_tls_file(file_path: Optional[str]) -> Optional[bytes]:
