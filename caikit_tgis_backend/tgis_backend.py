@@ -177,24 +177,25 @@ class TGISBackend(BackendBase):
             and not self.local_tgis
             and self._base_connection_cfg
         ):
-            with self._mutex:
-                model_conn = TGISConnection.from_config(
-                    model_id, self._base_connection_cfg
-                )
-                if self._test_connections:
-                    try:
-                        model_conn.test_connection()
-                    except grpc.RpcError as err:
-                        log.warning(
-                            "<TGB50048960W>",
-                            "Unable to connect to model %s: %s",
-                            model_id,
-                            err,
-                            exc_info=True,
-                        )
-                        model_conn = None
-                if model_conn is not None:
-                    self._model_connections.setdefault(model_id, model_conn)
+            model_conn = TGISConnection.from_config(model_id, self._base_connection_cfg)
+            if self._test_connections:
+                try:
+                    model_conn.test_connection()
+                except grpc.RpcError as err:
+                    log.warning(
+                        "<TGB50048960W>",
+                        "Unable to connect to model %s: %s",
+                        model_id,
+                        err,
+                        exc_info=True,
+                    )
+                    model_conn = None
+            if model_conn is not None:
+                # NOTE: setdefault used here to avoid the need to hold the mutex
+                #   when running the connection test. It's possible that two
+                #   threads would stimulate the creation of the connection
+                #   concurrently, so just keep whichever dict update lands first
+                self._model_connections.setdefault(model_id, model_conn)
         return model_conn
 
     def get_client(self, model_id: str) -> generation_pb2_grpc.GenerationServiceStub:
