@@ -6,4 +6,7 @@ metadata:
 spec:
   members:
     - knative-serving
+    - kserve
+    - kserve-demo
     - opendatahub
+    - auth-provider

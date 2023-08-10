@@ -50,8 +50,21 @@ data:
 - https://github.com/ReToCode/knative-kserve#installation-with-istio--mesh
 - https://knative.dev/docs/install/operator/knative-with-operators/#create-the-knative-serving-custom-resource
   
+## Export Environment Variables
+~~~
+# You can choose odh or rhods here.
+export TARGET_OPERATOR=odh
+# brew is a registry where WIP images are published. You need to ask the tag to use and it changes for every build 
+# export BREW_TAG=552986
+~~~
+
 ## Prerequisite installation
 ~~~
+source ./scripts/env.sh
+export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
+export TARGET_OPERATOR_NS=$(getOpNS)
+export KSERVE_OPERATOR_NS=$(getKserveNS)
+
 git clone https://github.com/opendatahub-io/caikit-tgis-serving
 cd caikit-tgis-serving/demo/kserve
 
@@ -73,10 +86,11 @@ oc wait --for=condition=ready pod -l app=istio-egressgateway -n istio-system --t
 oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 
 # kserve/knative
-oc create ns kserve
+oc create ns ${KSERVE_OPERATOR_NS}
 oc create ns knative-serving
-oc -n istio-system apply -f custom-manifests/service-mesh/smmr.yaml 
+oc -n istio-system apply -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR_TYPE}.yaml 
 oc apply -f custom-manifests/service-mesh/peer-authentication.yaml
+oc apply -f custom-manifests/service-mesh/peer-authentication-${TARGET_OPERATOR_TYPE}.yaml 
 # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
 
 oc apply -f custom-manifests/serverless/operators.yaml
@@ -98,27 +112,42 @@ oc wait --for=condition=ready pod -l app=activator -n knative-serving --timeout=
 oc wait --for=condition=ready pod -l app=autoscaler -n knative-serving --timeout=300s
 
 # Generate wildcard cert for a gateway.
-export BASE_DIR=/tmp/certs
+export BASE_DIR=/tmp/kserve
+export BASE_CERT_DIR=${BASE_DIR}/certs
 export DOMAIN_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' | awk -F'.' '{print $(NF-1)"."$NF}')
 export COMMON_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}'|sed 's/apps.//')
 
 mkdir ${BASE_DIR}
+mkdir ${BASE_CERT_DIR}
 
 ## Generate wildcard cert using openssl
-./scripts/generate-wildcard-certs.sh ${BASE_DIR} ${DOMAIN_NAME} ${COMMON_NAME}
+./scripts/generate-wildcard-certs.sh ${BASE_CERT_DIR} ${DOMAIN_NAME} ${COMMON_NAME}
 
 # Create the Knative gateways
-oc create secret tls wildcard-certs --cert=${BASE_DIR}/wildcard.crt --key=${BASE_DIR}/wildcard.key -n istio-system
+oc create secret tls wildcard-certs --cert=${BASE_CERT_DIR}/wildcard.crt --key=${BASE_CERT_DIR}/wildcard.key -n istio-system
 oc apply -f custom-manifests/serverless/gateways.yaml
+~~~
+
+## Brew Registry (optional)
+
+**Note** If you don't use brew regsitry, you can ignore this part.
+~~~
+# Create a catalogsource for brew registry
+sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
+ 
 ~~~
 
 ## Deploy KServe with OpenDataHub Operator
 ~~~
-oc create -f custom-manifests/opendatahub/operators.yaml
-sleep 30
-oc create -f custom-manifests/opendatahub/kfdef-kserve-op.yaml
-~~~
+oc create ns ${TARGET_OPERATOR_NS}
+oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.0.yaml
+# For preview RHODS in brew registry, use this
+# oc apply -f custom-manifests/opendatahub/brew-operators-2.0.yaml
 
+oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
+
+oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+~~~
 
 ## Deploy Minio for example LLM model
 
@@ -192,7 +221,7 @@ oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enabl
 
 If everything is set fine, you can run the following grpcurl command:
 ~~~
-export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor-default -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 ~~~
 The expected answer is something similar to:
@@ -206,6 +235,48 @@ The expected answer is something similar to:
     "version": "0.1.0"
   }
 }
+~~~
+
+This is a streaming test call:
+~~~
+echo
+echo "Testing streams of token"
+echo
+
+grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
+~~~
+
+The expected answer is something similar to:
+~~~
+{
+  "details": {
+    
+  }
+}
+{
+  "tokens": [
+    {
+      "text": "▁",
+      "logprob": -1.599083423614502
+    }
+  ],
+  "details": {
+    "generated_tokens": 1
+  }
+}
+{
+  "generated_text": "74",
+  "tokens": [
+    {
+      "text": "74",
+      "logprob": -3.3622500896453857
+    }
+  ],
+  "details": {
+    "generated_tokens": 2
+  }
+}
+....
 ~~~
 
 
