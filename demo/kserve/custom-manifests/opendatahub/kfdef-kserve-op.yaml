@@ -6,19 +6,6 @@ metadata:
 spec:
   applications:
     - kustomizeConfig:
-        parameters:
-        - name: kserve-alibi-explainer
-          value: quay.io/opendatahub/kserve-alibi-explainer:v0.10.2
-        - name: kserve-art-explainer
-          value: quay.io/opendatahub/kserve-art-explainer:v0.10.2
-        - name: kserve-agent
-          value: quay.io/opendatahub/kserve-agent:v0.10.2
-        - name: kserve-router
-          value: quay.io/opendatahub/kserve-router:v0.10.2
-        - name: kserve-storage-initializer
-          value: quay.io/opendatahub/kserve-storage-initializer:v0.10.2
-        - name: kserve-controller
-          value: quay.io/opendatahub/kserve-controller:v0.11-latest
         repoRef:
           name: manifests
           path: kserve
