@@ -158,11 +158,6 @@ oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS
 oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
 ~~~
 
-To enable automatic enabling of metrics for deployed models, deploy odh-model-controller 
-~~~
-oc create -f custom-manifests/opendatahub/kfdef-odh-model-controller.yaml
-~~~
-
 ## Deploy Minio for example LLM model
 
 If you have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
