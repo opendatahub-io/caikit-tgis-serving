@@ -1,0 +1,16 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: odh-model-controller
+  namespace: kserve
+spec:
+  applications:
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-model-controller
+      name: odh-model-controller
+  repos:
+    - name: manifests
+      uri: >-
+        https://github.com/VedantMahabaleshwarkar/odh-manifests/tarball/kserve-metrics
