@@ -4,7 +4,7 @@ source "$(dirname "$(realpath "$0")")/../env.sh"
 
 oc delete validatingwebhookconfiguration inferencegraph.serving.kserve.io  inferenceservice.serving.kserve.io 
 oc delete mutatingwebhookconfiguration inferenceservice.serving.kserve.io
-oc delete isvc --all ${TEST_NS} --force --grace-period=0
+oc delete isvc --all -n ${TEST_NS} --force --grace-period=0
 oc delete ns ${TEST_NS} ${MINIO_NS}
 oc delete secret wildcard-certs -n istio-system
 

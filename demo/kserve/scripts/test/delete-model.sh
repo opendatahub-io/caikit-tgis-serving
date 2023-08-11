@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
-oc delete isvc --all ${TEST_NS} --force --grace-period=0
+oc delete isvc --all -n ${TEST_NS} --force --grace-period=0
 oc delete ns ${TEST_NS} ${MINIO_NS}
 
 # Get the index of the target member in the array

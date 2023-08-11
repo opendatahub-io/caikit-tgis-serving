@@ -24,7 +24,7 @@ else
 
   ---
 
-  $ oc get cm user-workload-monitoring-config -n openshift-user-workload-monitoring
+  $ oc get cm user-workload-monitoring-config -n openshift-user-workload-monitoring -o yaml
 
   apiVersion: v1
   kind: ConfigMap
@@ -105,15 +105,14 @@ echo "Wait 30s for servicemesh control plane"
 echo
 sleep 30
 oc wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
-oc wait --for=condition=ready pod -l app=prometheus -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-ingressgateway -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-egressgateway -n istio-system --timeout=300s
-# oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
+oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 
 # kserve/knative
 oc create ns redhat-ods-applications
 oc create ns knative-serving
-oc -n istio-system apply -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR_TYPE}.yaml 
+oc apply -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR_TYPE}.yaml
 oc apply -f custom-manifests/service-mesh/peer-authentication.yaml
 oc apply -f custom-manifests/service-mesh/peer-authentication-${TARGET_OPERATOR_TYPE}.yaml 
 # we need this because of https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert
@@ -139,10 +138,10 @@ oc wait --for=condition=ready pod -l app=net-istio-webhook -n knative-serving --
 oc wait --for=condition=ready pod -l app=autoscaler-hpa -n knative-serving --timeout=300s
 oc wait --for=condition=ready pod -l app=domain-mapping -n knative-serving --timeout=300s
 oc wait --for=condition=ready pod -l app=webhook -n knative-serving --timeout=300s
-oc wait --for=condition=ready pod -l app=activator -n knative-serving --timeout=300s
-oc wait --for=condition=ready pod -l app=autoscaler -n knative-serving --timeout=300s
 oc delete pod -n knative-serving -l app=activator --force --grace-period=0
 oc delete pod -n knative-serving -l app=autoscaler --force --grace-period=0
+oc wait --for=condition=ready pod -l app=activator -n knative-serving --timeout=300s
+oc wait --for=condition=ready pod -l app=autoscaler -n knative-serving --timeout=300s
 
 # Generate wildcard cert for a gateway.
 export DOMAIN_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' | awk -F'.' '{print $(NF-1)"."$NF}')
@@ -159,7 +158,9 @@ oc apply -f custom-manifests/serverless/gateways.yaml
 # Create brew catalogsource
 if [[ ${TARGET_OPERATOR} == "brew" ]];
 then
+  echo "Create catalogsource for brew registry"
   sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
+  oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=300s  
 fi
 
 # Deploy odh/rhods operator
