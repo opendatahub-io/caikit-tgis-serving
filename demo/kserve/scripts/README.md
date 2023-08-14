@@ -39,7 +39,7 @@ export TARGET_OPERATOR=odh
 **Install Kserve including dependencies**
 
 ~~~
-./scripts/install/kserve_install.sh
+./scripts/install/kserve-install.sh
 ~~~
 
 **Deploy a sample model**
@@ -60,10 +60,10 @@ export TARGET_OPERATOR=odh
 
 **Uninstall kserve(including ./script/test/delete-model.sh)**
 ~~~
-./script/uninstall/kserve_uninstall.sh
+./script/uninstall/kserve-uninstall.sh
 ~~~
 
 **Uninstall dependencies**
 ~~~
-./script/uninstall/dependencies_uninstall.sh
+./script/uninstall/dependencies-uninstall.sh
 ~~~
