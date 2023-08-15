@@ -14,7 +14,7 @@ classifiers=[
     "License :: OSI Approved :: Apache Software License"
 ]
 dependencies = [
-    "caikit>=0.2.0,<0.16.0", # Core abstractions
+    "caikit>=0.2.0,<0.17.0", # Core abstractions
     "grpcio>=1.35.0,<2.0", # Client calls to TGIS
     "requests>=2.28.2,<3", # Health check calls to TGIS
 ]
