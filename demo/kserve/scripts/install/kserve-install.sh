@@ -49,14 +49,12 @@ if [ "$input" = "y" ]; then
       if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
       then
         export TARGET_OPERATOR=$input_target_op
-        export TARGET_OPERATOR_NS=$(getOpNS)
         export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
       else 
         echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
         exit 1
       fi
     else      
-      export TARGET_OPERATOR_NS=$(getOpNS)
       export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
     fi
 
@@ -73,6 +71,7 @@ if [ "$input" = "y" ]; then
     fi
     
     export KSERVE_OPERATOR_NS=$(getKserveNS)
+    export TARGET_OPERATOR_NS=$(getOpNS)
     echo
     echo "Let's install KServe"
 else
@@ -158,9 +157,11 @@ oc apply -f custom-manifests/serverless/gateways.yaml
 # Create brew catalogsource
 if [[ ${TARGET_OPERATOR} == "brew" ]];
 then
+  echo
   echo "Create catalogsource for brew registry"
   sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
-  oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=300s  
+
+  oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
 fi
 
 # Deploy odh/rhods operator
@@ -173,3 +174,4 @@ echo "Wait 30s for opendatahub operator"
 echo
 sleep 30
 oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+

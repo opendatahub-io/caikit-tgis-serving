@@ -55,7 +55,7 @@ data:
 # You can choose odh or rhods here.
 export TARGET_OPERATOR=odh
 # brew is a registry where WIP images are published. You need to ask the tag to use and it changes for every build 
-# export BREW_TAG=552986
+# export BREW_TAG=554186
 ~~~
 
 ## Prerequisite installation
