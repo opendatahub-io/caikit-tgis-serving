@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: rhods-catalog-dev
+  namespace: openshift-marketplace
+spec:
+  displayName: Red Hat OpenShift Data Science
+  publisher: RHODS Development Catalog
+  image: brew.registry.redhat.io/rh-osbs/iib:<%brew_tag%>
+  sourceType: grpc
