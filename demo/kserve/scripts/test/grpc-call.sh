@@ -1,9 +1,11 @@
 #!/bin/bash
 source "$(dirname "$(realpath "$0")")/../env.sh"
+source "$(dirname "$(realpath "$0")")/../utils.sh"
 
 echo
 echo "Wait until runtime is READY"
 
+wait_for_pods_ready "serving.kserve.io/inferenceservice=caikit-example-isvc" "${TEST_NS}"
 oc wait --for=condition=ready pod -l serving.kserve.io/inferenceservice=caikit-example-isvc -n ${TEST_NS} --timeout=300s
 
 echo

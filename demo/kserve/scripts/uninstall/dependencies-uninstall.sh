@@ -3,6 +3,7 @@ source "$(dirname "$(realpath "$0")")/../env.sh"
 
 if [[ ! -n ${TARGET_OPERATOR} ]]
   then
+    echo
     read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
     if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
     then
