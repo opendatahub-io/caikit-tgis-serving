@@ -174,4 +174,3 @@ echo "Wait 30s for opendatahub operator"
 echo
 sleep 30
 oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
-

@@ -35,8 +35,14 @@ oc delete -f custom-manifests/service-mesh/smcp.yaml
 oc delete ns istio-system
 oc delete -f custom-manifests/service-mesh/operators.yaml
 
-rm -rf /${BASE_DIR}
-rm -rf /${BASE_CERT_DIR}
+if [[ -n $BASE_DIR  ]] && [[ -n $BASE_CERT_DIR ]]
+then
+  if [[ ! z$BASE_DIR == 'z' ]]
+  then
+    rm -rf /${BASE_DIR}
+    rm -rf /${BASE_CERT_DIR}
+  fi
+fi
 
 # Verify 
 
