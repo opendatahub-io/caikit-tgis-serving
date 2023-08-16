@@ -1,11 +1,11 @@
-FROM quay.io/opendatahub/text-generation-inference:fast-ec05689
+FROM quay.io/opendatahub/text-generation-inference:fast-283ec87
 
 USER root
 
 WORKDIR /caikit
 COPY caikit /caikit
 
-RUN yum -y install git git-lfs && yum clean all && \
+RUN yum -y update && yum -y install git git-lfs && yum clean all && \
     git lfs install && \
     pip install pipenv && \
     pipenv install --system && \
