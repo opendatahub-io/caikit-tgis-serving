@@ -1,10 +1,17 @@
 
 #!/bin/bash
+set -o pipefail
+set -o nounset
+set -o errtrace
+# set -x   #Uncomment this to debug script.
+
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
 oc delete validatingwebhookconfiguration inferencegraph.serving.kserve.io  inferenceservice.serving.kserve.io 
 oc delete mutatingwebhookconfiguration inferenceservice.serving.kserve.io
 oc delete isvc --all -n ${TEST_NS} --force --grace-period=0
+
+echo "It would take around around 3~4 mins"
 oc delete ns ${TEST_NS} ${MINIO_NS}
 oc delete secret wildcard-certs -n istio-system
 

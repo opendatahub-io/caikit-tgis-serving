@@ -2,6 +2,11 @@
 # Environment variables
 # - CHECK_UWM: Set this to "false", if you want to skip the User Workload Configmap check message
 # - TARGET_OPERATOR: Set this among odh, rhods or brew, if you want to skip the question in the script.
+set -o pipefail
+set -o nounset
+set -o errtrace
+# set -x   #Uncomment this to debug script.
+
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
 if [[ -n ${CHECK_UWM} && ${CHECK_UWM} == "false" ]]
@@ -43,48 +48,54 @@ EOF
   read -p "Have you checked if user workload configmap is set correctly? (then enter 'y')" input
 fi
 
-if [ "$input" = "y" ]; then
-    if [[ ! -n ${TARGET_OPERATOR} ]]
-    then
-      read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
-      if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
-      then
-        export TARGET_OPERATOR=$input_target_op
-        export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
-      else 
-        echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
-        exit 1
-      fi
-    else      
-      export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
-    fi
-
-    if [[ ! -n ${BREW_TAG} ]]
-    then
-      read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
-      if [[ $brew_tag =~ ^[0-9]+$ ]]
-      then
-        export BREW_TAG=$brew_tag
-      else 
-        echo "[ERR] BREW_TAG must be number only"
-        exit 1
-      fi      
-    fi
-    
-    export KSERVE_OPERATOR_NS=$(getKserveNS)
-    export TARGET_OPERATOR_NS=$(getOpNS)
-    echo
-    echo "Let's install KServe"
-else
+if [ "$input" != "y" ];
+then
     echo "ERROR: Please check the configmap and execute this script again"
     exit 1
 fi
 
-mkdir ${BASE_DIR}
-mkdir ${BASE_CERT_DIR}
-# cd ${BASE_DIR}
-# git clone https://github.com/opendatahub-io/caikit-tgis-serving
-# cd caikit-tgis-serving/demo/kserve
+if [[ ! -n ${TARGET_OPERATOR} ]]
+then
+  read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
+  if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
+  then
+    export TARGET_OPERATOR=$input_target_op
+    export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
+  else 
+    echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
+    exit 1
+  fi
+else      
+  export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
+fi
+
+if [[ ! -n ${BREW_TAG} ]]
+then
+  read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
+  if [[ $brew_tag =~ ^[0-9]+$ ]]
+  then
+    export BREW_TAG=$brew_tag
+  else 
+    echo "[ERR] BREW_TAG must be number only"
+    exit 1
+  fi      
+fi
+
+export KSERVE_OPERATOR_NS=$(getKserveNS)
+export TARGET_OPERATOR_NS=$(getOpNS ${TARGET_OPERATOR_TYPE})
+echo
+echo "Let's install KServe"
+
+
+if [[ ! -d ${BASE_DIR} ]]
+then
+  mkdir ${BASE_DIR}
+fi
+
+if [[ ! -d ${BASE_CERT_DIR} ]]
+then
+  mkdir ${BASE_CERT_DIR}
+fi
 
 # Install Service Mesh operators
 echo "[INFO] Install Service Mesh operators"
@@ -102,7 +113,7 @@ oc wait --for=condition=ready pod -l name=kiali-operator -n openshift-operators 
 echo
 echo "[INFO] Create an istio instance"
 echo
-oc create ns istio-system
+oc create ns istio-system -oyaml --dry-run=client | oc apply -f-
 oc::wait::object::availability "oc get project istio-system" 2 60
 
 oc apply -f custom-manifests/service-mesh/smcp.yaml
@@ -122,13 +133,13 @@ echo "[INFO]Update SMMR"
 echo
 if [[ ${TARGET_OPERATOR_TYPE} == "odh" ]];
 then
-  oc create ns opendatahub
+  oc create ns opendatahub -oyaml --dry-run=client | oc apply -f-
   oc::wait::object::availability "oc get project opendatahub" 2 60
 else
-  oc create ns redhat-ods-applications
+  oc create ns redhat-ods-applications -oyaml --dry-run=client | oc apply -f-
   oc::wait::object::availability "oc get project redhat-ods-applications" 2 60
 fi
-oc create ns knative-serving
+oc create ns knative-serving -oyaml --dry-run=client | oc apply -f-
 oc::wait::object::availability "oc get project knative-serving" 2 60
 
 oc apply -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR_TYPE}.yaml
@@ -177,14 +188,14 @@ oc wait --for=condition=ready pod -l app=autoscaler -n knative-serving --timeout
 
 # Generate wildcard cert for a gateway.
 export DOMAIN_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' | awk -F'.' '{print $(NF-1)"."$NF}')
-export COMMON_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}'|sed 's/apps.//')
+export COMMON_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
 
 # cd ${BASE_CERT_DIR}
 ## Generate wildcard cert using openssl
 echo
 echo "[INFO] Generate wildcard cert using openssl"
 echo
-./scripts/generate-wildcard-certs.sh ${BASE_CERT_DIR} ${DOMAIN_NAME} ${COMMON_NAME}
+bash -x ./scripts/generate-wildcard-certs.sh ${BASE_CERT_DIR} ${DOMAIN_NAME} ${COMMON_NAME}
 
 # Create the Knative gateways
 oc create secret tls wildcard-certs --cert=${BASE_CERT_DIR}/wildcard.crt --key=${BASE_CERT_DIR}/wildcard.key -n istio-system
@@ -208,7 +219,7 @@ echo "[INFO] Deploy odh/rhods operator"
 echo
 if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
 then
-  oc create ns ${TARGET_OPERATOR_NS}
+  oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
   oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
 fi
 oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.0.yaml

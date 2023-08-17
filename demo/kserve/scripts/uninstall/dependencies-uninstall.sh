@@ -1,4 +1,9 @@
 #!/bin/bash
+set -o pipefail
+set -o nounset
+set -o errtrace
+# set -x   #Uncomment this to debug script.
+
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
 if [[ ! -n ${TARGET_OPERATOR} ]]
@@ -47,16 +52,16 @@ oc delete subscription kiali-ossm -n openshift-operators
 oc delete subscription servicemeshoperator -n openshift-operators
 oc delete subscription serverless-operator -n openshift-serverless
 
-jaeger_csv_name=$(oc get csv -n openshift-operators | grep jaeger)
+jaeger_csv_name=$(oc get csv -n openshift-operators | grep jaeger|awk '{print $1}')
 oc delete csv $jaeger_csv_name -n openshift-operators
 
-kiali_csv_name=$(oc get csv -n openshift-operators | grep kiali)
+kiali_csv_name=$(oc get csv -n openshift-operators | grep kiali|awk '{print $1}')
 oc delete csv $kiali_csv_name -n openshift-operators
 
-sm_csv_name=$(oc get csv -n openshift-operators | grep servicemeshoperator)
+sm_csv_name=$(oc get csv -n openshift-operators | grep servicemeshoperator|awk '{print $1}')
 oc delete csv $sm_csv_name -n openshift-operators
 
-sl_csv_name=$(oc get csv -n openshift-operators | grep serverless-operator)
+sl_csv_name=$(oc get csv -n openshift-operators | grep serverless-operator|awk '{print $1}')
 oc delete csv $sm_csv_name -n openshift-serverless
 
 oc delete csv OperatorGroup serverless-operators -n openshift-serverless

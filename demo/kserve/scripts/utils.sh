@@ -84,7 +84,7 @@ wait_for_pods_ready() {
 
     if [[ $wait_counter -ge 60 ]]; then
       echo
-      oc get pods $pod_selector -n $pod_namespace
+      oc get pods -l $pod_selector -n $pod_namespace
       die "Timed out after $((10 * wait_counter / 60)) minutes waiting for pod with selector: $pod_selector"
     fi
 
@@ -105,7 +105,12 @@ function wait_for_csv_installed(){
     do
         echo -n "."
         ((ii=ii+1))
-        sleep 2
+       if [ $ii -eq 100 ]; then
+            echo "CSV \"$csv\" is NOT installed and it exceeds maximum tries(300s)" 
+            echo "[FAILED] please check the CSV \"$csv\"" 
+            exit 1
+        fi
+        sleep 3
 
         if [ $(expr $ii % 20) == "0" ]; then   
             echo ""
