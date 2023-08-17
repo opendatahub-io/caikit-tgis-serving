@@ -69,7 +69,7 @@ else
   export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
 fi
 
-if [[ ! -n ${BREW_TAG} ]]
+if [[ ${TARGET_OPERATOR_TYPE} == 'brew' ]] && [[ ! -n ${BREW_TAG} ]]
 then
   read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
   if [[ $brew_tag =~ ^[0-9]+$ ]]
