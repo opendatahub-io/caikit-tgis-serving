@@ -1,4 +1,9 @@
 #!/bin/bash
+set -o pipefail
+set -o nounset
+set -o errtrace
+# set -x   #Uncomment this to debug script.
+
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
 oc delete isvc --all -n ${TEST_NS} --force --grace-period=0
