@@ -7,8 +7,8 @@ COPY caikit /caikit
 
 RUN yum -y update && yum -y install git git-lfs && yum clean all && \
     git lfs install && \
-    pip install pipenv && \
-    pipenv install --system && \
+    pip install 'micropipenv[toml]' && \
+    micropipenv install && \
     rm -rf ~/.cache && \
     mkdir -p /opt/models && \
     adduser -g 0 -u 1001 caikit --home-dir /caikit && \
