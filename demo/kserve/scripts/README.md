@@ -34,6 +34,7 @@ export TARGET_OPERATOR=odh
 - CHECK_UWM: Set this to "false", if you want to skip the User Workload Configmap check message
 - TARGET_OPERATOR: Set this among odh, rhods or brew, if you want to skip the question in the script.
 - BREW_TAG: Set this, when you want to choose brew for TARGET_OPERATOR.
+- CUSTOM_MANIFESTS_URL: Set this, when you want to use custom manifests(ex, https://github.com/opendatahub-io/odh-manifests/tarball/master)
   
 
 **Install Kserve including dependencies**
