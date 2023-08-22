@@ -227,6 +227,14 @@ oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.0.yaml
 wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
 oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
 
+# Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
+if [[ -n ${CUSTOM_MANIFESTS_URL} ]]
+then
+  echo
+  echo "Added custom manifest url into default dscinitializations"
+  oc patch dscinitializations default -p="[{\"op\": \"add\", \"path\": \"/spec/manifestsUri\",\"value\": \"${CUSTOM_MANIFESTS_URL}\"}]" --type='json'
+fi
+
 echo
 echo "[INFO] Deploy KServe"
 echo
