@@ -6,7 +6,7 @@ set -o errtrace
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
-if [[ ! -n ${TARGET_OPERATOR} ]]
+if [[ ! -n "${TARGET_OPERATOR+x}" ]]
   then
     echo
     read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
@@ -41,7 +41,7 @@ oc delete -f custom-manifests/service-mesh/smcp.yaml
 oc delete ns istio-system
 oc delete -f custom-manifests/service-mesh/operators.yaml
 
-if [[ -n $BASE_DIR  ]] && [[ -n $BASE_CERT_DIR ]]
+if [[ -n "${BASE_DIR+x}"  ]] && [[ -n "${BASE_CERT_DIR+x}" ]]
 then
   if [[ ! z$BASE_DIR == 'z' ]]
   then

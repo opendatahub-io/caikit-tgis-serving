@@ -9,7 +9,7 @@ set -o errtrace
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
-if [[ -n ${CHECK_UWM} && ${CHECK_UWM} == "false" ]]
+if [[ -n "${CHECK_UWM+x}" && ${CHECK_UWM} == "false" ]]
 then
   input="y"
 else
@@ -54,7 +54,7 @@ then
     exit 1
 fi
 
-if [[ ! -n ${TARGET_OPERATOR} ]]
+if [[ ! -n ${TARGET_OPERATOR+x} ]]
 then
   read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
   if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
@@ -68,8 +68,8 @@ then
 else      
   export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
 fi
-
-if [[ ${TARGET_OPERATOR_TYPE} == 'brew' ]] && [[ ! -n ${BREW_TAG} ]]
+echo "${TARGET_OPERATOR_TYPE}"
+if [[ ${TARGET_OPERATOR} == 'brew' ]] && [[ ! -n "${BREW_TAG+x}" ]]
 then
   read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
   if [[ $brew_tag =~ ^[0-9]+$ ]]
@@ -228,7 +228,7 @@ wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
 oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
 
 # Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
-if [[ -n ${CUSTOM_MANIFESTS_URL} ]]
+if [[ -n "${CUSTOM_MANIFESTS_URL+x}" ]]
 then
   echo
   echo "Added custom manifest url into default dscinitializations"
@@ -239,3 +239,5 @@ echo
 echo "[INFO] Deploy KServe"
 echo
 oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+
+wait_for_pods_ready "control-plane=kserve-controller-manager" "${KSERVE_OPERATOR_NS}"
