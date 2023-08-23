@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: caikit-isvc
+spec:
+  gateways:
+  - knative-ingress-gateway
+  hosts:
+  - "*"
+  http:
+  - route:
+    - destination:
+        port:
+          number: 443
+        # TODO: host: ?
+      headers:
+        request:
+          set:
+            mm-vmodel-id: caikit-example-isvc
+      weight: 80
+    - destination:
+        port:
+          number: 443
+        # TODO: host: ?
+      weight: 20
+      headers:
+        request:
+          set:
+            mm-vmodel-id: caikit-example-isvc-2

@@ -1,20 +1,21 @@
-# How to use install 
+# Script-based Installation
 
-**Git clone**
+## Clone the repo
+
+
 ~~~
 git clone https://github.com/opendatahub-io/caikit-tgis-serving
 cd caikit-tgis-serving/demo/kserve
 ~~~
 
-(NOTE) If you want to use brew, please do pre-requisites before you use this script.
-- Create a credential secret
-- Create ICSP
+**NOTE:** If you would like to use brew, please create a credential secret and ICSP.
 
-**Set environment variable(Optional)**
+## Set the environment variables
 
-If below variables are not set, the script will ask it. 
+If the variables below are not set, the script will ask for them.
 
-- Brew
+
+- Brew is a registry where WIP images are published. Please look for the desired/correct brew tag, as it changes with every build. 
 ~~~
 export TARGET_OPERATOR=brew
 export BREW_TAG=554169
@@ -30,33 +31,17 @@ export TARGET_OPERATOR=rhods
 export TARGET_OPERATOR=odh
 ~~~
 
-*Variables description*
-- CHECK_UWM: Set this to "false", if you want to skip the User Workload Configmap check message
-- TARGET_OPERATOR: Set this among odh, rhods or brew, if you want to skip the question in the script.
-- BREW_TAG: Set this, when you want to choose brew for TARGET_OPERATOR.
-- CUSTOM_MANIFESTS_URL: Set this, when you want to use custom manifests(ex, https://github.com/opendatahub-io/odh-manifests/tarball/master)
+***Description of Variables:***
+- **CHECK_UWM:** If you would like to skip the message that checks the User Workload Configmap, set this to `false` .
+- **TARGET_OPERATOR:** Can be set to `odh`, `rhods` or `brew`. If not set, the script will ask for it.
+- **BREW_TAG:** If using `brew`, set this to desired brew tag (ie. 554169)
+- **CUSTOM_MANIFESTS_URL:** If you would like to use a custom manifest, use the URL (ie. https://github.com/opendatahub-io/odh-manifests/tarball/master).
   
 
-**Install Kserve including dependencies**
+# Install Kserve including dependencies
 
 ~~~
 ./scripts/install/kserve-install.sh
-~~~
-
-**Deploy a sample model**
-
-~~~
-./scripts/test/deploy-model.sh
-~~~
-
-**gRPC test**
-~~~
-./scripts/test/grpc-call.sh
-~~~
-
-**Delete a sample model and minio**
-~~~
-./script/test/delete-model.sh
 ~~~
 
 **Uninstall kserve(including ./script/test/delete-model.sh)**
