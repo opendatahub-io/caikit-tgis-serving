@@ -20,7 +20,7 @@ sleep 15
 oc delete sub rhods-operator -n redhat-ods-operator
 oc delete csv -n redhat-ods-operator rhods-operator.2.0.0
 
-if [[ ! -n ${TARGET_OPERATOR} ]]
+if [[ ! -n "${TARGET_OPERATOR+x}" ]]
   then
     echo
     read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
