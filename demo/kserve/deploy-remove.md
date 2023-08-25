@@ -10,14 +10,13 @@ Before proceeding, please make sure you are in the `/caikit-tgis-serving/demo/ks
 If you have your model in another S3-like object storage (e.g., AWS S3), you can skip this step.
 We will create a new project/namespace for minio and deploy it together with service account and data connection (secret with generated access key ID and secret access key). 
 ~~~
-ACCESS_KEY_ID=THEACCESSKEY
-SECRET_ACCESS_KEY=$(openssl rand -hex 32)
+ACCESS_KEY_ID=admin
+SECRET_ACCESS_KEY=password
 MINIO_NS=minio
 
 oc new-project ${MINIO_NS}
-sed "s/<accesskey>/$ACCESS_KEY_ID/g"  ./custom-manifests/minio/minio.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" | tee ./minio-current.yaml | oc -n ${MINIO_NS} apply -f -
-sed "s/<accesskey>/$ACCESS_KEY_ID/g" ./custom-manifests/minio/minio-secret.yaml | sed "s+<secretkey>+$SECRET_ACCESS_KEY+g" |sed "s/<minio_ns>/$MINIO_NS/g" | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f - 
-
+oc apply -f minio/minio.yaml -n ${MINIO_NS}
+sed s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/minio-secret.yaml | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f - 
 sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yaml | tee ./serviceaccount-minio-current.yaml | oc -n ${MINIO_NS} apply -f - 
 ~~~
 Instructions above deploy an already containerized LLM model. To containerize your own LLM model into a minio bucket for testing, follow instructions [here](/demo/kserve/create-minio.md).
