@@ -20,7 +20,7 @@ sed "s/<accesskey>/$ACCESS_KEY_ID/g" ./custom-manifests/minio/minio-secret.yaml 
 
 sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yaml | tee ./serviceaccount-minio-current.yaml | oc -n ${MINIO_NS} apply -f - 
 ~~~
-Instructions above deploy an already containerized LLM model. To containerize your own LLM model into a minio bucket for testing, follow instructions [here](/docs/create-minio.md).
+Instructions above deploy an already containerized LLM model. To containerize your own LLM model into a minio bucket for testing, follow instructions [here](/demo/kserve/create-minio.md).
 ## Deploy flan-t5-small model with Caikit+TGIS Serving runtime
 We will first create a new namespace and patch ServiceMesh related object.
 ~~~
