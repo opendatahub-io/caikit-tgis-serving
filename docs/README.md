@@ -36,7 +36,7 @@ There are three ways to install the KServe/Caikit/TGIS stack (includes the insta
 2. [Manual installation](/demo/kserve/install-manual.md)
 
 ## Demos with LLM model
-- [Deploy a model and remove/undeploy a model](/docs/deploy-remove.md)
+- [Deploy a model and remove/undeploy a model](/demo/kserve/deploy-remove.md)
 - [Split traffic](/demo/kserve/traffic-splitting.md)
 - [Upgrade runtime](/demo/kserve/upgrade-runtime.md)
 - [Access metrics](/demo/kserve/metrics.md)

@@ -44,8 +44,7 @@ oc -n istio-system apply -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR
 oc apply -f custom-manifests/service-mesh/peer-authentication.yaml
 oc apply -f custom-manifests/service-mesh/peer-authentication-${TARGET_OPERATOR_TYPE}.yaml 
 ~~~
-This is needed because of [this](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.12/html/serverless/serving#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert).
-
+We use PeerAuthentications to enable mTLS according to [Openshift Serverless Documentation](https://access.redhat.com/documentation/en-us/red_hat_openshift_serverless/1.28/html/serving/configuring-custom-domains-for-knative-services#serverless-domain-mapping-custom-tls-cert_domain-mapping-custom-tls-cert)
 ~~~
 oc apply -f custom-manifests/serverless/operators.yaml
 sleep 30
