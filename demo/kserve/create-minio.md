@@ -1,27 +1,55 @@
-# Create your own Minio image
+# Create your own MinIO image
 
-If you would to create your own minio image with a desired model, first fork https://github.com/kserve/modelmesh-minio-examples.
+The procedures for installing and deploying the Caikit-TGIS-Serving stack describe how to deploy the [flan-t5-small](https://huggingface.co/google/flan-t5-small) model. If you would like to use your own model for testing purposes, you can create your own MinIO image.
 
-1. Clone the repo (update `<YOUR-USERNAME>`) and navigate to the correct directory.
-~~~
-git clone https://github.com/<YOUR-USERNAME>/modelmesh-minio-examples.git
-cd modelmesh-minio-examples
-~~~
+**Prerequisite**
 
-2. Create your model directory (update `<yourmodeldirectory>`) 
-~~~
-mkdir <yourmodeldirectory> && cd <yourmodeldirectory>
-~~~
-and place your model there.
+* You created a fork of the https://github.com/kserve/modelmesh-minio-examples GitHub repository.
+
+* You created a model.
+
+* You have a GitHib account.
+
+* You have a Quay account.
+
+**Procedure**
+
+1. Clone the repo (replace `<YOUR-USERNAME>` with your GitHub username).
+   ~~~
+   git clone https://github.com/<YOUR-USERNAME>/modelmesh-minio-examples.git
+   ~~~
+
+2. Navigate to the `modelmesh-minio-examples` directory.
+   ~~~
+   cd modelmesh-minio-examples
+   ~~~
+
+3. Create a model directory (replace `<yourmodeldirectory>` with the name of a directory for your model).
+   ~~~
+   mkdir <yourmodeldirectory>
+   ~~~
+
+4. Copy your model into the `modelmesh-minio-examples/<yourmodeldirectory>` directory.
+
+5. Edit your local `main/Dockerfile` and add lines for your model directory by following the pattern [here](https://github.com/kserve/modelmesh-minio-examples/blob/main/Dockerfile#L36) and [here](https://github.com/kserve/modelmesh-minio-examples/blob/main/Dockerfile#L59).
+
+   For example, add these two lines in the appropriate places and replace `<YOURMODEL>` with the name of your model:
+   ~~~
+   COPY --chown=1000:0 <YOURMODEL> ${MODEL_DIR}/<YOURMODEL>/
+   .
+   .
+   .
+   COPY --chown=1000:0 <YOURMODEL> ${FVT_DIR}/<YOURMODEL>
+   ~~~
 
 
-3. Edit the Dockerfile (located in the main directory) to add lines for your directory following the pattern [here](https://github.com/kserve/modelmesh-minio-examples/blob/main/Dockerfile#L36) and [here](https://github.com/kserve/modelmesh-minio-examples/blob/main/Dockerfile#L59).
 
-4. Build the image:
-~~~
-podman build -t quay.io/`<YOUR_QUAY_USERNAME>`/modelmesh-minio-examples:`<YOUR_TAG>` .
-~~~
-5. Push the image to quay:
-~~~
-podman push quay.io/`<YOUR_QUAY_USERNAME>`/modelmesh-minio-examples:`<YOUR_TAG>`
-~~~
+6. Build the image (replace `<YOUR_TAG>` with a build tag, for example `v1`).
+   ~~~
+   podman build -t quay.io/`<YOUR_QUAY_USERNAME>`/modelmesh-minio-examples:`<YOUR_TAG>` .
+   ~~~
+
+7. Push the image to Quay.
+   ~~~
+   podman push quay.io/`<YOUR_QUAY_USERNAME>`/modelmesh-minio-examples:`<YOUR_TAG>`
+   ~~~
