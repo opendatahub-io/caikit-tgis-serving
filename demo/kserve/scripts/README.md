@@ -1,69 +1,63 @@
-# How to use install 
+# Script-based installation of Kserve and dependencies
 
-**Git clone**
-~~~
-git clone https://github.com/opendatahub-io/caikit-tgis-serving
-cd caikit-tgis-serving/demo/kserve
-~~~
+Note: You have the alternative option of installing the KServe/Caikit/TGIS stack by using [Step-by-step commands](demo/kserve/install-manual.md).
 
-(NOTE) If you want to use brew, please do pre-requisites before you use this script.
-- Create a credential secret
-- Create ICSP
+**Prerequisites**
 
-**Set environment variable(Optional)**
+- To support inferencing, your cluster needs a node with 4 CPUs and 8 GB memory.
+- You have cluster administrator permissions.
+- You have installed the OpenShift CLI (`oc`).
 
-If below variables are not set, the script will ask it. 
+**Procedure**
 
-- Brew
-~~~
-export TARGET_OPERATOR=brew
-export BREW_TAG=554169
-~~~
+1. Clone the `caikit-tgis-serving` repo.
+   ~~~
+   git clone https://github.com/opendatahub-io/caikit-tgis-serving
+   cd caikit-tgis-serving/demo/kserve
+   ~~~
 
-- RHODS (1.32+)
-~~~
-export TARGET_OPERATOR=rhods
-~~~
+2. Set environment variables.
 
-- ODH (1.9+)
-~~~
-export TARGET_OPERATOR=odh
-~~~
+   Note: If you do not set values for these variables before you run the script, the script asks for them.
 
-*Variables description*
-- CHECK_UWM: Set this to "false", if you want to skip the User Workload Configmap check message
-- TARGET_OPERATOR: Set this among odh, rhods or brew, if you want to skip the question in the script.
-- BREW_TAG: Set this, when you want to choose brew for TARGET_OPERATOR.
+   **TARGET_OPERATOR:** Possible values are `odh` or `rhods`. For example:
+   - Red Hat OpenSHift Data Science (1.32+)
+     ~~~
+     export TARGET_OPERATOR=rhods
+     ~~~
+
+   - Open Data Hub (1.9+)
+     ~~~
+     export TARGET_OPERATOR=odh
+     ~~~
   
+   **CHECK_UWM:** (optional) To skip the message that checks the User Workload Configmap, set the value to `false`.
+     ~~~
+     export CHECK_UWM=false
+     ~~~
+   
+   **CUSTOM_MANIFESTS_URL:** (optional) To use a custom manifest, set the value to the custom manifest URL, for example:
+     ~~~
+     export CUSTOM_MANIFESTS_URL=https://github.com/opendatahub-io/odh-manifests/tarball/master
+     ~~~
+   
 
-**Install Kserve including dependencies**
+3. Run the script to install Kserve including its dependencies.
 
-~~~
-./scripts/install/kserve-install.sh
-~~~
+   ~~~
+   ./scripts/install/kserve-install.sh
+   ~~~
 
-**Deploy a sample model**
+# Script-based uninstall of Kserve and dependencies
 
-~~~
-./scripts/test/deploy-model.sh
-~~~
+1. Uninstall kserve (including `./script/test/delete-model.sh`):
 
-**gRPC test**
-~~~
-./scripts/test/grpc-call.sh
-~~~
+   ~~~
+   ./script/uninstall/kserve-uninstall.sh
+   ~~~
 
-**Delete a sample model and minio**
-~~~
-./script/test/delete-model.sh
-~~~
+2. Uninstall the dependencies:
 
-**Uninstall kserve(including ./script/test/delete-model.sh)**
-~~~
-./script/uninstall/kserve-uninstall.sh
-~~~
-
-**Uninstall dependencies**
-~~~
-./script/uninstall/dependencies-uninstall.sh
-~~~
+   ~~~
+   ./script/uninstall/dependencies-uninstall.sh
+   ~~~

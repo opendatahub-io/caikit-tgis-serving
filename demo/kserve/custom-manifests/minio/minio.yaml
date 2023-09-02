@@ -24,9 +24,9 @@ spec:
         - /data1
       env:
         - name: MINIO_ACCESS_KEY
-          value:  <accesskey>
+          value:  admin
         - name: MINIO_SECRET_KEY
-          value: <secretkey>
+          value: password
       image: quay.io/opendatahub/modelmesh-minio-examples:caikit-flan-t5
       imagePullPolicy: Always
       name: minio
