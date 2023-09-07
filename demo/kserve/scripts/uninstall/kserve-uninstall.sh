@@ -18,7 +18,8 @@ oc delete secret wildcard-certs -n istio-system
 oc delete DataScienceCluster --all -n redhat-ods-applications
 sleep 15
 oc delete sub rhods-operator -n redhat-ods-operator
-oc delete csv -n redhat-ods-operator rhods-operator.2.0.0
+oc delete csv -n redhat-ods-operator $(oc get csv|grep rhods|awk '{print $1}')
+
 
 if [[ ! -n "${TARGET_OPERATOR+x}" ]]
   then
