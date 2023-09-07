@@ -184,6 +184,57 @@ def test_load_prompt_artifacts_no_prompt_dir():
             conn.load_prompt_artifacts(prompt_id, *source_files)
 
 
+def test_unload_prompt_artifacts_ok():
+    """Make sure that prompt artifacts can be unloaded cleanly"""
+    with tempfile.TemporaryDirectory() as source_dir:
+        with tempfile.TemporaryDirectory() as prompt_dir:
+            # Make some source files
+            source_fnames = ["foo.pt", "bar.pt"]
+            source_files = [os.path.join(source_dir, fname) for fname in source_fnames]
+            for source_file in source_files:
+                with open(source_file, "w") as handle:
+                    handle.write("stub")
+
+            # Make the connection with the prompt dir
+            conn = TGISConnection.from_config(
+                "",
+                {
+                    TGISConnection.HOSTNAME_KEY: "foo.bar:1234",
+                    TGISConnection.PROMPT_DIR_KEY: prompt_dir,
+                },
+            )
+
+            # Copy the artifacts over
+            prompt_id = "some-prompt-id"
+            conn.load_prompt_artifacts(prompt_id, *source_files)
+
+            # Make sure the artifacts are available
+            for fname in source_fnames:
+                assert os.path.exists(os.path.join(prompt_dir, prompt_id, fname))
+
+            # Unload all of the prompts and make sure they're gone
+            conn.unload_prompt_artifacts(prompt_id)
+            assert not os.path.exists(os.path.join(prompt_dir, prompt_id))
+
+
+def test_unload_prompt_artifacts_bad_prompt_id():
+    """Make sure that unloading a bad prompt ID is a no-op"""
+    with tempfile.TemporaryDirectory() as source_dir:
+        with tempfile.TemporaryDirectory() as prompt_dir:
+            conn = TGISConnection.from_config(
+                "",
+                {
+                    TGISConnection.HOSTNAME_KEY: "foo.bar:1234",
+                    TGISConnection.PROMPT_DIR_KEY: prompt_dir,
+                },
+            )
+
+            # Unload all of the prompts and make sure they're gone
+            prompt_id = "some-prompt-id"
+            conn.unload_prompt_artifacts(prompt_id)
+            assert not os.path.exists(os.path.join(prompt_dir, prompt_id))
+
+
 def test_connection_valid_endpoint(tgis_mock_insecure):
     """Make sure that a connection test works with a valid server"""
     conn = TGISConnection(hostname=tgis_mock_insecure.hostname, model_id="asdf")

@@ -15,7 +15,7 @@
 
 # Standard
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 import os
 import shutil
 
@@ -163,7 +163,7 @@ class TGISConnection:
     def mtls_enabled(self) -> bool:
         return None not in [self.ca_cert_file, self.client_tls]
 
-    def load_prompt_artifacts(self, prompt_id: str, *artifact_paths):
+    def load_prompt_artifacts(self, prompt_id: str, *artifact_paths: List[str]):
         """Load the given artifact paths to this TGIS connection
 
         As implemented, this is a simple copy to the TGIS instance's prompt dir,
@@ -172,6 +172,10 @@ class TGISConnection:
         TODO: If two copies of the runtime attempt to perform the same copy at
             the same time, it could race and cause errors with the mounted
             directory system.
+
+        Args:
+            prompt_id (str): The ID that this prompt should use
+            *artifact_paths (List[str]): The paths to the artifacts to laod
         """
         error.value_check(
             "<TGB07970356E>",
@@ -191,6 +195,35 @@ class TGISConnection:
             target_file = os.path.join(target_dir, os.path.basename(artifact_path))
             log.debug3("Copying %s -> %s", artifact_path, target_file)
             shutil.copyfile(artifact_path, target_file)
+
+    def unload_prompt_artifacts(self, *prompt_ids: List[str]):
+        """Unload the given prompts from TGIS
+
+        As implemented, this simply removes the prompt artifacts for these IDs
+        and does not explicitly unload them from the TGIS in-memory cache.
+
+        NOTE: This intentionally ignores all errors. It's very likely that
+            multiple replicas of the runtime will attempt to unload the same
+            prompt, so we need to let the first one win and the rest quietly
+            accept that it's already deleted.
+
+        Args:
+            *prompt_ids (List[str]): The IDs to unload
+        """
+        error.value_check(
+            "<TGB07970365E>",
+            self.prompt_dir is not None,
+            "No prompt_dir configured for {}",
+            self.hostname,
+        )
+        error.type_check_all(
+            "<TGB41380075E>",
+            str,
+            prompt_ids=prompt_ids,
+        )
+        for prompt_id in prompt_ids:
+            prompt_id_dir = os.path.join(self.prompt_dir, prompt_id)
+            shutil.rmtree(prompt_id_dir, ignore_errors=True)
 
     def get_client(self) -> generation_pb2_grpc.GenerationServiceStub:
         """Get a grpc client for the connection"""
