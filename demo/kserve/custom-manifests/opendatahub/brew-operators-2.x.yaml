@@ -15,6 +15,5 @@ spec:
   channel: alpha
   installPlanApproval: Automatic
   name: rhods-operator
-  source: rhods-catalog
+  source: rhods-catalog-dev
   sourceNamespace: openshift-marketplace
-  startingCSV: rhods-operator.2.0.0

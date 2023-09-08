@@ -51,4 +51,4 @@ parameters:
   value: "8Gi"
 - name: CONTAINER_IMAGE
   description: Container image for the runtime
-  value: quay.io/opendatahub/caikit-tgis-serving:stable-4d0134e
+  value: quay.io/opendatahub/caikit-tgis-serving:stable

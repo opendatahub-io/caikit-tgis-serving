@@ -222,7 +222,7 @@ then
   oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
   oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
 fi
-oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.0.yaml
+oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
 
 wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
 oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
