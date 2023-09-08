@@ -1,6 +1,6 @@
 # Script-based installation of Kserve and dependencies
 
-Note: You have the alternative option of installing the KServe/Caikit/TGIS stack by using [Step-by-step commands](demo/kserve/install-manual.md).
+Note: You have the alternative option of installing the KServe/Caikit/TGIS stack by using [Step-by-step commands](../../kserve/install-manual.md).
 
 **Prerequisites**
 
