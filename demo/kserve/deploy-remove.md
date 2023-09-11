@@ -33,8 +33,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    MINIO_NS=minio
    
    oc new-project ${MINIO_NS}
-   oc apply -f minio/minio.yaml -n ${MINIO_NS}
-   sed s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/minio-secret.yaml | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f - 
+   oc apply -f ./custom-manifests/minio/minio.yaml -n ${MINIO_NS}
+   sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/minio-secret.yaml | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f - 
    sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yaml | tee ./serviceaccount-minio-current.yaml | oc -n ${MINIO_NS} apply -f - 
    ~~~
 
