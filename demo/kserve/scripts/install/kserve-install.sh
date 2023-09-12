@@ -223,10 +223,14 @@ then
   oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
 fi
 oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
-
-wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
-oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
-
+if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
+then
+  wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
+  oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
+else 
+  wait_for_pods_ready "name=opendatahub-operator-controller-manager" "openshift-operators"
+  oc wait --for=condition=ready pod -l name=opendatahub-operator-controller-manager -n openshift-operators --timeout=300s 
+fi 
 # Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
 if [[ -n "${CUSTOM_MANIFESTS_URL+x}" ]]
 then
