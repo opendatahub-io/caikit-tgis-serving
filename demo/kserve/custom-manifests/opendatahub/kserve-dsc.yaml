@@ -23,4 +23,4 @@ spec:
     ray:
       managementState: Removed
     workbenches:
-      managementState: Managed
+      managementState: Removed 

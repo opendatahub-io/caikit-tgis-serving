@@ -217,15 +217,17 @@ fi
 echo
 echo "[INFO] Deploy odh/rhods operator"
 echo
+OPERATOR_LABEL="control-plane=controller-manager"
 if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
 then
+  OPERATOR_LABEL="name=rhods-operator"
   oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
   oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
 fi
 oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
 
-wait_for_pods_ready "name=rhods-operator" "${TARGET_OPERATOR_NS}"
-oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 
+wait_for_pods_ready "${OPERATOR_LABEL}" "${TARGET_OPERATOR_NS}"
+oc wait --for=condition=ready pod -l ${OPERATOR_LABEL} -n ${TARGET_OPERATOR_NS} --timeout=300s 
 
 # Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
 if [[ -n "${CUSTOM_MANIFESTS_URL+x}" ]]
@@ -238,6 +240,12 @@ fi
 echo
 echo "[INFO] Deploy KServe"
 echo
-oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+# ODH 1.9 use alpha api so this logic needed but from ODH 1.10, this logic must be deleted.
+#oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]]; then
+  oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
+else
+  oc create -f custom-manifests/opendatahub/kserve-dsc-v1alpha1.yaml
+fi
 
 wait_for_pods_ready "control-plane=kserve-controller-manager" "${KSERVE_OPERATOR_NS}"
