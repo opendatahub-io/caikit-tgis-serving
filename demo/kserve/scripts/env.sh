@@ -27,7 +27,7 @@ getOpNS() {
   target_op=$1
   if [[ ${target_op} == "odh" ]]
   then
-    echo "opendatahub"
+    echo "openshift-operators"
   else
     echo "redhat-ods-operator"
   fi
