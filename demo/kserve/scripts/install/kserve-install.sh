@@ -9,6 +9,13 @@ set -o errtrace
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
+if [[ ! -n ${CHECK_UWM+x} ]]
+then
+  printf "CHECK_UWM is not set: to skip the message that checks the User Workload Configmap, set the value to false. true otherwise\n"
+  read -p ">> Insert CHECK_UWM: " input_uwm
+  export CHECK_UWM=$input_uwm
+fi
+
 if [[ -n "${CHECK_UWM+x}" && ${CHECK_UWM} == "false" ]]
 then
   input="y"
@@ -54,32 +61,46 @@ then
     exit 1
 fi
 
+if [[ ! -n "${DEPLOY_RHODS+x}" ]]
+then
+  printf "DEPLOY_RHODS is not set: to skip RHODS installation set the value to false. true otherwise\n"
+  read -p ">> Insert DEPLOY_RHODS: " input_deploy
+  export DEPLOY_RHODS=$input_deploy
+fi
+# if [[ ${DEPLOY_RHODS} == "true" ]]
+#   then
 if [[ ! -n ${TARGET_OPERATOR+x} ]]
-then
-  read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
-  if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
   then
-    export TARGET_OPERATOR=$input_target_op
-    export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
-  else 
-    echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
-    exit 1
+    printf "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?\n"
+    read -p ">> Insert TARGET_OPERATOR: " input_target_op
+    if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
+    then
+      export TARGET_OPERATOR=$input_target_op
+      export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
+    else 
+      echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
+      exit 1
+    fi
+  else      
+    export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
   fi
-else      
-  export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
-fi
-echo "${TARGET_OPERATOR_TYPE}"
-if [[ ${TARGET_OPERATOR} == 'brew' ]] && [[ ! -n "${BREW_TAG+x}" ]]
-then
-  read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
-  if [[ $brew_tag =~ ^[0-9]+$ ]]
+  echo "${TARGET_OPERATOR_TYPE}"
+
+  if [[ ${DEPLOY_RHODS} == "true" ]] && [[ ${TARGET_OPERATOR} == 'brew' ]] && [[ ! -n "${BREW_TAG+x}" ]]
   then
-    export BREW_TAG=$brew_tag
-  else 
-    echo "[ERR] BREW_TAG must be number only"
-    exit 1
-  fi      
+    read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
+    if [[ $brew_tag =~ ^[0-9]+$ ]]
+      then
+        export BREW_TAG=$brew_tag
+      else 
+        echo "[ERR] BREW_TAG must be number only"
+        exit 1
+    fi
 fi
+# else
+#   printf 'RHODS Deployment is disabled. You must set ${DEPLOY_RHODS} to "true" if you want to install it.'
+# fi
+
 
 export KSERVE_OPERATOR_NS=$(getKserveNS)
 export TARGET_OPERATOR_NS=$(getOpNS ${TARGET_OPERATOR_TYPE})
@@ -131,13 +152,16 @@ oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 echo
 echo "[INFO]Update SMMR"
 echo
-if [[ ${TARGET_OPERATOR_TYPE} == "odh" ]];
-then
-  oc create ns opendatahub -oyaml --dry-run=client | oc apply -f-
-  oc::wait::object::availability "oc get project opendatahub" 2 60
-else
-  oc create ns redhat-ods-applications -oyaml --dry-run=client | oc apply -f-
-  oc::wait::object::availability "oc get project redhat-ods-applications" 2 60
+if [[ ${DEPLOY_RHODS} == "true" ]]
+  then
+    if [[ ${TARGET_OPERATOR_TYPE} == "odh" ]];
+    then
+      oc create ns opendatahub -oyaml --dry-run=client | oc apply -f-
+      oc::wait::object::availability "oc get project opendatahub" 2 60
+    else
+      oc create ns redhat-ods-applications -oyaml --dry-run=client | oc apply -f-
+      oc::wait::object::availability "oc get project redhat-ods-applications" 2 60
+    fi
 fi
 oc create ns knative-serving -oyaml --dry-run=client | oc apply -f-
 oc::wait::object::availability "oc get project knative-serving" 2 60
@@ -213,28 +237,33 @@ then
   oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
 fi
 
-# Deploy odh/rhods operator
-echo
-echo "[INFO] Deploy odh/rhods operator"
-echo
-OPERATOR_LABEL="control-plane=controller-manager"
-if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
-then
-  OPERATOR_LABEL="name=rhods-operator"
-  oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
-  oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
-fi
-oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
+if [[ ${DEPLOY_RHODS} == "true" ]]
+  then
+    # Deploy odh/rhods operator
+    echo
+    echo "[INFO] Deploy odh/rhods operator"
+    echo
+    OPERATOR_LABEL="control-plane=controller-manager"
+    if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
+    then
+      OPERATOR_LABEL="name=rhods-operator"
+      oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
+      oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS} " 2 60
+    fi
+    oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
 
-wait_for_pods_ready "${OPERATOR_LABEL}" "${TARGET_OPERATOR_NS}"
-oc wait --for=condition=ready pod -l ${OPERATOR_LABEL} -n ${TARGET_OPERATOR_NS} --timeout=300s 
+    wait_for_pods_ready "${OPERATOR_LABEL}" "${TARGET_OPERATOR_NS}"
+    oc wait --for=condition=ready pod -l ${OPERATOR_LABEL} -n ${TARGET_OPERATOR_NS} --timeout=300s 
 
-# Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
-if [[ -n "${CUSTOM_MANIFESTS_URL+x}" ]]
-then
-  echo
-  echo "Added custom manifest url into default dscinitializations"
-  oc patch dscinitializations default -p="[{\"op\": \"add\", \"path\": \"/spec/manifestsUri\",\"value\": \"${CUSTOM_MANIFESTS_URL}\"}]" --type='json'
+    # Example CUSTOM_MANIFESTS_URL ==> https://github.com/opendatahub-io/odh-manifests/tarball/master
+    if [[ -n "${CUSTOM_MANIFESTS_URL+x}" ]]
+    then
+      echo
+      echo "Added custom manifest url into default dscinitializations"
+      oc patch dscinitializations default -p="[{\"op\": \"add\", \"path\": \"/spec/manifestsUri\",\"value\": \"${CUSTOM_MANIFESTS_URL}\"}]" --type='json'
+    fi
+  else
+    printf "[INFO] Skip deployment odh/rhods operator"
 fi
 
 echo
