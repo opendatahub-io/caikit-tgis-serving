@@ -67,8 +67,7 @@ then
   read -p ">> Insert DEPLOY_RHODS: " input_deploy
   export DEPLOY_RHODS=$input_deploy
 fi
-# if [[ ${DEPLOY_RHODS} == "true" ]]
-#   then
+
 if [[ ! -n ${TARGET_OPERATOR+x} ]]
   then
     printf "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?\n"
@@ -97,10 +96,6 @@ if [[ ! -n ${TARGET_OPERATOR+x} ]]
         exit 1
     fi
 fi
-# else
-#   printf 'RHODS Deployment is disabled. You must set ${DEPLOY_RHODS} to "true" if you want to install it.'
-# fi
-
 
 export KSERVE_OPERATOR_NS=$(getKserveNS)
 export TARGET_OPERATOR_NS=$(getOpNS ${TARGET_OPERATOR_TYPE})
@@ -269,12 +264,11 @@ fi
 echo
 echo "[INFO] Deploy KServe"
 echo
-# ODH 1.9 use alpha api so this logic needed but from ODH 1.10, this logic must be deleted.
-#oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
-if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]]; then
-  oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
-else
-  oc create -f custom-manifests/opendatahub/kserve-dsc-v1alpha1.yaml
+dsc_exists=$(oc get datasciencecluster default --all-namespaces)
+if [[ -n $dsc_exists ]]
+then
+    oc patch datasciencecluster default --type=merge -p '{"spec": {"components":{"kserve": {"managementState": "Managed"}}}}' -n redhat-ods-application
+else 
+    oc create -f custom-manifests/opendatahub/kserve-dsc.yaml
 fi
-
 wait_for_pods_ready "control-plane=kserve-controller-manager" "${KSERVE_OPERATOR_NS}"
