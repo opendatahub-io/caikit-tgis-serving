@@ -220,24 +220,22 @@ bash -x ./scripts/generate-wildcard-certs.sh ${BASE_CERT_DIR} ${DOMAIN_NAME} ${C
 oc create secret tls wildcard-certs --cert=${BASE_CERT_DIR}/wildcard.crt --key=${BASE_CERT_DIR}/wildcard.key -n istio-system
 oc apply -f custom-manifests/serverless/gateways.yaml
 
-# Create brew catalogsource
-if [[ ${TARGET_OPERATOR} == "brew" ]];
-then
-  echo
-  echo "[INFO] Create catalogsource for brew registry"
-  echo
-  sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
-
-  wait_for_pods_ready "olm.catalogSource=rhods-catalog-dev" "openshift-marketplace"
-  oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
-fi
-
 if [[ ${DEPLOY_RHODS} == "true" ]]
   then
     # Deploy odh/rhods operator
     echo
     echo "[INFO] Deploy odh/rhods operator"
     echo
+    # Create brew catalogsource
+    if [[ ${TARGET_OPERATOR} == "brew" ]];
+    then
+      echo
+      echo "[INFO] Create catalogsource for brew registry"
+      echo
+      sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
+      wait_for_pods_ready "olm.catalogSource=rhods-catalog-dev" "openshift-marketplace"
+      oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
+    fi
     OPERATOR_LABEL="control-plane=controller-manager"
     if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
     then
