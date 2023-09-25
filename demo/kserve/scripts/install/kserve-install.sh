@@ -61,11 +61,11 @@ then
     exit 1
 fi
 
-if [[ ! -n "${DEPLOY_RHODS+x}" ]]
+if [[ ! -n "${DEPLOY_OPERATOR+x}" ]]
 then
-  printf "DEPLOY_RHODS is not set: to skip RHODS installation set the value to false. true otherwise\n"
-  read -p ">> Insert DEPLOY_RHODS: " input_deploy
-  export DEPLOY_RHODS=$input_deploy
+  printf "DEPLOY_OPERATOR is not set: to skip RHODS installation set the value to false. true otherwise\n"
+  read -p ">> Insert DEPLOY_OPERATOR: " input_deploy
+  export DEPLOY_OPERATOR=$input_deploy
 fi
 
 if [[ ! -n ${TARGET_OPERATOR+x} ]]
@@ -85,7 +85,7 @@ if [[ ! -n ${TARGET_OPERATOR+x} ]]
   fi
   echo "${TARGET_OPERATOR_TYPE}"
 
-  if [[ ${DEPLOY_RHODS} == "true" ]] && [[ ${TARGET_OPERATOR} == 'brew' ]] && [[ ! -n "${BREW_TAG+x}" ]]
+  if [[ ${DEPLOY_OPERATOR} == "true" ]] && [[ ${TARGET_OPERATOR} == 'brew' ]] && [[ ! -n "${BREW_TAG+x}" ]]
   then
     read -p "BREW_TAG is not set, what is BREW_TAG?" brew_tag
     if [[ $brew_tag =~ ^[0-9]+$ ]]
@@ -147,7 +147,7 @@ oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 echo
 echo "[INFO]Update SMMR"
 echo
-if [[ ${DEPLOY_RHODS} == "true" ]]
+if [[ ${DEPLOY_OPERATOR} == "true" ]]
   then
     if [[ ${TARGET_OPERATOR_TYPE} == "odh" ]];
     then
@@ -220,7 +220,7 @@ bash -x ./scripts/generate-wildcard-certs.sh ${BASE_CERT_DIR} ${DOMAIN_NAME} ${C
 oc create secret tls wildcard-certs --cert=${BASE_CERT_DIR}/wildcard.crt --key=${BASE_CERT_DIR}/wildcard.key -n istio-system
 oc apply -f custom-manifests/serverless/gateways.yaml
 
-if [[ ${DEPLOY_RHODS} == "true" ]]
+if [[ ${DEPLOY_OPERATOR} == "true" ]]
   then
     # Deploy odh/rhods operator
     echo
