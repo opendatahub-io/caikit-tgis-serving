@@ -22,9 +22,9 @@ from typing import Dict, Optional
 import grpc
 
 # First Party
+from caikit.core.exceptions import error_handler
 from caikit.core.module_backends.backend_types import register_backend_type
 from caikit.core.module_backends.base import BackendBase
-from caikit.core.toolkit.errors import error_handler
 import alog
 
 # Local

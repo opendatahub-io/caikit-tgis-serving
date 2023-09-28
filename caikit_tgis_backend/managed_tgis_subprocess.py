@@ -29,7 +29,7 @@ import grpc
 import requests
 
 # First Party
-from caikit.core.toolkit.errors import error_handler
+from caikit.core.exceptions import error_handler
 import alog
 
 # Local
