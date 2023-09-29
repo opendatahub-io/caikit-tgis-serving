@@ -15,7 +15,7 @@
 
 # Standard
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import os
 import shutil
 
@@ -56,6 +56,8 @@ class TGISConnection:
     client_tls: Optional[TLSFilePair] = None
     # Mounted directory where TGIS will look for prompt vector artifacts
     prompt_dir: Optional[str] = None
+    # Channel options for creating the client
+    channel_options: Optional[List[Tuple[str, str]]] = None
     # Private member to hold the client once created
     _client: Optional[generation_pb2_grpc.GenerationServiceStub] = None
 
@@ -69,6 +71,7 @@ class TGISConnection:
     CLIENT_CERT_FILE_KEY = "client_cert_file"
     CLIENT_KEY_FILE_KEY = "client_key_file"
     PROMPT_DIR_KEY = "prompt_dir"
+    LB_POLICY_KEY = "grpc_lb_policy_name"
 
     @classmethod
     def from_config(cls, model_id: str, config: dict) -> Optional["TGISConnection"]:
@@ -81,6 +84,20 @@ class TGISConnection:
                 }
             )
             log.debug("Resolved hostname [%s] for model %s", hostname, model_id)
+
+            # Create channel options
+            channel_options = []
+            lb_policy = config.get(cls.LB_POLICY_KEY) or None
+            error.type_check(
+                "<TGB17223790E>",
+                str,
+                allow_none=True,
+                **{cls.LB_POLICY_KEY: lb_policy},
+            )
+            if lb_policy:
+                # pylint: disable=line-too-long
+                # Cite: https://grpc.github.io/grpc/core/group__grpc__arg__keys.html#ga72c2b475e218ecfd36bb7d3551d0295b
+                channel_options.append(("grpc.lb_policy_name", lb_policy))
 
             # Look for the prompt dir
             prompt_dir = config.get(cls.PROMPT_DIR_KEY) or None
@@ -153,6 +170,7 @@ class TGISConnection:
                 ca_cert_file=ca_cert,
                 client_tls=client_tls,
                 prompt_dir=prompt_dir,
+                channel_options=channel_options,
             )
 
     @property
@@ -237,7 +255,9 @@ class TGISConnection:
             )
             if not self.tls_enabled:
                 log.debug("Connecting to TGIS at [%s] INSECURE", self.hostname)
-                channel = grpc.insecure_channel(self.hostname)
+                channel = grpc.insecure_channel(
+                    self.hostname, options=self.channel_options
+                )
             else:
                 log.debug("Connecting to TGIS at [%s] SECURE", self.hostname)
                 creds_kwargs = {
@@ -252,7 +272,9 @@ class TGISConnection:
                         self.client_tls.key_file
                     )
                 credentials = grpc.ssl_channel_credentials(**creds_kwargs)
-                channel = grpc.secure_channel(self.hostname, credentials=credentials)
+                channel = grpc.secure_channel(
+                    self.hostname, credentials=credentials, options=self.channel_options
+                )
             self._client = generation_pb2_grpc.GenerationServiceStub(channel)
         return self._client
 
