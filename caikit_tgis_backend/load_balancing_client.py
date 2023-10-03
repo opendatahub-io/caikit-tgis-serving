@@ -17,7 +17,7 @@
 - Polls DNS and triggers channel re-connection when new endpoints are detected
 """
 # Standard
-from threading import RLock
+from functools import partial
 from typing import Generic, List, Optional, Set, Tuple, Type, TypeVar
 import socket
 import threading
@@ -56,42 +56,63 @@ class GRPCLoadBalancer(Generic[T]):
             target.count(":") == 1,
             "Target must be provided in {host}:{port} format",
         )
-        self.options = channel_options or []
-        self.options.append(("grpc.lb_policy_name", policy))
-        self.credentials = credentials
-        self._client = None
-        self._client_lock = RLock()
+        channel_options = channel_options or []
+        # pylint: disable=line-too-long
+        # Cite: https://grpc.github.io/grpc/core/group__grpc__arg__keys.html#ga72c2b475e218ecfd36bb7d3551d0295b
+        channel_options.append(("grpc.lb_policy_name", policy))
+
+        # Save a partial for re-constructing channels later
+        if credentials:
+            log.debug3("Creating load-balancing client with secure channel")
+            self.channel_partial = partial(
+                grpc.secure_channel,
+                target=self.target,
+                options=channel_options,
+                credentials=credentials,
+            )
+        else:
+            log.debug3("Creating load-balancing client with insecure channel")
+            self.channel_partial = partial(
+                grpc.insecure_channel, target=self.target, options=channel_options
+            )
+
+        # Build the client once
+        self._client = self.client_class(self.channel_partial())
 
         # Get initial IP set
         self._ip_set: Set[Tuple[str, int]] = set()
 
         self.poll_interval = poll_interval_s
         self._timer: Optional[threading.Timer] = None
+        self._poll_lock = threading.Lock()
         self._poll_for_ips()
 
     def __del__(self):
-        if hasattr(self, "_timer") and self._timer is not None and self._timer.is_alive():
+        """Attempt a bit of cleanup"""
+        if (
+            hasattr(self, "_timer")
+            and self._timer is not None
+            and self._timer.is_alive()
+        ):
             self._timer.cancel()
 
     def get_client(self) -> T:
-        """Returns the client. The result should not be cached as the client will be rebuilt
-        periodically"""
-        with self._client_lock:
-            if self._client is None:
-                self._rebuild_client()
-            return self._client
+        """Returns the client instance. The channel that this client holds will periodically be
+        replaced"""
+        return self._client
 
     def _poll_for_ips(self):
         try:
             log.debug3("Polling DNS for updates to service: %s", self.target)
-            new_ip_set = self._get_ip_set()
+            with self._poll_lock:
+                new_ip_set = self._get_ip_set()
 
-            # Create a new client only if new IP/port pairs are found
-            if len(new_ip_set - self._ip_set) > 0:
-                self._rebuild_client()
+                # Create a new client only if new IP/port pairs are found
+                if new_ip_set - self._ip_set:
+                    self._reconnect()
 
-            self._ip_set = new_ip_set
-        except Exception:  # pylint: disable=broad-exception-caught
+                self._ip_set = new_ip_set
+        except (socket.gaierror, socket.herror):
             log.warning("Failed to poll DNS for updates", exc_info=True)
 
         # Cancel any duplicate timers
@@ -104,18 +125,20 @@ class GRPCLoadBalancer(Generic[T]):
         self._timer.daemon = True
         self._timer.start()
 
-    def _rebuild_client(self):
-        log.debug3("Rebuilding client for service: %s", self.target)
-        if self.credentials:
-            channel = grpc.secure_channel(
-                target=self.target, credentials=self.credentials, options=self.options
-            )
-        else:
-            channel = grpc.insecure_channel(target=self.target, options=self.options)
-        with self._client_lock:
-            self._client = self.client_class(channel)
+    def _reconnect(self):
+        """Force-reconnect the client by re-invoking the initializer with a new channel"""
+        log.debug3("Reconnecting channel for service: %s", self.target)
+        # 🌶️🌶️🌶️ We don't want to rebuild a new client, since that would require that all users
+        # update any client references that they're holding.
+        # This __init__ call re-initializes the client instance that many things may be holding.
+        # This should be safe since the grpc client classes are "dumb" wrappers around channels.
+        # pylint: disable=unnecessary-dunder-call
+        self.client_class.__init__(self=self._client, channel=self.channel_partial())
 
     def _get_ip_set(self) -> Set[Tuple[str, int]]:
+        """Uses `socket` to attempt a DNS lookup.
+        Returns a set of (ip address, port) tuples that self.target resolves to
+        """
         host, port = self.target.split(":")
         hosts = socket.getaddrinfo(host, port)
         ip_set = {host[4] for host in hosts}

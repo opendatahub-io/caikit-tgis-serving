@@ -15,7 +15,7 @@
 
 # Standard
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import os
 import shutil
 
@@ -27,6 +27,7 @@ from caikit.core.exceptions import error_handler
 import alog
 
 # Local
+from .load_balancing_client import GRPCLoadBalancer
 from .protobufs import generation_pb2, generation_pb2_grpc
 
 log = alog.use_channel("TGCONN")
@@ -39,6 +40,7 @@ class TLSFilePair:
     key_file: str
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class TGISConnection:
 
@@ -56,8 +58,10 @@ class TGISConnection:
     client_tls: Optional[TLSFilePair] = None
     # Mounted directory where TGIS will look for prompt vector artifacts
     prompt_dir: Optional[str] = None
-    # Channel options for creating the client
-    channel_options: Optional[List[Tuple[str, str]]] = None
+    # Load balancing policy
+    lb_policy: Optional[str] = None
+    # DNS poll interval (seconds) for LB updates
+    lb_poll_interval_s: Optional[float] = None
     # Private member to hold the client once created
     _client: Optional[generation_pb2_grpc.GenerationServiceStub] = None
 
@@ -72,6 +76,7 @@ class TGISConnection:
     CLIENT_KEY_FILE_KEY = "client_key_file"
     PROMPT_DIR_KEY = "prompt_dir"
     LB_POLICY_KEY = "grpc_lb_policy_name"
+    LB_POLL_INTERVAL_KEY = "grpc_lb_poll_interval_s"
 
     @classmethod
     def from_config(cls, model_id: str, config: dict) -> Optional["TGISConnection"]:
@@ -85,8 +90,6 @@ class TGISConnection:
             )
             log.debug("Resolved hostname [%s] for model %s", hostname, model_id)
 
-            # Create channel options
-            channel_options = []
             lb_policy = config.get(cls.LB_POLICY_KEY) or None
             error.type_check(
                 "<TGB17223790E>",
@@ -94,10 +97,15 @@ class TGISConnection:
                 allow_none=True,
                 **{cls.LB_POLICY_KEY: lb_policy},
             )
-            if lb_policy:
-                # pylint: disable=line-too-long
-                # Cite: https://grpc.github.io/grpc/core/group__grpc__arg__keys.html#ga72c2b475e218ecfd36bb7d3551d0295b
-                channel_options.append(("grpc.lb_policy_name", lb_policy))
+
+            lb_poll_interval_s = config.get(cls.LB_POLL_INTERVAL_KEY) or None
+            error.type_check(
+                "<TGB17223790E>",
+                float,
+                int,
+                allow_none=True,
+                **{cls.LB_POLL_INTERVAL_KEY: lb_poll_interval_s},
+            )
 
             # Look for the prompt dir
             prompt_dir = config.get(cls.PROMPT_DIR_KEY) or None
@@ -170,7 +178,8 @@ class TGISConnection:
                 ca_cert_file=ca_cert,
                 client_tls=client_tls,
                 prompt_dir=prompt_dir,
-                channel_options=channel_options,
+                lb_policy=lb_policy,
+                lb_poll_interval_s=lb_poll_interval_s,
             )
 
     @property
@@ -245,6 +254,7 @@ class TGISConnection:
 
     def get_client(self) -> generation_pb2_grpc.GenerationServiceStub:
         """Get a grpc client for the connection"""
+        load_balancer_kwargs = {}
         if self._client is None:
             log.info(
                 "<TGB20236231I>",
@@ -255,9 +265,6 @@ class TGISConnection:
             )
             if not self.tls_enabled:
                 log.debug("Connecting to TGIS at [%s] INSECURE", self.hostname)
-                channel = grpc.insecure_channel(
-                    self.hostname, options=self.channel_options
-                )
             else:
                 log.debug("Connecting to TGIS at [%s] SECURE", self.hostname)
                 creds_kwargs = {
@@ -272,10 +279,22 @@ class TGISConnection:
                         self.client_tls.key_file
                     )
                 credentials = grpc.ssl_channel_credentials(**creds_kwargs)
-                channel = grpc.secure_channel(
-                    self.hostname, credentials=credentials, options=self.channel_options
-                )
-            self._client = generation_pb2_grpc.GenerationServiceStub(channel)
+                load_balancer_kwargs["credentials"] = credentials
+
+            # Override the lb policy, if configured.
+            # The load balancer will always provide a default if we don't pass one.
+            if self.lb_policy:
+                load_balancer_kwargs["policy"] = self.lb_policy
+
+            if self.lb_poll_interval_s:
+                load_balancer_kwargs["poll_interval_s"] = self.lb_poll_interval_s
+
+            load_balancer = GRPCLoadBalancer(
+                client_class=generation_pb2_grpc.GenerationServiceStub,
+                target=self.hostname,
+                **load_balancer_kwargs,
+            )
+            self._client = load_balancer.get_client()
         return self._client
 
     def test_connection(self):
