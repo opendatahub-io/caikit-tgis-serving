@@ -22,6 +22,8 @@ import contextlib
 import datetime
 import random
 import socket
+import threading
+import time
 
 # Third Party
 import grpc
@@ -29,7 +31,7 @@ import pytest
 import tls_test_tools
 
 # Local
-from caikit_tgis_backend.load_balancing_client import GRPCLoadBalancer
+from caikit_tgis_backend.load_balancing_proxy import GRPCLoadBalancerProxy
 from caikit_tgis_backend.protobufs import generation_pb2, generation_pb2_grpc
 
 # 🌶️🌶️🌶️ These tests don't actually flex the real grpc load balancing between remotes.
@@ -99,31 +101,63 @@ def mock_ip_set(ports: List[int]):
 def test_client_works():
     """Basic test- does it turn on"""
     with mock_tgis_server() as port:
-        wrapper = GRPCLoadBalancer(
+        client = GRPCLoadBalancerProxy(
             client_class=generation_pb2_grpc.GenerationServiceStub,
             target=f"localhost:{port}",
         )
-        client = wrapper.get_client()
 
         response = client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
         assert response.responses[0].token_count == 5
+        client.shutdown_dns_poll()
+
+
+def test_dns_poll_shutdown():
+    """Make sure the polling isn't totally runaway"""
+    # NB: I hate sleeps in tests!
+    # But, I don't know of a different way to properly deal with timers :(
+
+    # little sleep first to let other threads die...
+    time.sleep(0.01)
+    initial_thread_count = threading.active_count()
+
+    client = GRPCLoadBalancerProxy(
+        client_class=generation_pb2_grpc.GenerationServiceStub,
+        target=f"localhost:80",
+        poll_interval_s=0.0001,
+    )
+
+    # We should have at least another thread for the dns poll
+    assert threading.active_count() > initial_thread_count
+
+    # Ping the poll method a bunch ourselves
+    for i in range(100):
+        client._dns_poll()
+
+    time.sleep(0.1)
+    # We should not have a ton more threads
+    assert threading.active_count() < initial_thread_count + 10
+
+    # Shut it down and ensure we no longer have poll threads
+    client.shutdown_dns_poll()
+    time.sleep(0.1)
+    assert threading.active_count() <= initial_thread_count
 
 
 def test_target_validation():
     """Targets must be in host:port format"""
     with pytest.raises(ValueError, match="Target must be provided in .* format"):
-        GRPCLoadBalancer(
+        GRPCLoadBalancerProxy(
             client_class=generation_pb2_grpc.GenerationServiceStub, target="localhost"
         )
 
     with pytest.raises(ValueError, match="Target must be provided in .* format"):
-        GRPCLoadBalancer(
+        GRPCLoadBalancerProxy(
             client_class=generation_pb2_grpc.GenerationServiceStub, target="9001"
         )
 
     with pytest.raises(ValueError, match="Target must be provided in .* format"):
         # NB: dns targets not supported
-        GRPCLoadBalancer(
+        GRPCLoadBalancerProxy(
             client_class=generation_pb2_grpc.GenerationServiceStub,
             target="dns://foo.bar/localhost:9001",
         )
@@ -136,12 +170,11 @@ def test_client_rebuilds_on_ip_change():
     poll_interval = 0.0001  # 0.1 ms
     with mock_tgis_server() as port:
         with mock_ip_set([8080]):
-            wrapper = GRPCLoadBalancer(
+            client = GRPCLoadBalancerProxy(
                 client_class=generation_pb2_grpc.GenerationServiceStub,
                 target=f"localhost:{port}",
                 poll_interval_s=poll_interval,
             )
-            client = wrapper.get_client()
             client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
             first_tokenize_method = client.Tokenize
 
@@ -153,26 +186,28 @@ def test_client_rebuilds_on_ip_change():
                     milliseconds=100
                 ), "Client did not update"
 
-            # new client still works
-            new_client = wrapper.get_client()
-            new_client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
+            # client still works
+            client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
+
+            client.shutdown_dns_poll()
 
 
 def test_client_does_not_rebuild_when_ips_do_not_change():
     """Make sure we're not churning a ton of clients"""
     with mock_tgis_server() as port:
         with mock_ip_set([8080, 9090]):
-            wrapper = GRPCLoadBalancer(
+            client = GRPCLoadBalancerProxy(
                 client_class=generation_pb2_grpc.GenerationServiceStub,
                 target=f"localhost:{port}",
             )
-            client = wrapper.get_client()
             client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
             tokenize_ptr = client.Tokenize
 
             # Force poll which would update the client
-            wrapper._poll_for_ips()
+            client._dns_poll()
             assert client.Tokenize is tokenize_ptr
+
+            client.shutdown_dns_poll()
 
 
 def test_client_does_not_rebuild_when_ips_drop_out():
@@ -180,18 +215,18 @@ def test_client_does_not_rebuild_when_ips_drop_out():
     The grpc load balancing policy should close the sub-channel and re-query DNS anyway."""
     with mock_tgis_server() as port:
         with mock_ip_set([8080, 9090]):
-            wrapper = GRPCLoadBalancer(
+            client = GRPCLoadBalancerProxy(
                 client_class=generation_pb2_grpc.GenerationServiceStub,
                 target=f"localhost:{port}",
             )
-            client = wrapper.get_client()
             client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
             tokenize_ptr = client.Tokenize
 
         with mock_ip_set([8080]):
             # Force poll which would update the client
-            wrapper._poll_for_ips()
+            client._dns_poll()
             assert client.Tokenize is tokenize_ptr
+            client.shutdown_dns_poll()
 
 
 def test_client_handles_socket_errors():
@@ -199,12 +234,11 @@ def test_client_handles_socket_errors():
     poll_interval = 0.0001  # 0.1 ms
     with mock_tgis_server() as port:
         with mock_ip_set([8080, 9090]):
-            wrapper = GRPCLoadBalancer(
+            client = GRPCLoadBalancerProxy(
                 client_class=generation_pb2_grpc.GenerationServiceStub,
                 target=f"localhost:{port}",
                 poll_interval_s=poll_interval,
             )
-            client = wrapper.get_client()
             client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
             original_tokenize = client.Tokenize
 
@@ -221,9 +255,10 @@ def test_client_handles_socket_errors():
                 client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
 
             # no more socket errors, now force poll and ensure nothing changed
-            wrapper._poll_for_ips()
+            client._dns_poll()
             assert client.Tokenize == original_tokenize
             client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
+            client.shutdown_dns_poll()
 
 
 def test_client_reconnect_under_load():
@@ -233,11 +268,10 @@ def test_client_reconnect_under_load():
     pool = ThreadPoolExecutor(max_workers=20)
 
     with mock_tgis_server() as port:
-        wrapper = GRPCLoadBalancer(
+        client = GRPCLoadBalancerProxy(
             client_class=generation_pb2_grpc.GenerationServiceStub,
             target=f"localhost:{port}",
         )
-        client = wrapper.get_client()
 
         def do_work():
             return client.Tokenize(request=generation_pb2.BatchedTokenizeRequest())
@@ -252,9 +286,10 @@ def test_client_reconnect_under_load():
         for i in range(int(num_calls / stride)):
             with mock_ip_set([8000 + i]):
                 # force re-poll to reconnect the client running in the pool
-                wrapper._poll_for_ips()
+                client._dns_poll()
                 # Let some of the work happen
                 [f.result() for f in futures[i * stride : (i + 1) * stride]]
+        client.shutdown_dns_poll()
 
 
 @pytest.mark.skip("sanity check only")

@@ -27,7 +27,7 @@ from caikit.core.exceptions import error_handler
 import alog
 
 # Local
-from .load_balancing_client import GRPCLoadBalancer
+from .load_balancing_proxy import GRPCLoadBalancerProxy
 from .protobufs import generation_pb2, generation_pb2_grpc
 
 log = alog.use_channel("TGCONN")
@@ -289,12 +289,12 @@ class TGISConnection:
             if self.lb_poll_interval_s:
                 load_balancer_kwargs["poll_interval_s"] = self.lb_poll_interval_s
 
-            load_balancer = GRPCLoadBalancer(
+            load_balancer = GRPCLoadBalancerProxy(
                 client_class=generation_pb2_grpc.GenerationServiceStub,
                 target=self.hostname,
                 **load_balancer_kwargs,
             )
-            self._client = load_balancer.get_client()
+            self._client = load_balancer.client
         return self._client
 
     def test_connection(self):

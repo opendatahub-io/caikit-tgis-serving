@@ -36,8 +36,8 @@ error = error_handler.get(log)
 
 
 # pylint: disable=too-many-instance-attributes
-class GRPCLoadBalancer(Generic[T]):
-    """Wraps a grpc client class T, rebuilding the client when new IPs are available"""
+class GRPCLoadBalancerProxy(Generic[T]):
+    """Proxies a grpc client class T, reconnecting the client when new IPs are available"""
 
     def __init__(
         self,
@@ -48,6 +48,8 @@ class GRPCLoadBalancer(Generic[T]):
         credentials: Optional[str] = None,
         channel_options: Optional[List[Tuple[str, str]]] = None,
     ):
+        # Ensure that self._client always exists. It is required by the __getattr__ proxying
+        self._client = None
         self.client_class = client_class
         self.target = target
 
@@ -85,10 +87,30 @@ class GRPCLoadBalancer(Generic[T]):
         self.poll_interval = poll_interval_s
         self._timer: Optional[threading.Timer] = None
         self._poll_lock = threading.Lock()
-        self._poll_for_ips()
+        self._shutdown = False
+        self._dns_poll()
 
     def __del__(self):
-        """Attempt a bit of cleanup"""
+        """Attempt a bit of cleanup on GC"""
+        self.shutdown_dns_poll()
+
+    def __getattr__(self, item):
+        """Proxies self._client so that self is the grpc client"""
+        return getattr(self._client, item)
+
+    @property
+    def client(self) -> T:
+        """Syntactic sugar to assert that we are in fact a type T.
+
+        Returns the client instance (self). The channel that this client holds will periodically be
+        replaced when DNS polling indicates new hosts are available."""
+        return self
+
+    def shutdown_dns_poll(self):
+        """Shuts down the internal DNS poll.
+        This should happen on garbage collection, and is exposed here to explicitly control the
+        polling lifecycle if needed."""
+        self._shutdown = True
         if (
             hasattr(self, "_timer")
             and self._timer is not None
@@ -96,12 +118,11 @@ class GRPCLoadBalancer(Generic[T]):
         ):
             self._timer.cancel()
 
-    def get_client(self) -> T:
-        """Returns the client instance. The channel that this client holds will periodically be
-        replaced"""
-        return self._client
-
-    def _poll_for_ips(self):
+    def _dns_poll(self):
+        """Run the internal DNS poll. This method re-schedules itself until shutdown_dns_poll
+        is called."""
+        if self._shutdown:
+            return
         # Lock for both _ip_set and _timer
         with self._poll_lock:
             try:
@@ -123,7 +144,7 @@ class GRPCLoadBalancer(Generic[T]):
 
             # Schedule next poll
             log.debug3("Scheduling next DNS poll in %s seconds", self.poll_interval)
-            self._timer = threading.Timer(self.poll_interval, self._poll_for_ips)
+            self._timer = threading.Timer(self.poll_interval, self._dns_poll)
             self._timer.daemon = True
             self._timer.start()
 
