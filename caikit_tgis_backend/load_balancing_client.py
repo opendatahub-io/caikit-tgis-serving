@@ -102,9 +102,11 @@ class GRPCLoadBalancer(Generic[T]):
         return self._client
 
     def _poll_for_ips(self):
-        try:
-            log.debug3("Polling DNS for updates to service: %s", self.target)
-            with self._poll_lock:
+        # Lock for both _ip_set and _timer
+        with self._poll_lock:
+            try:
+                log.debug3("Polling DNS for updates to service: %s", self.target)
+
                 new_ip_set = self._get_ip_set()
 
                 # Create a new client only if new IP/port pairs are found
@@ -112,18 +114,18 @@ class GRPCLoadBalancer(Generic[T]):
                     self._reconnect()
 
                 self._ip_set = new_ip_set
-        except (socket.gaierror, socket.herror):
-            log.warning("Failed to poll DNS for updates", exc_info=True)
+            except (socket.gaierror, socket.herror):
+                log.warning("Failed to poll DNS for updates", exc_info=True)
 
-        # Cancel any duplicate timers
-        if self._timer is not None and self._timer.is_alive():
-            self._timer.cancel()
+            # Cancel any duplicate timers
+            if self._timer is not None and self._timer.is_alive():
+                self._timer.cancel()
 
-        # Schedule next poll
-        log.debug3("Scheduling next DNS poll in %s seconds", self.poll_interval)
-        self._timer = threading.Timer(self.poll_interval, self._poll_for_ips)
-        self._timer.daemon = True
-        self._timer.start()
+            # Schedule next poll
+            log.debug3("Scheduling next DNS poll in %s seconds", self.poll_interval)
+            self._timer = threading.Timer(self.poll_interval, self._poll_for_ips)
+            self._timer.daemon = True
+            self._timer.start()
 
     def _reconnect(self):
         """Force-reconnect the client by re-invoking the initializer with a new channel"""
