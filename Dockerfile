@@ -1,4 +1,4 @@
-FROM quay.io/opendatahub/text-generation-inference:stable-406b404
+FROM quay.io/opendatahub/text-generation-inference:fast-66ff883
 
 USER root
 

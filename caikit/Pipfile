@@ -10,7 +10,7 @@ name = "pytorch_nightly"
 
 [packages]
 caikit-nlp = {editable = true, ref = "6f099312d65a15dc20952abfe77d3990a83669a3", git = "https://github.com/opendatahub-io/caikit-nlp.git"}
-torch = {version = "==2.1.0.dev20230730+cu118", index = "pytorch_nightly" }
+torch = {version = "==2.1.0.dev20230904+cu118", index = "pytorch_nightly" }
 pytorch-triton = {version = "==2.1.0+e6216047b8", index = "pytorch_nightly"}
 
 [dev-packages]
