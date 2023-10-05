@@ -123,7 +123,10 @@ def test_dns_poll_shutdown():
     client = GRPCLoadBalancerProxy(
         client_class=generation_pb2_grpc.GenerationServiceStub,
         target=f"localhost:80",
-        poll_interval_s=0.0001,
+        # NOTE: poll interval needs to be a bit in tune with the range and sleep below
+        # otherwise the test would fail since we would spin up more
+        # threads
+        poll_interval_s=0.01,
     )
 
     # We should have at least another thread for the dns poll
