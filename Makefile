@@ -1,4 +1,4 @@
-TGIS_IMAGE=quay.io/opendatahub/text-generation-inference:stable-406b404
+TGIS_IMAGE=quay.io/opendatahub/text-generation-inference:stable-bafd218
 
 .PHONY: default
 
