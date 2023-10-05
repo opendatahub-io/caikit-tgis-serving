@@ -17,9 +17,9 @@
 2. Enable and configure User Workload Monitoring.
 
    ~~~
-   oc apply -f custom-manifests/metrics/uwm-cm-enable.yaml -n $TEST_NS
+   oc apply -f custom-manifests/metrics/uwm-cm-enable.yaml
    
-   oc apply -f custom-manifests/metrics/uwm-cm-conf.yaml -n $TEST_NS
+   oc apply -f custom-manifests/metrics/uwm-cm-conf.yaml
    ~~~
 
    Optionally, you can change the retention time by editing the `uwm-cm-conf.yaml` file.
