@@ -58,6 +58,13 @@ class GRPCLoadBalancerProxy(Generic[T]):
             target.count(":") == 1,
             "Target must be provided in {host}:{port} format",
         )
+
+        error.value_check(
+            "<TGB01133969E>",
+            poll_interval_s > 0,
+            "poll_interval_s should be > 0"
+        )
+
         channel_options = channel_options or []
         # pylint: disable=line-too-long
         # Cite: https://grpc.github.io/grpc/core/group__grpc__arg__keys.html#ga72c2b475e218ecfd36bb7d3551d0295b
@@ -138,6 +145,13 @@ class GRPCLoadBalancerProxy(Generic[T]):
             except (socket.gaierror, socket.herror):
                 log.warning("Failed to poll DNS for updates", exc_info=True)
 
+            except Exception as ex:
+                log.warning(
+                    "<TGB58023131W>",
+                    "Unhandled exception caught during polling DNS for updates: %s",
+                    ex
+                )
+
             # Cancel any duplicate timers
             if self._timer is not None and self._timer.is_alive():
                 self._timer.cancel()
@@ -164,6 +178,9 @@ class GRPCLoadBalancerProxy(Generic[T]):
         """
         host, port = self.target.split(":")
         hosts = socket.getaddrinfo(host, port)
+        # socket.getaddrinfo returns a tuple containing information
+        # about socket, where 4th index contains sockaddr containing
+        # ip address and port
         ip_set = {host[4] for host in hosts}
         log.debug3("IPs for target: %s, %s", self.target, ip_set)
         return ip_set
