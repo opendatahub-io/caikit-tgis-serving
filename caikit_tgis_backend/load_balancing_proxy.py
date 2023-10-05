@@ -60,9 +60,7 @@ class GRPCLoadBalancerProxy(Generic[T]):
         )
 
         error.value_check(
-            "<TGB01133969E>",
-            poll_interval_s > 0,
-            "poll_interval_s should be > 0"
+            "<TGB01133969E>", poll_interval_s > 0, "poll_interval_s should be > 0"
         )
 
         channel_options = channel_options or []
@@ -145,11 +143,12 @@ class GRPCLoadBalancerProxy(Generic[T]):
             except (socket.gaierror, socket.herror):
                 log.warning("Failed to poll DNS for updates", exc_info=True)
 
+            # pylint: disable=broad-exception-caught)
             except Exception as ex:
                 log.warning(
                     "<TGB58023131W>",
                     "Unhandled exception caught during polling DNS for updates: %s",
-                    ex
+                    ex,
                 )
 
             # Cancel any duplicate timers
