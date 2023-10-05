@@ -3,7 +3,7 @@ FROM quay.io/opendatahub/text-generation-inference:stable-bafd218
 USER root
 
 # Add grpc-ecosystem health probe
-ARG GRPC_HEALTH_PROBE_VERSION=v0.4.19
+ARG GRPC_HEALTH_PROBE_VERSION=v0.4.20
 
 WORKDIR /caikit
 COPY caikit /caikit
