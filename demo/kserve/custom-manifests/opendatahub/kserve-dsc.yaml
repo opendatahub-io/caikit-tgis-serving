@@ -1,5 +1,5 @@
 kind: DataScienceCluster
-apiVersion: datasciencecluster.opendatahub.io/v1alpha1
+apiVersion: datasciencecluster.opendatahub.io/v1
 metadata:
   labels:
     app.kubernetes.io/created-by: rhods-operator
@@ -7,20 +7,20 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: datasciencecluster
     app.kubernetes.io/part-of: rhods-operator
-  name: kserve
+  name: default
 spec:
   components:
     codeflare:
-      enabled: false
+      managementState: Removed
     dashboard:
-      enabled: false
+      managementState: Removed
     datasciencepipelines:
-      enabled: false
+      managementState: Removed
     kserve:
-      enabled: true
+      managementState: Managed
     modelmeshserving:
-      enabled: false
+      managementState: Removed
     ray:
-      enabled: false
+      managementState: Removed
     workbenches:
-      enabled: false
+      managementState: Removed 

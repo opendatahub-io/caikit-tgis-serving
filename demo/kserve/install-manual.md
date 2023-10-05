@@ -131,7 +131,7 @@ Note: You have the alternative option of installing the KServe/Caikit/TGIS stack
 11. Deploy KServe with Open Data Hub Operator 2.0.
      ~~~
      oc create ns ${TARGET_OPERATOR_NS}
-     oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.0.yaml
+     oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
   
      sleep 10
      oc wait --for=condition=ready pod -l name=rhods-operator -n ${TARGET_OPERATOR_NS} --timeout=300s 

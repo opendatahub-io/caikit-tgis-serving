@@ -48,3 +48,4 @@ After you install the KServe/Caikit/TGIS stack, you can try these demos:
 - [Splitting traffic](/demo/kserve/traffic-splitting.md)
 - [Upgrading the runtime](/demo/kserve/upgrade-runtime.md)
 - [Accessing metrics](/demo/kserve/metrics.md)
+- [Performance Configuration](/demo/kserve/performance-config.md)

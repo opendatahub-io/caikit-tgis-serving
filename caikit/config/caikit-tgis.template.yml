@@ -21,7 +21,7 @@ model_management:
           - type: TGIS
             config:
               local:
-                load_timeout: 120
+                load_timeout: 3600
                 grpc_port: null
                 http_port: null
                 health_poll_delay: 1.0

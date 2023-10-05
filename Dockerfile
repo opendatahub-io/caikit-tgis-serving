@@ -1,6 +1,9 @@
-FROM quay.io/opendatahub/text-generation-inference:fast-283ec87
+FROM quay.io/opendatahub/text-generation-inference:stable-bafd218
 
 USER root
+
+# Add grpc-ecosystem health probe
+ARG GRPC_HEALTH_PROBE_VERSION=v0.4.19
 
 WORKDIR /caikit
 COPY caikit /caikit
@@ -14,6 +17,10 @@ RUN yum -y update && yum -y install git git-lfs && yum clean all && \
     adduser -g 0 -u 1001 caikit --home-dir /caikit && \
     chown -R 1001:0 /caikit /opt/models && \
     chmod -R g=u /caikit /opt/models
+
+# This is for the use-cases without kserve
+RUN curl -Lo /usr/local/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /usr/local/bin/grpc_health_probe
 
 USER 1001
 
