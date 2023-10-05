@@ -44,7 +44,7 @@ class GRPCLoadBalancerProxy(Generic[T]):
         client_class: Type[T],
         target: str,
         policy: str = "round_robin",
-        poll_interval_s: float = 10,
+        poll_interval_s: Optional[float] = 10,
         credentials: Optional[str] = None,
         channel_options: Optional[List[Tuple[str, str]]] = None,
     ):
@@ -60,7 +60,7 @@ class GRPCLoadBalancerProxy(Generic[T]):
         )
 
         error.value_check(
-            "<TGB01133969E>", poll_interval_s > 0, "poll_interval_s should be > 0"
+            "<TGB01133969E>", poll_interval_s is None or poll_interval_s >= 0, "poll_interval_s should be > 0"
         )
 
         channel_options = channel_options or []
@@ -93,7 +93,9 @@ class GRPCLoadBalancerProxy(Generic[T]):
         self._timer: Optional[threading.Timer] = None
         self._poll_lock = threading.Lock()
         self._shutdown = False
-        self._dns_poll()
+        if self.poll_interval:
+            log.debug2("Enabling DNS poll interval every %f seconds", self.poll_interval)
+            self._dns_poll()
 
     def __del__(self):
         """Attempt a bit of cleanup on GC"""
@@ -149,6 +151,7 @@ class GRPCLoadBalancerProxy(Generic[T]):
                     "<TGB58023131W>",
                     "Unhandled exception caught during polling DNS for updates: %s",
                     ex,
+                    exc_info=True,
                 )
 
             # Cancel any duplicate timers
