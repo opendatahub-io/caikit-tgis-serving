@@ -9,15 +9,33 @@ spec:
       enabled: false
     kiali:
       name: kiali
-      enabled: true
+      enabled: false
     prometheus:
       enabled: false
     jaeger: 
       name: jaeger
+      enabled: false
   security:
     dataPlane:
-      mtls: false # otherwise inference-graph will not work. We use PeerAuthentication resources to force mTLS
+      mtls: true # otherwise inference-graph will not work. We use PeerAuthentication resources to force mTLS
     identity:
       type: ThirdParty        
+  techPreview:
+    meshConfig:
+      defaultConfig:
+        terminationDrainDuration: 35s
+  gateways:
+    ingress:
+      service:
+        metadata:
+          labels:
+            knative: ingressgateway
+  proxy:
+    networking:
+      trafficControl:
+        inbound:
+          excludedPorts:
+            - 8444 # metrics
+            - 8022 # serving: wait-for-drain k8s pre-stop hook              
   profiles:
     - default

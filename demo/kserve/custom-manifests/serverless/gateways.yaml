@@ -12,7 +12,7 @@ spec:
       protocol: TCP
       targetPort: 8081
   selector:
-    istio: ingressgateway
+    knative: ingressgateway
   type: ClusterIP
 ---
 apiVersion: networking.istio.io/v1beta1
@@ -22,7 +22,7 @@ metadata:
   namespace: knative-serving
 spec:
   selector:
-    istio: ingressgateway
+    knative: ingressgateway
   servers:
     - hosts:
         - '*'
@@ -41,7 +41,7 @@ metadata:
   namespace: knative-serving
 spec:
   selector:
-    istio: ingressgateway
+    knative: ingressgateway
   servers:
     - hosts:
         - '*'
