@@ -98,7 +98,7 @@ Note: You have the alternative option of installing the KServe/Caikit/TGIS stack
    export BASE_CERT_DIR=${BASE_DIR}/certs
    export DOMAIN_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' | awk -F'.' '{print $(NF-1)"."$NF}')
    export COMMON_NAME=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-   
+
    mkdir ${BASE_DIR}
    mkdir ${BASE_CERT_DIR}
 
