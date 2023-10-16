@@ -1,26 +1,73 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caikit-tgis-config
+data:
+  caikit.yml: |
+    runtime:
+      library: caikit_nlp
+      local_models_dir: /mnt/models/
+      lazy_load_local_models: true
+
+    model_management:
+      finders:
+        default:
+          type: MULTI
+          config:
+            finder_priority:
+              - tgis-auto
+        tgis-auto:
+          type: TGIS-AUTO
+          config:
+            test_connection: true
+      initializers:
+        default:
+          type: LOCAL
+          config:
+            backend_priority:
+              - type: TGIS
+                config:
+                  connection:
+                    hostname: localhost:8033
+---
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
   name: caikit-runtime
 spec:
-  containers:
-  - env:
-    - name: RUNTIME_LOCAL_MODELS_DIR
-      value: /mnt/models
-    # TODO: This will eventually point to the official image
-    image: quay.io/opendatahub/caikit-tgis-serving@sha256:20cbc7b312e0dc63903d4a2c7d70b741135ffea31113af63dd8691da4baae0f9
-    name: kserve-container
-    ports:
-    # Note, KServe only allows a single port, this is the gRPC port. Subject to change in the future
-    - containerPort: 8085
-      name: h2c
-      protocol: TCP
-    resources:
-      requests:
-        cpu: 8
-        memory: 16Gi
   multiModel: false
   supportedModelFormats:
-  # Note: this currently *only* supports caikit format models
-  - autoSelect: true
-    name: caikit
+    # Note: this currently *only* supports caikit format models
+    - autoSelect: true
+      name: caikit
+  containers:
+    - name: kserve-container
+      image: quay.io/opendatahub/text-generation-inference:stable-bafd218
+      command: ["text-generation-launcher"]
+      args: ["--model-name=/mnt/models/artifacts/"]
+      env:
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
+      # resources: # configure as required
+      #   requests:
+      #     cpu: 8
+      #     memory: 16Gi
+    - name: transformer-container
+      image: quay.io/opendatahub/caikit:latest
+      volumeMounts:
+        - name: config-volume
+          mountPath: /caikit/config/
+          readOnly: true
+      ports:
+        - containerPort: 8085
+          name: h2c
+          protocol: TCP
+      # resources: # configure as required
+      #   requests:
+      #     cpu: 8
+      #     memory: 16Gi
+  volumes:
+    - name: config-volume
+      configMap:
+        name: caikit-tgis-config

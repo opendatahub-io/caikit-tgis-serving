@@ -9,7 +9,10 @@ metadata:
 spec:
   predictor:
     model:
+      apiVersion: serving.kserve.io/v1alpha2
       modelFormat:
         name: caikit
       runtime: caikit-runtime
-      storageUri: <Path to location with config.yml and artifacts directory>
+      storageUri: proto://path/to/model # single model here
+      # Example, using a pvc:
+      # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
