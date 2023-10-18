@@ -25,16 +25,12 @@ export KSERVE_OPERATOR_NS=$(getKserveNS)
 
 # Delete the Knative gateways
 oc delete -f custom-manifests/serverless/gateways.yaml
-oc delete Jaeger jaeger -n istio-system
-oc delete Kiali kiali -n istio-system
 oc delete ServiceMeshControlPlane minimal -n istio-system
 
 oc delete -f custom-manifests/serverless/knativeserving-istio.yaml
 oc delete -f custom-manifests/serverless/operators.yaml
 
-oc delete -f custom-manifests/service-mesh/smmr-${TARGET_OPERATOR_TYPE}.yaml  
-oc delete -f custom-manifests/service-mesh/peer-authentication.yaml 
-oc delete -f custom-manifests/service-mesh/peer-authentication-${TARGET_OPERATOR_TYPE}.yaml
+oc delete -f custom-manifests/service-mesh/default-smmr.yaml  
 oc delete ns redhat-ods-applications
 oc delete ns knative-serving
 oc delete -f custom-manifests/service-mesh/smcp.yaml
@@ -53,16 +49,8 @@ fi
 # Verify 
 
 oc delete KnativeServing knative-serving -n knative-serving
-oc delete subscription jaeger-product -n openshift-operators
-oc delete subscription kiali-ossm -n openshift-operators
 oc delete subscription servicemeshoperator -n openshift-operators
 oc delete subscription serverless-operator -n openshift-serverless
-
-jaeger_csv_name=$(oc get csv -n openshift-operators | grep jaeger|awk '{print $1}')
-oc delete csv $jaeger_csv_name -n openshift-operators
-
-kiali_csv_name=$(oc get csv -n openshift-operators | grep kiali|awk '{print $1}')
-oc delete csv $kiali_csv_name -n openshift-operators
 
 sm_csv_name=$(oc get csv -n openshift-operators | grep servicemeshoperator|awk '{print $1}')
 oc delete csv $sm_csv_name -n openshift-operators

@@ -2,7 +2,7 @@ export BASE_DIR=/tmp/kserve
 export BASE_CERT_DIR=${BASE_DIR}/certs
 export TEST_NS=kserve-demo
 export MINIO_NS=minio
-
+export deploy_odh_operator=true
 
 getKserveNS() {
   if [[ ${TARGET_OPERATOR} == "odh" ]]

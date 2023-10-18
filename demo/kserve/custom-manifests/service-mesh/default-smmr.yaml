@@ -6,4 +6,3 @@ metadata:
 spec:
   members:
     - knative-serving
-    - redhat-ods-applications

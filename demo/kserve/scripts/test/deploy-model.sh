@@ -29,8 +29,7 @@ oc get ns ${TEST_NS}
 if [[ $? ==  1 ]]
 then
   oc new-project ${TEST_NS}
-  oc patch smmr/default -n istio-system --type='json' -p="[{'op': 'add', 'path': '/spec/members/-', 'value': \"$TEST_NS\"}]"
-
+  
   oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
 
   oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 

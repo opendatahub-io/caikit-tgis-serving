@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Set the color variable
+red='\033[0;31m'
+light_red='\033[0;91m'
+cyan='\033[0;36m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+light_blue='\033[0;94m'
+# Clear the color after that
+clear='\033[0m'
+
+# Set the color for log level
+info=$cyan
+warning=$yellow
+error=$red
+pending=$light_blue
+
 die() {
   color_red='\e[31m'
   color_yellow='\e[33m'
@@ -12,6 +29,11 @@ info() {
   color_blue='\e[34m'
   color_reset='\e[0m'
   printf "${color_blue}$*${color_reset}\n" 1>&2
+}
+
+light_info() {
+  color_reset='\e[0m'
+  printf "${cyan}$*${color_reset}\n" 1>&2
 }
 
 success() {
