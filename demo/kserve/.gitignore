@@ -1,6 +1,0 @@
-kserve/
-knative-kserve/
-odh-manifests/
-*-current.yaml
-.cache/
-kustomize/
