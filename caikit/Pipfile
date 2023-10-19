@@ -9,7 +9,7 @@ verify_ssl = true
 name = "pytorch_nightly"
 
 [packages]
-caikit-nlp = {editable = true, ref = "6f099312d65a15dc20952abfe77d3990a83669a3", git = "https://github.com/opendatahub-io/caikit-nlp.git"}
+caikit-nlp = {editable = true, ref = "4f42230832777ac9667700fba5254d6452942ce4", git = "https://github.com/caikit/caikit-nlp/"}
 torch = {version = "==2.1.0.dev20230904+cu118", index = "pytorch_nightly" }
 pytorch-triton = {version = "==2.1.0+e6216047b8", index = "pytorch_nightly"}
 
