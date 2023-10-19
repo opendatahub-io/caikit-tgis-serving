@@ -1,0 +1,30 @@
+runtime:
+  library: caikit_nlp
+  local_models_dir: /mnt/models
+  lazy_load_local_models: true
+
+model_management:
+  finders:
+    default:
+      type: MULTI
+      config:
+        finder_priority:
+          - tgis-auto
+          # - local
+    tgis-auto:
+      type: TGIS-AUTO
+      config:
+        test_connections: true
+  initializers:
+    default:
+      type: LOCAL
+      config:
+        backend_priority:
+          - type: TGIS
+            config:
+              connection:
+                hostname: tgis:8033
+                test_connections: true
+
+log:
+  formatter: pretty

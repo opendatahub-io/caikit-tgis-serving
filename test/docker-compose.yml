@@ -1,0 +1,21 @@
+services:
+  caikit:
+    # image: quay.io/opendatahub/caikit:latest
+    build: ..
+    volumes:
+      - ./caikit_config:/caikit/config
+      - ./models/flan-t5-small-caikit/:/mnt/models/
+    ports:
+      - 8085:8085
+  tgis:
+    image: quay.io/opendatahub/text-generation-inference:stable
+    command: [
+        "text-generation-launcher", # NOTE:--num-shard defaults to 1
+        "--model-name=/mnt/models/artifacts/",
+        "--max-batch-size=256",
+        "--max-concurrent-requests=64",
+      ]
+    volumes:
+      - ./models/flan-t5-small-caikit/:/mnt/models
+    environment:
+      - "TRANSFORMERS_CACHE=/tmp/transformers_cache"
