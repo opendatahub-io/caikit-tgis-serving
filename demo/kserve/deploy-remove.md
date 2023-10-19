@@ -16,6 +16,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
 - Your current working directory is the `/caikit-tgis-serving/demo/kserve/` directory.
 
+- If your LLM is already in an S3-like object storage (for example, AWS S3), change the connection data in the `minio-secret.yaml` and `serviceaccount-minio.yaml` as shown [here](/demo/kserve/custom-manifests/minio/). Please note that the model should be converted to a `caikit`-compatible format, see [here][/demo/kserve/built-tip.md] for instructions.
+
 **Procedure**
 
 1. Deploy the MinIO image that contains the LLM model.
@@ -44,7 +46,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    oc new-project ${TEST_NS}
    ```
 
-   b. Create a caikit ServingRuntime. By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
+   b. Create a caikit `ServingRuntime`. By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
 
    ```bash
    oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime.yaml -n ${TEST_NS}
@@ -69,7 +71,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    oc get isvc/caikit-example-isvc -n ${TEST_NS}
    ```
 
-3. Perform inference with Remote Procedure Call (gPRC) commands.
+3. Perform inference with Remote Procedure Call (gPRC) commands. This example uses the [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line utility.
 
    a. Determine whether the HTTP2 protocol is enabled in the cluster.
 
