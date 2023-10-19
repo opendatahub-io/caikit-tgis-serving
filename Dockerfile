@@ -37,4 +37,4 @@ USER caikit
 ENV CONFIG_FILES=/caikit/config/caikit.yml
 VOLUME ["/caikit/config/"]
 
-CMD ["python",  "-m", "caikit.runtime.grpc_server"]
+CMD ["python",  "-m", "caikit.runtime"]
