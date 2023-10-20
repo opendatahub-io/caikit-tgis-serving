@@ -1,31 +1,40 @@
-FROM quay.io/opendatahub/text-generation-inference:stable-bafd218
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as poetry-builder
 
-USER root
+RUN microdnf -y update && \
+    microdnf -y install \
+        shadow-utils python39-pip python39-wheel && \
+    pip3 install --no-cache-dir --upgrade pip wheel && \
+    microdnf clean all
 
-# Add grpc-ecosystem health probe
-ARG GRPC_HEALTH_PROBE_VERSION=v0.4.20
+ENV POETRY_VIRTUALENVS_IN_PROJECT=1
+
+WORKDIR /tmp/poetry
+COPY pyproject.toml .
+COPY poetry.lock .
+RUN pip3 install poetry && poetry install
+
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as deploy
+RUN microdnf -y update && \
+    microdnf -y install \
+        shadow-utils python39 && \
+    microdnf clean all
 
 WORKDIR /caikit
-COPY caikit /caikit
 
-RUN yum -y update && yum -y install git git-lfs && yum clean all && \
-    git lfs install && \
-    pip install 'micropipenv[toml]' && \
-    micropipenv install && \
-    rm -rf ~/.cache && \
-    mkdir -p /opt/models && \
-    adduser -g 0 -u 1001 caikit --home-dir /caikit && \
-    chown -R 1001:0 /caikit /opt/models && \
-    chmod -R g=u /caikit /opt/models
+COPY --from=poetry-builder /tmp/poetry/.venv /caikit/
 
-# This is for the use-cases without kserve
-RUN curl -Lo /usr/local/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /usr/local/bin/grpc_health_probe
+ENV VIRTUAL_ENV=/caikit
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-USER 1001
+RUN groupadd --system caikit --gid 1001 && \
+    adduser --system --uid 1001 --gid 0 --groups caikit \
+    --create-home --home-dir /caikit --shell /sbin/nologin \
+    --comment "Caikit User" caikit
 
-ENV TRANSFORMERS_CACHE="/tmp/transformers_cache" \
-    RUNTIME_LIBRARY='caikit_nlp' \
-    RUNTIME_LOCAL_MODELS_DIR='/opt/models'
+USER caikit
 
-CMD [ "./start-serving.sh" ]
+ENV CONFIG_FILES=/caikit/config/caikit.yml
+VOLUME ["/caikit/config/"]
+
+CMD ["python",  "-m", "caikit.runtime.grpc_server"]

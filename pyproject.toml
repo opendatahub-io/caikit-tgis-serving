@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "caikit-tgis-serving"
+version = "0.0.1"
+description = ""
+authors = ["Daniele Trifirò <dtrifiro@redhat.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.9"
+caikit-nlp = { git = "https://github.com/opendatahub-io/caikit-nlp", rev = "0.2.1" }
+# pytorch 2.0.1 release's metadata is missing the cublas/cuda dependencies, which breaks
+# poetry. Below are all the missing dependencies while waiting for a new torch release
+# See https://github.com/pytorch/pytorch/issues/100974 for more information for more information.
+nvidia-cublas-cu11 = "11.10.3.66"
+nvidia-cuda-cupti-cu11 = "11.7.101"
+nvidia-cuda-nvrtc-cu11 = "11.7.99"
+nvidia-cuda-runtime-cu11 = "11.7.99"
+nvidia-cudnn-cu11 = "8.5.0.96"
+nvidia-cufft-cu11 = "10.9.0.58"
+nvidia-curand-cu11 = "10.2.10.91"
+nvidia-cusolver-cu11 = "11.4.0.1"
+nvidia-cusparse-cu11 = "11.7.4.91"
+nvidia-nccl-cu11 = "2.14.3"
+nvidia-nvtx-cu11 = "11.7.91"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
