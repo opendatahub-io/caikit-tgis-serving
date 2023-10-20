@@ -54,6 +54,7 @@ Note: You have the alternative option of installing the KServe/Caikit/TGIS stack
    wait_for_pods_ready "app=istiod" "istio-system"
    wait_for_pods_ready "app=istio-ingressgateway" "istio-system"
    wait_for_pods_ready "app=istio-egressgateway" "istio-system"
+
    oc wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
    oc wait --for=condition=ready pod -l app=istio-ingressgateway -n istio-system --timeout=300s
    oc wait --for=condition=ready pod -l app=istio-egressgateway -n istio-system --timeout=300s

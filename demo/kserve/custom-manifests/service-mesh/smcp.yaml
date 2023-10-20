@@ -4,6 +4,8 @@ metadata:
   name: minimal
   namespace: istio-system
 spec:
+  tracing:
+    type: None
   addons:
     grafana:
       enabled: false
@@ -14,7 +16,6 @@ spec:
       enabled: false
     jaeger: 
       name: jaeger
-      enabled: false
   security:
     dataPlane:
       mtls: true # otherwise inference-graph will not work. We use PeerAuthentication resources to force mTLS
