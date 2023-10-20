@@ -43,7 +43,7 @@ spec:
       name: caikit
   containers:
     - name: kserve-container
-      image: quay.io/opendatahub/text-generation-inference:stable-bafd218
+      image: quay.io/opendatahub/text-generation-inference:stable
       command: ["text-generation-launcher"]
       args: ["--model-name=/mnt/models/artifacts/"]
       env:
@@ -54,7 +54,7 @@ spec:
       #     cpu: 8
       #     memory: 16Gi
     - name: transformer-container
-      image: quay.io/opendatahub/caikit:latest
+      image: quay.io/opendatahub/caikit-tgis-serving:stable
       volumeMounts:
         - name: config-volume
           mountPath: /caikit/config/

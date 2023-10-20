@@ -1,9 +1,11 @@
+CAIKIT_IMAGE=quay.io/opendatahub/caikit-tgis-serving
+
 .PHONY: default refresh-poetry-lock-files
 
 default:
 	podman build \
-		-t opendatahub/caikit:latest \
-		-t opendatahub/caikit:$$(git rev-parse --short HEAD) \
+		-t $(CAIKIT_IMAGE):dev \
+		-t $(CAIKIT_IMAGE):$$(git rev-parse --short HEAD) \
 		.
 
 
@@ -11,7 +13,7 @@ refresh-poetry-lock-files: default
 	podman run --user root -it --rm \
 		--volume $$(pwd):/app:z \
 		--workdir /app  \
-		opendatahub/caikit:latest \
+		$(CAIKIT_IMAGE):dev \
 		/bin/bash -c " \
 			pip install poetry && \
 			poetry update \
@@ -20,5 +22,5 @@ refresh-poetry-lock-files: default
 shell: default
 	podman run -it --rm \
 		--name caikit-tgis-serving-test-$$(git rev-parse --short HEAD) \
-		opendatahub/caikit:$$(git rev-parse --short HEAD) \
+		$(CAIKIT_IMAGE):dev \
 		/bin/bash
