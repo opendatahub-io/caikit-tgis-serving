@@ -1,0 +1,16 @@
+version: 2
+
+updates:
+  - directory: "/"
+    package-ecosystem: "poetry"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+
+  - directory: "/"
+    package-ecosystem: "Docker"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
