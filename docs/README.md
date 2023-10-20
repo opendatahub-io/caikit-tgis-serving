@@ -35,8 +35,6 @@ There are two ways to install the KServe/Caikit/TGIS stack:
 * [Script-based installation](/demo/kserve/scripts/README.md)
 
    Note: The installation procedures include commands for installing the following operators, which are required by the KServe/Caikit/TGIS stack:
-   - [Kiali](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
-   - [Red Hat OpenShift distributed tracing platform](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
    - [Red Hat OpenShift Service Mesh](https://docs.openshift.com/container-platform/4.13/service_mesh/v2x/installing-ossm.html)
    - [OpenShift Serverless](https://docs.openshift.com/serverless/1.29/install/install-serverless-operator.html)
    - [Open Data Hub](https://opendatahub.io/docs/quick-installation/)

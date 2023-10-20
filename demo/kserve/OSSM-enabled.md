@@ -27,7 +27,6 @@ cd caikit-tgis-serving/demo/kserve
 oc apply -f custom-manifests/service-mesh/operators.yaml
 sleep 30
 oc wait --for=condition=ready pod -l name=istio-operator -n openshift-operators --timeout=300s
-oc wait --for=condition=ready pod -l name=jaeger-operator -n openshift-operators --timeout=300s
 oc wait --for=condition=ready pod -l name=kiali-operator -n openshift-operators --timeout=300s
 
 # Create an istio instance
@@ -39,10 +38,8 @@ oc apply -f custom-manifests/service-mesh/peer-authentication-odh.yaml
 
 sleep 15
 oc wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
-oc wait --for=condition=ready pod -l app=prometheus -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-ingressgateway -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-egressgateway -n istio-system --timeout=300s
-oc wait --for=condition=ready pod -l app=jaeger -n istio-system --timeout=300s
 
 # Install Authorino/Opendatahub operator
 oc create -f custom-manifests/authorino/operators.yaml  
