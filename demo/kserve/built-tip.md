@@ -16,7 +16,7 @@ git clone https://huggingface.co/bigscience/bloom-560m
 2. Create a virtual environment with Python 3.9 and install `caikit-nlp`
 
 ```bash
-python3 -m venv venv
+python3.9 -m venv venv
 source venv/bin/activate
 pip install git+https://github.com/caikit/caikit-nlp.git
 ```
