@@ -155,7 +155,7 @@ function oc::wait::object::availability() {
     while [ $ii -le $iterations ]
     do
 
-        token=$($cmd &>>/dev/null) && returncode=$? || returncode=$?
+        token=$($cmd >>/dev/null) && returncode=$? || returncode=$?
         echo "$cmd "|sh
 
         if [ $returncode -eq 0 ]; then
