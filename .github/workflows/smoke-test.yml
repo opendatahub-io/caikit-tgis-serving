@@ -1,0 +1,34 @@
+on:
+  push:
+    branches: [main]
+    paths:
+      - "!docs"
+      - "!demo"
+
+  pull_request:
+
+jobs:
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: |
+          cd test
+          docker-compose build
+          # Note: caikit's and tgis images are fairly large, and if we include cached
+          # layers, we easily cross the 25GB mark, hence we'll clean up as much
+          # space as possible to avoid out-of-space failures.
+          # caikit-tgis-serving image: ~4GB
+          # text-generation-inference: ~10GB
+          docker system prune -f
+      - name: Pull tgis image
+        run: |
+          docker pull quay.io/opendatahub/text-generation-inference:stable
+      - name: Test image
+        run: |
+          cd test
+          bash -x smoke-test.sh
+        env:
+          CI: true
