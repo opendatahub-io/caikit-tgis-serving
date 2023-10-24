@@ -1,6 +1,6 @@
 services:
   caikit:
-    # image: quay.io/opendatahub/caikit:latest
+    image: quay.io/opendatahub/caikit-tgis-serving:dev
     build: ..
     volumes:
       - ./caikit_config:/caikit/config
