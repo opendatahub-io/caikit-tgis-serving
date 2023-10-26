@@ -5,11 +5,6 @@
 
 * Before you begin, complete the prerequisites and install the required operators and components as described in the [Caikit-TGIS-Serving readme file](/docs/README.md).
 
-* Make sure that the `TEST-NS` environment variable is set to the name of your project. For example, if the project name is `kserve-demo`, use this command:
-   ~~~
-   export TEST_NS=kserve-demo
-   ~~~
-
 **Procedure**
 
 1. Navigate to the `/demo/kserve/` directory.
@@ -17,9 +12,9 @@
 2. Enable and configure User Workload Monitoring.
 
    ~~~
-   oc apply -f custom-manifests/metrics/uwm-cm-enable.yaml -n $TEST_NS
+   oc apply -f custom-manifests/metrics/uwm-cm-enable.yaml
    
-   oc apply -f custom-manifests/metrics/uwm-cm-conf.yaml -n $TEST_NS
+   oc apply -f custom-manifests/metrics/uwm-cm-conf.yaml
    ~~~
 
    Optionally, you can change the retention time by editing the `uwm-cm-conf.yaml` file.
