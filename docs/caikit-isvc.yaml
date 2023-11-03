@@ -9,7 +9,6 @@ metadata:
 spec:
   predictor:
     model:
-      apiVersion: serving.kserve.io/v1alpha2
       modelFormat:
         name: caikit
       runtime: caikit-runtime
