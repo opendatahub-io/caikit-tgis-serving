@@ -70,7 +70,7 @@ spec:
     volumeMounts:
     - name: runtime-config
       subPath: runtime_config.yaml
-      mountPath: "/caikit/config/caikit-tgis.yml"
+      mountPath: "/caikit/config/caikit.yml"
 ...
   volumes:
     - name: runtime-config
@@ -82,7 +82,7 @@ kind: ConfigMap
 metadata:
   name: runtime-config
 data:
-  caikit-tgis.yml: |
+  caikit.yml: |
     jvm_options: []
 ...
     model_management:
@@ -100,4 +100,4 @@ data:
 
 This load_timeout setting increases the timeout to over 30 minutes.
 
-
+Note: This is no longer necessary after the container has been split

@@ -30,12 +30,12 @@ if [[ $? ==  1 ]]
 then
   oc new-project ${TEST_NS}
   
-  oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
+  oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime.yaml -n ${TEST_NS}
 
   oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 
   oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
 
-  oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
+  oc apply -f ./custom-manifests/caikit/caikit-tgis-isvc.yaml -n ${TEST_NS}
 
   # Resources needed to enable metrics for the model 
   # The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`

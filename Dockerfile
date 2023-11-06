@@ -23,6 +23,7 @@ RUN microdnf -y update && \
 WORKDIR /caikit
 
 COPY --from=poetry-builder /tmp/poetry/.venv /caikit/
+COPY caikit.yml /caikit/config/caikit.yml
 
 ENV VIRTUAL_ENV=/caikit
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

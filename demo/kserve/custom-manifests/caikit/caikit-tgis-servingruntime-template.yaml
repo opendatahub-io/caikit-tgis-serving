@@ -19,36 +19,44 @@ objects:
 - apiVersion: serving.kserve.io/v1alpha1
   kind: ServingRuntime
   metadata:
-    name: caikit-runtime
+    name: caikit-tgis-runtime
   spec:
-    containers:
-    - env:
-        - name: RUNTIME_LOCAL_MODELS_DIR
-          value: ${RUNTIME_LOCAL_MODELS_DIR}
-      image: ${CONTAINER_IMAGE}
-      name: kserve-container
-      ports:
-      - containerPort: 8085
-        name: h2c
-        protocol: TCP
-      resources:
-        requests:
-          cpu: ${CPU_REQUEST}
-          memory: ${MEMORY_REQUEST}
     multiModel: false
     supportedModelFormats:
-    - autoSelect: true
-      name: caikit
+      # Note: this currently *only* supports caikit format models
+      - autoSelect: true
+        name: caikit
+    containers:
+      - name: kserve-container
+        image: ${TGIS_CONTAINER_IMAGE}
+        command: ["text-generation-launcher"]
+        args: ["--model-name=/mnt/models/artifacts/"]
+        env:
+          - name: TRANSFORMERS_CACHE
+            value: /tmp/transformers_cache
+        resources: # configure as required
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
+      - name: transformer-container
+        image: ${CAIKIT_CONTAINER_IMAGE}
+        env:
+        - name: RUNTIME_LOCAL_MODELS_DIR
+          value: /mnt/models
+        ports:
+          - containerPort: 8080
+            name: h2c
+            protocol: TCP
 parameters:
-- name: RUNTIME_LOCAL_MODELS_DIR
-  description: Directory path for local models
-  value: /mnt/models
 - name: CPU_REQUEST
   description: CPU request for the container
   value: "4"
 - name: MEMORY_REQUEST
   description: Memory request for the container
   value: "8Gi"
-- name: CONTAINER_IMAGE
+- name: CAIKIT_CONTAINER_IMAGE
   description: Container image for the runtime
   value: quay.io/opendatahub/caikit-tgis-serving:stable
+- name: TGIS_CONTAINER_IMAGE
+  description: Container image for the runtime
+  value: quay.io/opendatahub/text-generation-inference:stable
