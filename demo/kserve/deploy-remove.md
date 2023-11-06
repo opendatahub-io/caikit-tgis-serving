@@ -49,7 +49,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    b. Create a caikit ServingRuntime. By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
    ~~~
-   oc apply -f ./custom-manifests/caikit/caikit-servingruntime.yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime.yaml -n ${TEST_NS}
    ~~~
 
    c. Deploy the MinIO data connection and service account. 
@@ -60,7 +60,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    d. Deploy the inference service. It will point to the model located in the `modelmesh-example-models/llm/models` directory.
    ~~~
-   oc apply -f ./custom-manifests/caikit/caikit-isvc.yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis-isvc.yaml -n ${TEST_NS}
    ~~~
 
    e. Verify that the inference service's `READY` state is `True`.
