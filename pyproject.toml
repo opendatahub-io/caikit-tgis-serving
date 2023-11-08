@@ -7,11 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.9"
-# NOTE: in order to include the upstream changes, we're temporarily pinning `caikit` to a specific rev, which requires to also pin `caikit-tgis` and `caikit-nlp`.
-# We should be able to get rid of this after caikit >=0.23.0 is released
-caikit-tgis-backend = {git = "https://github.com/opendatahub-io/caikit-tgis-backend", rev = "b2b0f67a2eaae6d2a15ca3570abacfb7ce3a0e8d"}
-caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "4f42230"}
-caikit = {git = "https://github.com/opendatahub-io/caikit", rev = "79f1f1a"}
+caikit-tgis-backend = {git = "https://github.com/caikit/caikit-tgis-backend", rev = "8e68757299ee98fdaf48adadf33f25055b34cb36"}
+caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "4be54cf8820e0cfb2f32a26f39b80f870fb07a9f"}
 # pytorch release's metadata is missing the cublas/cuda dependencies, which breaks
 # poetry installs, hence we need to explicitly define these.
 # See https://github.com/pytorch/pytorch/issues/100974
