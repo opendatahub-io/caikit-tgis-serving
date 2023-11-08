@@ -14,3 +14,10 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+
+  - directory: "/"
+    package-ecosystem: "github-actions"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "maintenance"
