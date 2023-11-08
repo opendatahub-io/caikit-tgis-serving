@@ -6,7 +6,8 @@ services:
       - ./caikit_config:/caikit/config
       - ./models/flan-t5-small-caikit/:/mnt/models/
     ports:
-      - 8085:8085
+      - 8085:8085 # grpc
+      - 8080:8080 # http
   tgis:
     image: quay.io/opendatahub/text-generation-inference:stable
     command: [
