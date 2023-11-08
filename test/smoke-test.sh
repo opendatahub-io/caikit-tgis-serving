@@ -55,12 +55,31 @@ until ${grpcurl} -plaintext \
 	sleep 3
 	max_retries=$((max_retries - 1))
 	if [[ $max_retries -le 0 ]]; then
-		echo "Failed to query grpc service" >&2
-		docker-compose logs
-		docker-compose down
-		exit 1
+		echo "Failed to query grpc endpoint" >&2
+		grpc_failure=true
+		break
 	fi
 done
 
-docker-compose down
+max_retries=10
+until curl --json '{
+"model_id": "flan-t5-small-caikit",
+"inputs": "At what temperature does liquid Nitrogen boil?"}' 127.0.0.1:8080/api/v1/task/text-generation; do
+	sleep 3
+	max_retries=$((max_retries - 1))
+	if [[ $max_retries -le 0 ]]; then
+		echo "Failed to query http endpoint" >&2
+		http_failure=true
+		break
+	fi
+done
+
+if [[ -z $grpc_failure && -z $http_failure ]]; then
+	docker-compose logs
+	echo "👎 Test failed"
+	docker-compose down
+	exit 1
+fi
+
 echo "👍 Test successful!"
+docker-compose down
