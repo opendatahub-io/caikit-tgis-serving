@@ -45,7 +45,6 @@ objects:
           value: /mnt/models
         ports:
           - containerPort: 8080
-            name: h2c
             protocol: TCP
 parameters:
 - name: CPU_REQUEST

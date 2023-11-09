@@ -27,7 +27,6 @@ spec:
           value: /mnt/models
       ports:
         - containerPort: 8080
-          name: h2c
           protocol: TCP
       # resources: # configure as required
       #   requests:
