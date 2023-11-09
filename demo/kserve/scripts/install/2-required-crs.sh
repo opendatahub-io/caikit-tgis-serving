@@ -39,11 +39,6 @@ oc wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-ingressgateway -n istio-system --timeout=300s
 oc wait --for=condition=ready pod -l app=istio-egressgateway -n istio-system --timeout=300s
 
-# for gathering metrics
-oc apply -f custom-manifests/service-mesh/istiod-monitor.yaml 
-oc apply -f custom-manifests/service-mesh/istio-proxies-monitor.yaml
-oc apply -f custom-manifests/metrics/kserve-prometheus-k8s.yaml
-
 # kserve/knative
 echo
 light_info "[INFO] Update SMMR"
