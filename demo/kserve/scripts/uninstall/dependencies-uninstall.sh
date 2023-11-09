@@ -6,23 +6,6 @@ set -o errtrace
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 
-if [[ ! -n "${TARGET_OPERATOR+x}" ]]
-  then
-    echo
-    read -p "TARGET_OPERATOR is not set. Is it for odh or rhods or brew?" input_target_op
-    if [[ $input_target_op == "odh" || $input_target_op == "rhods" || $input_target_op == "brew" ]]
-    then
-      export TARGET_OPERATOR=$input_target_op
-      export TARGET_OPERATOR_TYPE=$(getOpType $input_target_op)
-    else 
-      echo "[ERR] Only 'odh' or 'rhods' or 'brew' can be entered"
-      exit 1
-    fi
-  else      
-    export TARGET_OPERATOR_TYPE=$(getOpType $TARGET_OPERATOR)
-  fi
-export KSERVE_OPERATOR_NS=$(getKserveNS)
-
 # Delete the Knative gateways
 oc delete -f custom-manifests/serverless/gateways.yaml
 oc delete ServiceMeshControlPlane minimal -n istio-system
@@ -31,7 +14,6 @@ oc delete -f custom-manifests/serverless/knativeserving-istio.yaml
 oc delete -f custom-manifests/serverless/operators.yaml
 
 oc delete -f custom-manifests/service-mesh/default-smmr.yaml  
-oc delete ns redhat-ods-applications
 oc delete ns knative-serving
 oc delete -f custom-manifests/service-mesh/smcp.yaml
 oc delete ns istio-system
