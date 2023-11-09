@@ -1486,13 +1486,13 @@ files = [
 
 [[package]]
 name = "nvidia-cusolver-cu12"
-version = "11.4.5.107"
+version = "11.5.3.52"
 description = "CUDA solver native runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cusolver_cu12-11.4.5.107-py3-none-manylinux1_x86_64.whl", hash = "sha256:8a7ec542f0412294b15072fa7dab71d31334014a69f953004ea7a118206fe0dd"},
-    {file = "nvidia_cusolver_cu12-11.4.5.107-py3-none-win_amd64.whl", hash = "sha256:74e0c3a24c78612192a74fcd90dd117f1cf21dea4822e66d89e8ea80e3cd2da5"},
+    {file = "nvidia_cusolver_cu12-11.5.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:c806e563ece3e8390cc9e582458435068532dc28425f46f2026a2684671f7cd2"},
+    {file = "nvidia_cusolver_cu12-11.5.3.52-py3-none-win_amd64.whl", hash = "sha256:ea9a94ae016937e23dd6610493df7239d47d4a6a805c78bbbccbe07cda0a9e17"},
 ]
 
 [package.dependencies]
@@ -3317,4 +3317,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "1abaed7a63d880471f16950b9895cdc0cc5925eeace76c4cc5ea2d29e27b0393"
+content-hash = "68d5434469ea7bfb74eac717c1c5ed8e5b72e4d7ecaf28dd4199c903d7ee1af1"
