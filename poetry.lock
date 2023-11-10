@@ -1440,13 +1440,13 @@ files = [
 
 [[package]]
 name = "nvidia-cuda-runtime-cu12"
-version = "12.1.105"
+version = "12.3.52"
 description = "CUDA Runtime native Libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cuda_runtime_cu12-12.1.105-py3-none-manylinux1_x86_64.whl", hash = "sha256:6e258468ddf5796e25f1dc591a31029fa317d97a0a94ed93468fc86301d61e40"},
-    {file = "nvidia_cuda_runtime_cu12-12.1.105-py3-none-win_amd64.whl", hash = "sha256:dfb46ef84d73fababab44cf03e3b83f80700d27ca300e537f85f636fac474344"},
+    {file = "nvidia_cuda_runtime_cu12-12.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:038de2d9e9aa0f07fcd4b9615a7ea23ef28bca0073b0f212e4201246b386bfec"},
+    {file = "nvidia_cuda_runtime_cu12-12.3.52-py3-none-win_amd64.whl", hash = "sha256:7e6f2933e8ed25964a2f38bc9f74f6bbfd0eafacab07452e513ed2acf971e42e"},
 ]
 
 [[package]]
@@ -3317,4 +3317,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "68d5434469ea7bfb74eac717c1c5ed8e5b72e4d7ecaf28dd4199c903d7ee1af1"
+content-hash = "5793cd526224bc0989c6302ec2d9133688832407533a0578d85323513415058a"
