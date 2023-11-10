@@ -1502,13 +1502,13 @@ nvidia-nvjitlink-cu12 = "*"
 
 [[package]]
 name = "nvidia-cusparse-cu12"
-version = "12.1.0.106"
+version = "12.1.3.153"
 description = "CUSPARSE native runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cusparse_cu12-12.1.0.106-py3-none-manylinux1_x86_64.whl", hash = "sha256:f3b50f42cf363f86ab21f720998517a659a48131e8d538dc02f8768237bd884c"},
-    {file = "nvidia_cusparse_cu12-12.1.0.106-py3-none-win_amd64.whl", hash = "sha256:b798237e81b9719373e8fae8d4f091b70a0cf09d9d85c95a557e11df2d8e9a5a"},
+    {file = "nvidia_cusparse_cu12-12.1.3.153-py3-none-manylinux1_x86_64.whl", hash = "sha256:592736e39e5ad427ce809bf42e0fd34fa42a8b7591ea792d42b1b321e3b3eae2"},
+    {file = "nvidia_cusparse_cu12-12.1.3.153-py3-none-win_amd64.whl", hash = "sha256:7f70c34d7177e1fc0a8cefc51908e88e95414062a19bc0c60b426d722b3add53"},
 ]
 
 [package.dependencies]
@@ -3317,4 +3317,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "558cb967a46cf8aa83093a9016872d8a54060ef02953a35bd4b0a22e30fbc1f5"
+content-hash = "da368ce09310606318ebd69c0255182e89665bd3b78bea14b43eff16e3a5ab0e"
