@@ -1464,13 +1464,13 @@ nvidia-cublas-cu12 = "*"
 
 [[package]]
 name = "nvidia-cufft-cu12"
-version = "11.0.2.54"
+version = "11.0.11.19"
 description = "CUFFT native runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cufft_cu12-11.0.2.54-py3-none-manylinux1_x86_64.whl", hash = "sha256:794e3948a1aa71fd817c3775866943936774d1c14e7628c74f6f7417224cdf56"},
-    {file = "nvidia_cufft_cu12-11.0.2.54-py3-none-win_amd64.whl", hash = "sha256:d9ac353f78ff89951da4af698f80870b1534ed69993f10a4cf1d96f21357e253"},
+    {file = "nvidia_cufft_cu12-11.0.11.19-py3-none-manylinux1_x86_64.whl", hash = "sha256:4fa118f90ba8e77eb71a51f4d8a3e1db1ae1f966f5087947d0e8438e3da17ad4"},
+    {file = "nvidia_cufft_cu12-11.0.11.19-py3-none-win_amd64.whl", hash = "sha256:3e3a65ee5e02f6a811fb449d04b101989877a29c04751c63b3f15a61122b0de1"},
 ]
 
 [[package]]
@@ -3317,4 +3317,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "5793cd526224bc0989c6302ec2d9133688832407533a0578d85323513415058a"
+content-hash = "558cb967a46cf8aa83093a9016872d8a54060ef02953a35bd4b0a22e30fbc1f5"
