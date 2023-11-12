@@ -1451,16 +1451,18 @@ files = [
 
 [[package]]
 name = "nvidia-cudnn-cu12"
-version = "8.9.2.26"
+version = "8.9.6.50"
 description = "cuDNN runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cudnn_cu12-8.9.2.26-py3-none-manylinux1_x86_64.whl", hash = "sha256:5ccb288774fdfb07a7e7025ffec286971c06d8d7b4fb162525334616d7629ff9"},
+    {file = "nvidia_cudnn_cu12-8.9.6.50-py3-none-manylinux1_x86_64.whl", hash = "sha256:02fbdf6a9f00ba88da68b275d1f175111cc01bbe2294fb688cd309fd61af8844"},
+    {file = "nvidia_cudnn_cu12-8.9.6.50-py3-none-win_amd64.whl", hash = "sha256:acfc4447a9345e8ba525e3b0641ee64bdfd35189ab9904241814ff991792f77a"},
 ]
 
 [package.dependencies]
 nvidia-cublas-cu12 = "*"
+nvidia-cuda-nvrtc-cu12 = "*"
 
 [[package]]
 name = "nvidia-cufft-cu12"
@@ -3317,4 +3319,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "5375138a4b62539f8120689b615868199cb584a5acf5d27a65ebe8d44845b372"
+content-hash = "2174a8c4d4db00162c260f8b65eb4e880738ac39e2c9415cf254dea763b2ef04"
