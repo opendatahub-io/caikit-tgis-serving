@@ -1475,13 +1475,13 @@ files = [
 
 [[package]]
 name = "nvidia-curand-cu12"
-version = "10.3.2.106"
+version = "10.3.4.52"
 description = "CURAND native runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_curand_cu12-10.3.2.106-py3-none-manylinux1_x86_64.whl", hash = "sha256:9d264c5036dde4e64f1de8c50ae753237c12e0b1348738169cd0f8a536c0e1e0"},
-    {file = "nvidia_curand_cu12-10.3.2.106-py3-none-win_amd64.whl", hash = "sha256:75b6b0c574c0037839121317e17fd01f8a69fd2ef8e25853d826fec30bdba74a"},
+    {file = "nvidia_curand_cu12-10.3.4.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:99faaecf1d77a5cfd935ab66d0d36166e0d89fa759ab43811d98ceb85b9635b7"},
+    {file = "nvidia_curand_cu12-10.3.4.52-py3-none-win_amd64.whl", hash = "sha256:3d06bacdc0f0475ed83c2b18997815b5c886f0623a2d1069686e010e7a7bd931"},
 ]
 
 [[package]]
@@ -3317,4 +3317,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "cf745be3928935e7a235010dce89cb6a416921aa2acecdb9f242ba35c716eb71"
+content-hash = "5375138a4b62539f8120689b615868199cb584a5acf5d27a65ebe8d44845b372"
