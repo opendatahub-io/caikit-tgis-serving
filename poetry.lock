@@ -1539,13 +1539,13 @@ files = [
 
 [[package]]
 name = "nvidia-nvtx-cu12"
-version = "12.1.105"
+version = "12.3.52"
 description = "NVIDIA Tools Extension"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_nvtx_cu12-12.1.105-py3-none-manylinux1_x86_64.whl", hash = "sha256:dc21cf308ca5691e7c04d962e213f8a4aa9bbfa23d95412f452254c2caeb09e5"},
-    {file = "nvidia_nvtx_cu12-12.1.105-py3-none-win_amd64.whl", hash = "sha256:65f4d98982b31b60026e0e6de73fbdfc09d08a96f4656dd3665ca616a11e1e82"},
+    {file = "nvidia_nvtx_cu12-12.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:9b65ee935766a0ab5de0633a56e00c4225dfbd8c77432329847843405e3bc5a2"},
+    {file = "nvidia_nvtx_cu12-12.3.52-py3-none-win_amd64.whl", hash = "sha256:3a80b9beeeeddfdf388252f069afaca692676513504297aa6fc686a48044dfa8"},
 ]
 
 [[package]]
@@ -3319,4 +3319,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "2174a8c4d4db00162c260f8b65eb4e880738ac39e2c9415cf254dea763b2ef04"
+content-hash = "3005730d9179b5c0339a6226c7ebe894aebda6eb9e4b80121d569fa5823cfc14"
