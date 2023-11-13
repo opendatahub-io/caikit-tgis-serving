@@ -1418,13 +1418,13 @@ files = [
 
 [[package]]
 name = "nvidia-cuda-cupti-cu12"
-version = "12.1.105"
+version = "12.3.52"
 description = "CUDA profiling tools runtime libs."
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cuda_cupti_cu12-12.1.105-py3-none-manylinux1_x86_64.whl", hash = "sha256:e54fde3983165c624cb79254ae9818a456eb6e87a7fd4d56a2352c24ee542d7e"},
-    {file = "nvidia_cuda_cupti_cu12-12.1.105-py3-none-win_amd64.whl", hash = "sha256:bea8236d13a0ac7190bd2919c3e8e6ce1e402104276e6f9694479e48bb0eb2a4"},
+    {file = "nvidia_cuda_cupti_cu12-12.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:04e29413fcf41a2bbdebf8700cb39fbb5ffe505d1ee848ec00fbbecdeaf5bfe3"},
+    {file = "nvidia_cuda_cupti_cu12-12.3.52-py3-none-win_amd64.whl", hash = "sha256:c0ffeba5389f5eff51949172cb8e3374719136f5e9ff23c70ee8634e089bb858"},
 ]
 
 [[package]]
@@ -3319,4 +3319,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "2f226438888430d559ed6543354c386046e71190837f74b3a4a157317db8b004"
+content-hash = "9a8c77bd03e2d5e167776f8bfda22e3feb5ab272a8d0a02d55468d1344b7b1ca"
