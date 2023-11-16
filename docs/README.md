@@ -1,6 +1,6 @@
 # Caikit-TGIS-Serving
 
-Caikit-TGIS-Serving is a combined image that allows data scientists to perform Large Learning Model (LLM) inference.
+Caikit-TGIS-Serving is a combined image that allows data scientists to perform Large Language Model (LLM) inference.
 
 The Caikit-TGIS-Serving stack consists of these components:
 * **[Text Generation Inference Server (TGIS)](https://github.com/opendatahub-io/text-generation-inference)**: The serving backend that loads the models and provides the inference engine.
