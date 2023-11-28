@@ -1,6 +1,7 @@
 services:
   caikit:
     image: quay.io/opendatahub/caikit-tgis-serving:dev
+    platform: linux/amd64
     build: ..
     volumes:
       - ./caikit_config:/caikit/config
@@ -10,6 +11,7 @@ services:
       - 8080:8080 # http
   tgis:
     image: quay.io/opendatahub/text-generation-inference:stable
+    platform: linux/amd64
     command: [
         "text-generation-launcher", # NOTE:--num-shard defaults to 1
         "--model-name=/mnt/models/artifacts/",

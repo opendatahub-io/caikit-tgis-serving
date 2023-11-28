@@ -8,10 +8,10 @@ RUN microdnf -y update && \
 
 ENV POETRY_VIRTUALENVS_IN_PROJECT=1
 
-WORKDIR /tmp/poetry
+WORKDIR /caikit
 COPY pyproject.toml .
 COPY poetry.lock .
-RUN pip3 install poetry && poetry install
+RUN pip3 install poetry && poetry lock --no-update && poetry install
 
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as deploy
@@ -22,10 +22,10 @@ RUN microdnf -y update && \
 
 WORKDIR /caikit
 
-COPY --from=poetry-builder /tmp/poetry/.venv /caikit/
+COPY --from=poetry-builder /caikit/.venv /caikit/.venv
 COPY caikit.yml /caikit/config/caikit.yml
 
-ENV VIRTUAL_ENV=/caikit
+ENV VIRTUAL_ENV=/caikit/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN groupadd --system caikit --gid 1001 && \
