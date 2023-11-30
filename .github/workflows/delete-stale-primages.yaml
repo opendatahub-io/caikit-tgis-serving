@@ -1,6 +1,4 @@
 name: Delete stale quay PR image tags
-on:
-  pull_request:
 
 jobs:
   delete-pr-quay-image:
