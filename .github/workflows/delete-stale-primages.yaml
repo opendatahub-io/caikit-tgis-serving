@@ -16,8 +16,11 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install skopeo
       - name: Login to quay.io
+        env:
+          QUAY_TOKEN: ${{ secrets.QUAY_ROBOT_TOKEN }}
+          QUAY_ROBOT_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
         run: |
-          skopeo login quay.io -u ${{ secrets.QUAY_ROBOT_USERNAME }} -p ${{ secrets.QUAY_ROBOT_TOKEN }}
+          skopeo login quay.io -u "$QUAY_ROBOT_USERNAME" -p "$QUAY_TOKEN"
       - name: Delete PR images
         run: |
           for tag in "pr-69" "pr-101" "pr-103" "pr-112" "pr-107" "pr-123" "pr-119" "pr-114" "pr-118" "pr-124" "pr-126" "pr-131" "pr-135" "pr-140" "pr-141" "pr-142" "pr-143" "pr-144" "pr-148" "pr-149" "pr-150" "pr-151" "pr-153" "pr-152" "pr-168" "pr-171"; do
