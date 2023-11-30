@@ -1,5 +1,9 @@
 name: Delete stale quay PR image tags
 
+on:
+  push:
+    branches: [main]
+
 jobs:
   delete-pr-quay-image:
     runs-on: ubuntu-latest
