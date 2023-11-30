@@ -15,6 +15,9 @@ on:
       - "docs/**"
       - "demo/**"
 
+env:
+  QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
+
 jobs:
   delete-pr-quay-image:
     runs-on: ubuntu-latest
@@ -29,13 +32,15 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install skopeo
       - name: Login to quay.io
+        shell: bash
         env:
           QUAY_TOKEN: ${{ secrets.QUAY_ROBOT_TOKEN }}
           QUAY_ROBOT_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
         run: |
           skopeo login quay.io -u "$QUAY_ROBOT_USERNAME" -p "$QUAY_TOKEN"
       - name: Delete PR image
+        shell: bash
         env:
           PR: ${{ github.event.pull_request.number }}
         run: |
-          skopeo delete docker://quay.io/opendatahub/caikit-tgis-serving:pr-${PR}
+          skopeo delete docker://${QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO}:pr-${PR}
