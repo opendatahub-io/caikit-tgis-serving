@@ -1554,13 +1554,13 @@ files = [
 
 [[package]]
 name = "nvidia-nvtx-cu12"
-version = "12.3.52"
+version = "12.3.101"
 description = "NVIDIA Tools Extension"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_nvtx_cu12-12.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:9b65ee935766a0ab5de0633a56e00c4225dfbd8c77432329847843405e3bc5a2"},
-    {file = "nvidia_nvtx_cu12-12.3.52-py3-none-win_amd64.whl", hash = "sha256:3a80b9beeeeddfdf388252f069afaca692676513504297aa6fc686a48044dfa8"},
+    {file = "nvidia_nvtx_cu12-12.3.101-py3-none-manylinux1_x86_64.whl", hash = "sha256:a91f85c7a30b40f820287856e482bfea638bb740a2674cd4f17eb1bab0b2c1c7"},
+    {file = "nvidia_nvtx_cu12-12.3.101-py3-none-win_amd64.whl", hash = "sha256:947f5e2f8770b9a1660e7581264e26c4b299d4071e2a09fd2436541c5f21abdc"},
 ]
 
 [[package]]
@@ -3443,4 +3443,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "3e66845c6fd0bc625880772a1a3b775b99072d301beed9cce28ff52cd188a0de"
+content-hash = "39667365953ad2743990d0fb1c32ff73d9ea84d10aa4ea6d98ec19fdee518ab0"
