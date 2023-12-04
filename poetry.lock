@@ -1422,13 +1422,13 @@ files = [
 
 [[package]]
 name = "nvidia-cublas-cu12"
-version = "12.3.2.9"
+version = "12.3.4.1"
 description = "CUBLAS native runtime libraries"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cublas_cu12-12.3.2.9-py3-none-manylinux1_x86_64.whl", hash = "sha256:87cc0514009361159b85a65e2f63a7df5ff6363a9e77800f0549b44b583b917a"},
-    {file = "nvidia_cublas_cu12-12.3.2.9-py3-none-win_amd64.whl", hash = "sha256:23e288e14cadd24eb645a11215326449cfd763f809dc6552bb4db0e1983cdf8e"},
+    {file = "nvidia_cublas_cu12-12.3.4.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:9b25b27bd5a5be1cc7e83a7b8004258daa338800798e22986e5b67ee06f0859d"},
+    {file = "nvidia_cublas_cu12-12.3.4.1-py3-none-win_amd64.whl", hash = "sha256:90e0344a0d96c72b6ee0ebec2b1447e552217131914aa678fff1603701005f3a"},
 ]
 
 [[package]]
@@ -3443,4 +3443,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "9e193a19cac3e0ada01efa670226ec1ab2622a11660dd70c6b37760ea13f6171"
+content-hash = "3e66845c6fd0bc625880772a1a3b775b99072d301beed9cce28ff52cd188a0de"

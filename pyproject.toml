@@ -12,7 +12,7 @@ caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "0.3.1"}
 # pytorch release's metadata is missing the cublas/cuda dependencies, which breaks
 # poetry installs, hence we need to explicitly define these.
 # See https://github.com/pytorch/pytorch/issues/100974
-nvidia-cublas-cu12 = "12.3.2.9"
+nvidia-cublas-cu12 = "12.3.4.1"
 nvidia-cuda-cupti-cu12 = "12.3.101"
 nvidia-cuda-nvrtc-cu12 = "12.3.52"
 nvidia-cuda-runtime-cu12 = "12.3.52"
