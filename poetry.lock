@@ -1433,13 +1433,13 @@ files = [
 
 [[package]]
 name = "nvidia-cuda-cupti-cu12"
-version = "12.3.52"
+version = "12.3.101"
 description = "CUDA profiling tools runtime libs."
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "nvidia_cuda_cupti_cu12-12.3.52-py3-none-manylinux1_x86_64.whl", hash = "sha256:04e29413fcf41a2bbdebf8700cb39fbb5ffe505d1ee848ec00fbbecdeaf5bfe3"},
-    {file = "nvidia_cuda_cupti_cu12-12.3.52-py3-none-win_amd64.whl", hash = "sha256:c0ffeba5389f5eff51949172cb8e3374719136f5e9ff23c70ee8634e089bb858"},
+    {file = "nvidia_cuda_cupti_cu12-12.3.101-py3-none-manylinux1_x86_64.whl", hash = "sha256:7b984288af7db1faa1e6f1803db075d4350116b72a98d4be0e88d604dc812c0e"},
+    {file = "nvidia_cuda_cupti_cu12-12.3.101-py3-none-win_amd64.whl", hash = "sha256:735e3c5b0db489ff1277aacf19f17fc61c89dfd4d95c9f31f75a32550888c2eb"},
 ]
 
 [[package]]
@@ -3443,4 +3443,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "45a3e5ff15103b6334e3bf7179de688b131af89dc479c8b55412dc773cc28ad8"
+content-hash = "9e193a19cac3e0ada01efa670226ec1ab2622a11660dd70c6b37760ea13f6171"
