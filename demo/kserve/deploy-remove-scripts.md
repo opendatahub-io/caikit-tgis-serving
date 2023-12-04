@@ -20,8 +20,15 @@ Note: If you prefer to deploy and remove an LLM model by using step-by-step comm
    ./scripts/test/deploy-model.sh
    ~~~
 
-2. Perform inference with a gRPC call.
+2. Perform inference with a HTTP or gRPC call.
 
+   2-http. If using HTTP:
+   ~~~
+   ./scripts/test/http-call.sh
+   ~~~
+
+
+   2-grpc. If using gRPC:
    ~~~
    ./scripts/test/grpc-call.sh
    ~~~

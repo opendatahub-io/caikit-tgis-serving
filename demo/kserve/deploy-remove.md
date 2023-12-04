@@ -71,84 +71,150 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    oc get isvc/caikit-example-isvc -n ${TEST_NS}
    ```
 
-3. Perform inference with Remote Procedure Call (gPRC) commands. This example uses the [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line utility.
+3. Perform inference using HTTP (default) or gRPC
 
-   a. Determine whether the HTTP2 protocol is enabled in the cluster.
+    3-http. Perform inference with HTTP. This example uses cURL.
 
-   ```bash
-   oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
-   ```
+      a. Run the following `curl` command for all tokens in a single call:
 
-   If the annotation is set to true, skip to Step 3c.
+      ```bash
+      export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+      curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
+      ```
 
-   b. If the annotation is set to either false or not present, enable it.
+      The response should be similar to the following:
 
-   ```bash
-   oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
-   ```
+      ```json
+      {
+        "generated_token_count": "5",
+        "text": "74 degrees F",
+        "stop_reason": "EOS_TOKEN",
+        "producer_id": {
+          "name": "Text Generation",
+          "version": "0.1.0"
+        }
+      }
+      ```
 
-   c. Run the following `grpcurl` command for all tokens in a single call:
+      b. Run `curl` to generate a token stream.
 
-   ```bash
-   export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
-   grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
-   ```
+      ```bash
+      curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
+      ```
 
-   The response should be similar to the following:
+      The response should be similar to the following:
 
-   ```json
-   {
-     "generated_token_count": "5",
-     "text": "74 degrees F",
-     "stop_reason": "EOS_TOKEN",
-     "producer_id": {
-       "name": "Text Generation",
-       "version": "0.1.0"
-     }
-   }
-   ```
+      ```json
+      {
+        "details": {
 
-   d. Run `grpcurl` to generate a token stream.
+        }
+      },
+      {
+        "tokens": [
+          {
+            "text": "▁",
+            "logprob": -1.599083423614502
+          }
+        ],
+        "details": {
+          "generated_tokens": 1
+        }
+      }
+      {
+        "generated_text": "74",
+        "tokens": [
+          {
+            "text": "74",
+            "logprob": -3.3622500896453857
+          }
+        ],
+        "details": {
+          "generated_tokens": 2
+        }
+      }
+      ....
+      ```
 
-   ```bash
-   grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
-   ```
 
-   The response should be similar to the following:
+    3-gRPC. Perform inference with Remote Procedure Call (gPRC) commands. This example uses the [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line utility.
 
-   ```json
-   {
-     "details": {
+      a. Determine whether the HTTP2 protocol is enabled in the cluster.
 
-     }
-   },
-   {
-     "tokens": [
-       {
-         "text": "▁",
-         "logprob": -1.599083423614502
-       }
-     ],
-     "details": {
-       "generated_tokens": 1
-     }
-   }
-   {
-     "generated_text": "74",
-     "tokens": [
-       {
-         "text": "74",
-         "logprob": -3.3622500896453857
-       }
-     ],
-     "details": {
-       "generated_tokens": 2
-     }
-   }
-   ....
-   ```
+      ```bash
+      oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
+      ```
 
-4. Remove the LLM model
+      If the annotation is set to true, skip to Step 3c.
+
+      b. If the annotation is set to either false or not present, enable it.
+
+      ```bash
+      oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
+      ```
+
+      c. Run the following `grpcurl` command for all tokens in a single call:
+
+      ```bash
+      export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+      grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+      ```
+
+      The response should be similar to the following:
+
+      ```json
+      {
+        "generated_token_count": "5",
+        "text": "74 degrees F",
+        "stop_reason": "EOS_TOKEN",
+        "producer_id": {
+          "name": "Text Generation",
+          "version": "0.1.0"
+        }
+      }
+      ```
+
+      d. Run `grpcurl` to generate a token stream.
+
+      ```bash
+      grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
+      ```
+
+      The response should be similar to the following:
+
+      ```json
+      {
+        "details": {
+
+        }
+      },
+      {
+        "tokens": [
+          {
+            "text": "▁",
+            "logprob": -1.599083423614502
+          }
+        ],
+        "details": {
+          "generated_tokens": 1
+        }
+      }
+      {
+        "generated_text": "74",
+        "tokens": [
+          {
+            "text": "74",
+            "logprob": -3.3622500896453857
+          }
+        ],
+        "details": {
+          "generated_tokens": 2
+        }
+      }
+      ....
+      ```
+
+1. Remove the LLM model
 
    a. To remove (undeploy) the LLM model, delete the Inference Service.
 
