@@ -30,6 +30,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    ACCESS_KEY_ID=admin
    SECRET_ACCESS_KEY=password
    MINIO_NS=minio
+   INF_PROTO=http  ### If INF_PROTO is set to "http", only HTTP (e.g., curl) can be used to invoke inferences.  If set to "grpc" only gRPC (e.g., grpcurl) can be used.
 
    oc new-project ${MINIO_NS}
    oc apply -f ./custom-manifests/minio/minio.yaml -n ${MINIO_NS}
@@ -42,14 +43,16 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    a. Create a new namespace.
 
    ```bash
-   export TEST_NS=kserve-demo
+   export TEST_NS=kserve-demo"-${INF_PROTO}"
    oc new-project ${TEST_NS}
    ```
 
-   b. Create a caikit `ServingRuntime`. By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
+   b. Create a caikit `ServingRuntime`.
+
+      By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
 
    ```bash
-   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime.yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime-"$INF_PROTO".yaml -n ${TEST_NS}
    ```
 
    c. Deploy the MinIO data connection and service account.
@@ -62,23 +65,31 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    d. Deploy the inference service. It will point to the model located in the `modelmesh-example-models/llm/models` directory.
 
    ```bash
-   oc apply -f ./custom-manifests/caikit/caikit-tgis-isvc.yaml -n ${TEST_NS}
+
+   ISVC_NAME=caikit-tgis-isvc-"$INF_PROTO"
+   sed "s/<protocol>/$INF_PROTO/g" ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml > ./"$ISVC_NAME".yaml
+   oc apply -f ./"$ISVC_NAME".yaml -n ${TEST_NS}
    ```
 
    e. Verify that the inference service's `READY` state is `True`.
 
    ```bash
-   oc get isvc/caikit-example-isvc -n ${TEST_NS}
+   oc get isvc/$ISVC_NAME -n ${TEST_NS}
    ```
 
-3. Perform inference using HTTP (default) or gRPC
+3. Perform inference using HTTP or either gRPC (
+
+    Compute KSVC_HOSTNAME:
+   ```bash
+
+    export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+   ```
 
     3-http. Perform inference with HTTP. This example uses cURL.
 
       a. Run the following `curl` command for all tokens in a single call:
 
       ```bash
-      export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
       curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
       ```
 
@@ -156,7 +167,6 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
       c. Run the following `grpcurl` command for all tokens in a single call:
 
       ```bash
-      export KSVC_HOSTNAME=$(oc get ksvc caikit-example-isvc-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
       grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
       ```
 
