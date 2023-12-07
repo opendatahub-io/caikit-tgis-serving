@@ -67,8 +67,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    ```bash
 
    ISVC_NAME=caikit-tgis-isvc-"$INF_PROTO"
-   sed "s/<protocol>/$INF_PROTO/g" ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml > ./"$ISVC_NAME".yaml
-   oc apply -f ./"$ISVC_NAME".yaml -n ${TEST_NS}
+   sed "s/<protocol>/$INF_PROTO/g" ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml > ./custom-manifests/caikit/"$ISVC_NAME".yaml
+   oc apply -f ./custom-manifests/caikit/"$ISVC_NAME".yaml -n ${TEST_NS}
    ```
 
    e. Verify that the inference service's `READY` state is `True`.
@@ -82,7 +82,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
     Compute KSVC_HOSTNAME:
    ```bash
 
-    export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+   export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
    ```
 
     3-http. Perform inference with HTTP. This example uses cURL.
