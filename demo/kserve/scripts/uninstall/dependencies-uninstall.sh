@@ -5,6 +5,8 @@ set -o errtrace
 # set -x   #Uncomment this to debug script.
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
+export TEST_NS_HTTP=${TEST_NS}"-http"
+export TEST_NS_GRPC=${TEST_NS}"-grpc"
 
 # Delete the Knative gateways
 oc delete -f custom-manifests/serverless/gateways.yaml
@@ -45,4 +47,16 @@ oc delete csv OperatorGroup serverless-operators -n openshift-serverless
 oc delete project istio-system
 oc delete project knative-serving
 oc delete project knative-eventing
-oc delete project $TEST_NS
+
+oc get ns ${TEST_NS_HTTP}}
+if [[ $? ==  0 ]]
+then
+    oc delete project $TEST_NS_HTTP
+fi
+
+oc get ns ${TEST_NS_GRPC}}
+if [[ $? ==  0 ]]
+then
+    oc delete project $TEST_NS_GRPC
+fi
+
