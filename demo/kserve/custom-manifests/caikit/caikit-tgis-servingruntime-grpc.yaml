@@ -1,7 +1,7 @@
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
-  name: caikit-tgis-runtime
+  name: caikit-tgis-runtime-grpc
 spec:
   multiModel: false
   supportedModelFormats:
@@ -26,7 +26,8 @@ spec:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
       ports:
-        - containerPort: 8080
+        - containerPort: 8085
+          name: h2c
           protocol: TCP
       # resources: # configure as required
       #   requests:
