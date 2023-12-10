@@ -4,7 +4,7 @@ set -o nounset
 set -o errtrace
 # set -x   #Uncomment this to debug script.
 
-### This script will remove, if they exist, kserve-demo-http and kserve-demo-grpc namespaces and their content and then will remove the minio namespace
+### This script will remove, if they exist, kserve-demo-http and kserve-demo-grpc namespaces and their content
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 export TEST_NS_HTTP=${TEST_NS}"-http"
