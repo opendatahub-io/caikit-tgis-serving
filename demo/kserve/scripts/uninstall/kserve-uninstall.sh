@@ -1,9 +1,10 @@
-
 #!/bin/bash
 set -o pipefail
 set -o nounset
 set -o errtrace
 # set -x   #Uncomment this to debug script.
+
+# Will perform the uninstall for all present namespaces (e.g.,  kserve-demo-http or hserve-demo-grpc)
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 TEST_NS_HTTP=${TEST_NS}"-http"
