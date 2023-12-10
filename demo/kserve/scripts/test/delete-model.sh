@@ -23,5 +23,5 @@ then
 fi
 
 ### common to all protocols:
-oc delete ns  ${TEST_NS_HTTP} ${TEST_NS_GRPC} ${MINIO_NS} --force --grace-period=0
+oc delete ns  ${TEST_NS_HTTP} ${TEST_NS_GRPC} --force --grace-period=0
 
