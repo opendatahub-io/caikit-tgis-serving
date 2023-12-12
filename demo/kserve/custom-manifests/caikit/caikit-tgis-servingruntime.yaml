@@ -1,7 +1,7 @@
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
-  name: caikit-tgis-runtime-http
+  name: caikit-tgis-runtime
 spec:
   multiModel: false
   supportedModelFormats:
