@@ -13,7 +13,8 @@ spec:
       modelFormat:
         name: caikit
       runtime: caikit-tgis-runtime
-      storageUri: proto://path/to/model # single model here
+      storageUri: s3://modelmesh-example-models/llm/models/flan-t5-small-caikit    # single model here
+      # storageUri: proto://path/to/model # single model here
       # Example, using a pvc:
       # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
       # Target directory must contain a config.yml
