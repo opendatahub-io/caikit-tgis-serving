@@ -30,8 +30,9 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    ACCESS_KEY_ID=admin
    SECRET_ACCESS_KEY=password
    MINIO_NS=minio
-   INF_PROTO=http  ### If INF_PROTO is set to "http", only HTTP (e.g., curl) can be used to invoke inferences.  If set to "grpc" only gRPC (e.g., grpcurl) can be used.
+   ```
 
+   ```
    oc new-project ${MINIO_NS}
    oc apply -f ./custom-manifests/minio/minio.yaml -n ${MINIO_NS}
    sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/minio-secret.yaml | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f -
@@ -40,38 +41,49 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
 2. Deploy the LLM model with Caikit+TGIS Serving runtime
 
-   a. Create a new namespace.
+   a. Choose protocol to be used to invoke inferences:
+   Default protocol is HTTP (e.g., curl commands).
+   If you want to use gRPC set INF_PROTO to "-grpc" value, either skip the following command lines.
+
+   ```
+   INF_PROTO="-grpc"
+   ```
+
+   b. Create a new namespace.
 
    ```bash
-   export TEST_NS=kserve-demo"-${INF_PROTO}"
+   export TEST_NS="kserve-demo"
    oc new-project ${TEST_NS}
    ```
 
-   b. Create a caikit `ServingRuntime`.
+   c. Create a caikit `ServingRuntime`.
 
       By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
 
    ```bash
-   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime-"$INF_PROTO".yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime"$INF_PROTO".yaml -n ${TEST_NS}
    ```
 
-   c. Deploy the MinIO data connection and service account.
+   d. Deploy the MinIO data connection and service account.
 
    ```bash
    oc apply -f ./minio-secret-current.yaml -n ${TEST_NS}
    oc create -f ./serviceaccount-minio-current.yaml -n ${TEST_NS}
    ```
 
-   d. Deploy the inference service. It will point to the model located in the `modelmesh-example-models/llm/models` directory.
+   e. Deploy the inference service.
+
+   ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml shows how to define a generic ISVC.
+   If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
+   you can use this specific ISVC to get it up and running: ./custom-manifests/caikit/caikit-tgis-isvc.yaml
+   It will point to the model located in the `modelmesh-example-models/llm/models` directory.
 
    ```bash
-
-   ISVC_NAME=caikit-tgis-isvc-"$INF_PROTO"
-   sed "s/<protocol>/$INF_PROTO/g" ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml > ./custom-manifests/caikit/"$ISVC_NAME".yaml
+   ISVC_NAME=caikit-tgis-isvc$INF_PROTO
    oc apply -f ./custom-manifests/caikit/"$ISVC_NAME".yaml -n ${TEST_NS}
    ```
 
-   e. Verify that the inference service's `READY` state is `True`.
+   f. Verify that the inference service's `READY` state is `True`.
 
    ```bash
    oc get isvc/$ISVC_NAME -n ${TEST_NS}
@@ -81,7 +93,6 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
     Compute KSVC_HOSTNAME:
    ```bash
-
    export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
    ```
 
@@ -224,16 +235,17 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
       ....
       ```
 
-1. Remove the LLM model
+4. Remove the LLM model
 
-   a. To remove (undeploy) the LLM model, delete the Inference Service.
+   a. To remove (undeploy) the LLM model, delete the Inference Service and its containing namespace:
 
    ```bash
    oc delete isvc --all -n ${TEST_NS} --force --grace-period=0
+   oc delete ns ${TEST_NS}
    ```
 
    b. Delete the MinIO resources by deleting the MinIO namespace.
 
    ```bash
-   oc delete ns ${TEST_NS} ${MINIO_NS}
+   oc delete ns ${MINIO_NS}
    ```

@@ -14,29 +14,32 @@ Note: If you prefer to deploy and remove an LLM model by using step-by-step comm
 
 **Procedure**
 
-1. Choose the protocol to be used when invoking inferences: HTTP or gRPC.
-   You may use simulatneously both by invoking the 3 first steps one with "http" and once with "grpc"
+1. Deploy a sample LLM model 
 
+   For HTTP:
    ~~~
-   export INF_PROT="http"  ### When HTTP is to be used (e.g., curl)
-   ### or ### 
-   export INF_PROT="grpc"  ### If gRPC is to be used (e.g., grpcurl)
+   ./scripts/test/deploy-model.sh
    ~~~
 
-2. Deploy a sample LLM model 
-
+   For gRPC:
    ~~~
-   ./scripts/test/deploy-model.sh ${INF_PROT}
-   ~~~
-
-3. Perform inference with a HTTP or gRPC call.
-
-   ~~~
-   ./scripts/test/inference-call.sh ${INF_PROT}
+   ./scripts/test/deploy-model.sh grpc
    ~~~
 
-4. Delete the sample model for a specific protocol:
+2. Perform inference:
+
+   For HTTP:
+   ~~~
+   ./scripts/test/http-call.sh
+   ~~~
+
+   For gRPC:
+   ~~~
+   ./scripts/test/grpc-call.sh
+   ~~~
+
+3. Delete the sample model:
 
    ~~~
-   ./scripts/test/delete-model.sh ${INF_PROT}
+   ./scripts/test/delete-model.sh
    ~~~
