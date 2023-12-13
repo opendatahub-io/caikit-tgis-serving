@@ -13,14 +13,14 @@ echo
 echo "Wait until http runtime is READY"
 
 ISVC_NAME=caikit-tgis-isvc
-wait_for_pods_ready "serving.kserve.io/inferenceservice=$ISVC_NAME" "${TEST_NS}"
-oc wait --for=condition=ready pod -l serving.kserve.io/inferenceservice=$ISVC_NAME -n ${TEST_NS} --timeout=300s
+wait_for_pods_ready "serving.kserve.io/inferenceservice=${ISVC_NAME}" "${TEST_NS}"
+oc wait --for=condition=ready pod -l serving.kserve.io/inferenceservice=${ISVC_NAME} -n ${TEST_NS} --timeout=300s
 
 echo
 echo "Testing all token in a single call"
 echo
 
-export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+export KSVC_HOSTNAME=$(oc get ksvc "${ISVC_NAME}"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 
 ### Invoke the inferences:
 
