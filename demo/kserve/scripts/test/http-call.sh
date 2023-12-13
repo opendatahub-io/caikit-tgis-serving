@@ -6,16 +6,13 @@ set -o errtrace
 
 # Performs inference using HTTP
 
-PREFIX=""
-INF_PROTO=""
-
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
 
 echo
-echo "Wait until $INF_PROTO runtime is READY"
+echo "Wait until http runtime is READY"
 
-ISVC_NAME=caikit-tgis-isvc"${PREFIX}${INF_PROTO}"
+ISVC_NAME=caikit-tgis-isvc
 wait_for_pods_ready "serving.kserve.io/inferenceservice=$ISVC_NAME" "${TEST_NS}"
 oc wait --for=condition=ready pod -l serving.kserve.io/inferenceservice=$ISVC_NAME -n ${TEST_NS} --timeout=300s
 
@@ -24,8 +21,6 @@ echo "Testing all token in a single call"
 echo
 
 export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
-#export THE_QUESTION="At what temperature does Nitrogen boil?"
-# export THE_MODEL="flan-t5-small-caikit"
 
 ### Invoke the inferences:
 
