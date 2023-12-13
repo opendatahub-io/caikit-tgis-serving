@@ -4,7 +4,7 @@ set -o nounset
 set -o errtrace
 # set -x   #Uncomment this to debug script.
 
-# Performs inference using HTTP
+# Performs inference using gRPC
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
