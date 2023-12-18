@@ -11,6 +11,7 @@ spec:
   containers:
     - name: kserve-container
       image: quay.io/opendatahub/text-generation-inference:stable
+      ## Note: cannot add readiness/liveness probes to this container because knative will refuse them
       command: ["text-generation-launcher"]
       args: ["--model-name=/mnt/models/artifacts/"]
       env:
@@ -30,6 +31,20 @@ spec:
         - containerPort: 8085
           name: h2c
           protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - readiness
+      livenessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - liveness
       # resources: # configure as required
       #   requests:
       #     cpu: 8

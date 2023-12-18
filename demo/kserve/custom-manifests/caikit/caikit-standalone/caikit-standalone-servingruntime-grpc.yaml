@@ -1,0 +1,39 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: caikit-standalone-runtime-grpc
+spec:
+  multiModel: false
+  supportedModelFormats:
+    # Note: this currently *only* supports caikit format models
+    - autoSelect: true
+      name: caikit
+  containers:
+    - name: kserve-container
+      image: quay.io/opendatahub/caikit-nlp:stable
+      command: ["python", "-m", "caikit.runtime.grpc_server"]
+      env:
+        - name: RUNTIME_LOCAL_MODELS_DIR
+          value: /mnt/models
+      ports:
+        - containerPort: 8085
+          name: h2c
+          protocol: TCP
+      # resources: # configure as required
+      #   requests:
+      #     cpu: 8
+      #     memory: 16Gi
+      readinessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - readiness
+      livenessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - liveness

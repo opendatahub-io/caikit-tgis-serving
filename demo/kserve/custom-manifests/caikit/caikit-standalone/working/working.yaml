@@ -1,0 +1,128 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caikit-tgis-config
+namespace: kserve-test
+data:
+  caikit.yml: |
+    runtime:
+      library: caikit_nlp
+      local_models_dir: /mnt/models/
+      lazy_load_local_models: true
+      grpc:
+        server_thread_pool_size: 64
+
+    model_management:
+      finders:
+        default:
+          type: MULTI
+          config:
+            finder_priority:
+              - tgis-auto
+        tgis-auto:
+          type: TGIS-AUTO
+          config:
+            test_connection: true
+      initializers:
+        default:
+          type: LOCAL
+          config:
+            backend_priority:
+              - type: TGIS
+                config:
+                  connection:
+                    hostname: localhost:8033
+---
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: caikit-runtime
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+namespace: kserve-test
+spec:
+  multiModel: false
+  supportedModelFormats:
+    # Note: this currently *only* supports caikit format models
+    - autoSelect: true
+      name: caikit
+  containers:
+    - name: kserve-container
+      image: quay.io/opendatahub/text-generation-inference:stable-bafd218
+      imagePullPolicy: IfNotPresent
+      command: ["text-generation-launcher"]
+      args: [
+          # NOTE:--num-shard defaults to 1
+          "--model-name=/mnt/models/artifacts/",
+          "--max-batch-size=256",
+          "--max-concurrent-requests=64",
+        ]
+      # ports:
+      #   - containerPort: 8033
+      #     name: h2c
+      #     protocol: TCP
+      env:
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
+      # resources: # configure as required
+      #   requests:
+      #     cpu: 8
+      #     memory: 16Gi
+      # livenessProbe:
+      #   grpc:
+      #     port: 8083
+      # readinessProbe:
+      #   exec:
+      #     command:
+      #       - curl --fail http://localhost:3000/health
+      #       # TODO: Add grpc endpoint
+      #   # grpc:
+      #   #   port: 8033
+      #   # httpGet:
+      #   #   path: /health
+      #   #   port: 3000
+    - name: transformer-container
+      image: quay.io/opendatahub/caikit-tgis-serving:fast
+      imagePullPolicy: IfNotPresent
+      env:
+        # Optional values:
+        # - name: PT2_COMPILE # Slows down model loading, but provides a speedup in inference
+        #   value: true
+        # - name: FLASH_ATTENTION # Optimizes certain models, see https://github.com/IBM/text-generation-inference#converting-weights-to-safetensors-format
+        #   value: true
+      volumeMounts:
+        - name: config-volume
+          mountPath: /caikit/config/
+          readOnly: true
+      ports:
+        - containerPort: 8085
+          protocol: TCP
+        # - containerPort: 8080  # http
+        #   protocol: TCP
+      #   grpc:
+      #     port: 8085
+      # livenessProbe:
+      #   grpc:
+      #     port: 8085
+      #   initialDelaySeconds: 10
+      # readinessProbe: # http readiness
+      #   httpGet:
+      #     path: /health
+      #     port: 8080
+      #   initialDelaySeconds: 10
+      # livenessProbe:  # http liveness
+      #   httpGet:
+      #     path: /health
+      #     port: 8080
+
+      # resources: # configure as required
+      #   requests:
+      #     cpu: 8
+      #     memory: 16Gi
+  volumes:
+    - name: config-volume
+      configMap:
+        name: caikit-tgis-config
