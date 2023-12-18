@@ -1,7 +1,7 @@
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
-  name: caikit-tgis-runtime
+  name: caikit-standalone-runtime
 spec:
   multiModel: false
   supportedModelFormats:
@@ -10,18 +10,7 @@ spec:
       name: caikit
   containers:
     - name: kserve-container
-      image: quay.io/opendatahub/text-generation-inference:stable
-      command: ["text-generation-launcher"]
-      args: ["--model-name=/mnt/models/artifacts/"]
-      env:
-        - name: TRANSFORMERS_CACHE
-          value: /tmp/transformers_cache
-      # resources: # configure as required
-      #   requests:
-      #     cpu: 8
-      #     memory: 16Gi
-    - name: transformer-container
-      image: quay.io/opendatahub/caikit-tgis-serving:stable
+      image: quay.io/opendatahub/caikit-nlp:stable
       command: ["python", "-m", "caikit.runtime.http_server"]
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
@@ -33,3 +22,17 @@ spec:
       #   requests:
       #     cpu: 8
       #     memory: 16Gi
+      readinessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - readiness
+      livenessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - liveness

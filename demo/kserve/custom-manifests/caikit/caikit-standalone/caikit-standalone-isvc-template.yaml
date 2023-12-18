@@ -1,0 +1,22 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  name: caikit-standalone-isvc
+spec:
+  predictor:
+    # replace in following  <NameOfAServiceAccount> with the name
+    # of a ServiceAccount that has the secret for accessing the model
+    serviceAccountName: <NameOfAServiceAccount>
+    model:
+      modelFormat:
+        name: caikit
+      # Replace with the actual name of the deployed ServingRuntime
+      runtime: <NameOfTheServingRuntime>
+      storageUri: s3://modelmesh-example-models/llm/models/flan-t5-small-caikit # single model here: target directory must contain a config.yml
+      # Example, using a pvc:
+      # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
+      # Target directory must contain a config.yml
