@@ -11,7 +11,7 @@ spec:
     - name: kserve-container
       image: quay.io/opendatahub/text-generation-inference:stable
       command: ["text-generation-launcher"]
-      args: 
+      args:
         - "--model-name=/mnt/models/"
         - "--port=3000"
         - "--grpc-port=8033"
@@ -23,7 +23,13 @@ spec:
       #     cpu: 8
       #     memory: 16Gi
       ports:
-      - containerPort: 8033
-        name: h2c
-        protocol: TCP
-        
+        - containerPort: 3000
+          protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 3000
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 3000
