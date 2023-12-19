@@ -22,6 +22,7 @@ spec:
       #     memory: 16Gi
     - name: transformer-container
       image: quay.io/opendatahub/caikit-tgis-serving:stable
+      command: ["python", "-m", "caikit.runtime.grpc_server"]
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
