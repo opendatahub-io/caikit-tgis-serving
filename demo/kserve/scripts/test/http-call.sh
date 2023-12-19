@@ -2,6 +2,9 @@
 set -o pipefail
 set -o nounset
 set -o errtrace
+set -u  ### any reference to an unset variable will be considered as an error and will immediately stop execution
+
+
 # set -x   #Uncomment this to debug script.
 
 # Performs inference using HTTP
