@@ -103,7 +103,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
          # Target directory must contain a config.yml
    ```
 
-   **Note that you should adapt this template by modifying**
+   **Note** you should adapt this template by modifying:
 
 - <caikit-tgis-isvc-name> should be replaced by the name of the inference
 - <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
@@ -111,8 +111,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
    the following 2 lines will point to the specific yaml code (as function of your chosen protocol)
-   that is either to [ISVC Template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc.yaml) for HTTP or
-   to [ISVC Template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-grpc.yaml) for gRPC
+   that is either to [HTTP ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc.yaml) or
+   to [gRPC ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-grpc.yaml)
 
    ```bash
    ISVC_NAME=caikit-tgis-isvc$INF_PROTO
