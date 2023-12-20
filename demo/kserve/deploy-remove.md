@@ -105,8 +105,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    **Note** you should adapt this template by modifying:
 
-- <caikit-tgis-isvc-name> should be replaced by the name of the inference
-- <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
+- &lt;caikit-tgis-isvc-name&gt; should be replaced by the name of the inference
+- &lt;NameOfAServiceAccount&gt; should be replaced by the actual name of the Service Account
 - proto://path/to/model should be replaced by the actual path to the model that will run the inferences
 
    If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
