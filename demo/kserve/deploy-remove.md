@@ -111,8 +111,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
    the following 2 lines will use the specific yaml code (as needed per chosen protocol)
-   that is either to [HTTP ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc.yaml) or
-   to [gRPC ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-grpc.yaml) and create
+   that is either [HTTP ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc.yaml) or
+   [gRPC ISVC file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-grpc.yaml) and create
    the needed Inference Service:
 
    ```bash
