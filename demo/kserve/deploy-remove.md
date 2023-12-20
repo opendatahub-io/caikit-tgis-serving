@@ -103,7 +103,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
          # Target directory must contain a config.yml
    ```
 
-   **Note** you should adapt this template by modifying:
+   **Note** you should adapt this template as follows:
 
 - &lt;caikit-tgis-isvc-name&gt; should be replaced by the name of the inference
 - &lt;NameOfAServiceAccount&gt; should be replaced by the actual name of the Service Account
