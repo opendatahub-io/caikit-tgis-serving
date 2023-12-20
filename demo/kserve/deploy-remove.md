@@ -103,10 +103,11 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
          # Target directory must contain a config.yml
    ```
 
-   Note that you should modify 3 places:
-   i. <caikit-tgis-isvc-name> should be replaced by the name of the inference
-   ii. <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
-   iii. proto://path/to/model should be replaced by the actual path to the model that will run the inferences
+   **Note that you should adapt this template by modifying**
+
+- <caikit-tgis-isvc-name> should be replaced by the name of the inference
+- <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
+- proto://path/to/model should be replaced by the actual path to the model that will run the inferences
 
    If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
    the following 2 lines will point to the specific yaml code (as function of your chosen protocol)
