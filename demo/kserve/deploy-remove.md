@@ -77,31 +77,32 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    shows how to define a generic ISVC:
 
    ```bash
-apiVersion: serving.kserve.io/v1beta1
-kind: InferenceService
-metadata:
-  annotations:
-    serving.knative.openshift.io/enablePassthrough: "true"
-    sidecar.istio.io/inject: "true"
-    sidecar.istio.io/rewriteAppHTTPProbers: "true"
-  # The following <caikit-tgis-isvc-name> should be set to the
-  # actual name of the inference service. (e.g., caikit-tgis-isvc
-  # for HTTP and caikit-tgis-isvc-grpc for gRPC)
-  name: <caikit-tgis-isvc-name>
-spec:
-  predictor:
-    # replace in following  <NameOfAServiceAccount> with the name
-    # of a ServiceAccount that has the secret for accessing the model
-    serviceAccountName: <NameOfAServiceAccount>
-    model:
-      modelFormat:
-        name: caikit
-      runtime: caikit-tgis-runtime
-      storageUri: proto://path/to/model # single model here
-      # Example, using a pvc:
-      # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
-      # Target directory must contain a config.yml
+   apiVersion: serving.kserve.io/v1beta1
+   kind: InferenceService
+   metadata:
+     annotations:
+       serving.knative.openshift.io/enablePassthrough: "true"
+       sidecar.istio.io/inject: "true"
+       sidecar.istio.io/rewriteAppHTTPProbers: "true"
+     # The following <caikit-tgis-isvc-name> should be set to the
+     # actual name of the inference service. (e.g., caikit-tgis-isvc
+     # for HTTP and caikit-tgis-isvc-grpc for gRPC)
+     name: <caikit-tgis-isvc-name>
+   spec:
+     predictor:
+       # replace in following  <NameOfAServiceAccount> with the name
+       # of a ServiceAccount that has the secret for accessing the model
+       serviceAccountName: <NameOfAServiceAccount>
+       model:
+         modelFormat:
+           name: caikit
+         runtime: caikit-tgis-runtime
+         storageUri: proto://path/to/model # single model here
+         # Example, using a pvc:
+         # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
+         # Target directory must contain a config.yml
    ```
+
    Note that you should modify 3 places:
    i. <caikit-tgis-isvc-name> should be replaced by the name of the inference
    ii. <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
