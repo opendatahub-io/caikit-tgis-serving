@@ -73,10 +73,44 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    e. Deploy the inference service.
 
-   ./custom-manifests/caikit/caikit-tgis-isvc-template.yaml shows how to define a generic ISVC.
+   The [ISVC Template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-template.yaml)
+   shows how to define a generic ISVC:
+
+   ```bash
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  # The following <caikit-tgis-isvc-name> should be set to the
+  # actual name of the inference service. (e.g., caikit-tgis-isvc
+  # for HTTP and caikit-tgis-isvc-grpc for gRPC)
+  name: <caikit-tgis-isvc-name>
+spec:
+  predictor:
+    # replace in following  <NameOfAServiceAccount> with the name
+    # of a ServiceAccount that has the secret for accessing the model
+    serviceAccountName: <NameOfAServiceAccount>
+    model:
+      modelFormat:
+        name: caikit
+      runtime: caikit-tgis-runtime
+      storageUri: proto://path/to/model # single model here
+      # Example, using a pvc:
+      # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
+      # Target directory must contain a config.yml
+   ```
+   Note that you should modify 3 places:
+   i. <caikit-tgis-isvc-name> should be replaced by the name of the inference
+   ii. <NameOfAServiceAccount> should be replaced by the actual name of the Service Account
+   iii. proto://path/to/model should be replaced by the actual path to the model that will run the inferences
+
    If you've deployed Minio with the flan-t5-small model, as explained earlier in this document,
-   you can use this specific ISVC to get it up and running: ./custom-manifests/caikit/caikit-tgis-isvc.yaml
-   It will point to the model located in the `modelmesh-example-models/llm/models` directory.
+   the following 2 lines will point to the specific yaml code (as function of your chosen protocol)
+   that is either to [ISVC Template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc.yaml) for HTTP or
+   to [ISVC Template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-grpc.yaml) for gRPC
 
    ```bash
    ISVC_NAME=caikit-tgis-isvc$INF_PROTO

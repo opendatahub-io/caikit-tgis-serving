@@ -5,7 +5,10 @@ metadata:
     serving.knative.openshift.io/enablePassthrough: "true"
     sidecar.istio.io/inject: "true"
     sidecar.istio.io/rewriteAppHTTPProbers: "true"
-  name: caikit-tgis-isvc
+  # The following <caikit-tgis-isvc-name> should be set to the
+  # actual name of the inference service. (e.g., caikit-tgis-isvc
+  # for HTTP and caikit-tgis-isvc-grpc for gRPC)
+  name: <caikit-tgis-isvc-name>
 spec:
   predictor:
     # replace in following  <NameOfAServiceAccount> with the name
