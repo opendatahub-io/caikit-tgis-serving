@@ -8,9 +8,9 @@ metadata:
   name: caikit-tgis-isvc
 spec:
   predictor:
-    # replace in following  <ServiceAccountName> with the name
+    # replace in following  <NameOfAServiceAccount> with the name
     # of a ServiceAccount that has the secret for accessing the model
-    serviceAccountName: <NameOfAServiceAccount>  
+    serviceAccountName: <NameOfAServiceAccount>
     model:
       modelFormat:
         name: caikit
