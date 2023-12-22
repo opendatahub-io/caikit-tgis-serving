@@ -23,13 +23,6 @@ spec:
       #     cpu: 8
       #     memory: 16Gi
       ports:
-        - containerPort: 3000
+        - containerPort: 8033
+          name: h2c
           protocol: TCP
-      livenessProbe:
-        httpGet:
-          path: /health
-          port: 3000
-      readinessProbe:
-        httpGet:
-          path: /health
-          port: 3000
