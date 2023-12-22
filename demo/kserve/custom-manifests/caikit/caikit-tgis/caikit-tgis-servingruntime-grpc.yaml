@@ -30,6 +30,26 @@ spec:
         - containerPort: 8085
           name: h2c
           protocol: TCP
+      # readinessProbe: # NOTE: grpc probes are only supported by knative-serving>=1.12
+      #   grpc:
+      #     port: 8085
+      # livenessProbe: # NOTE: grpc probes are only supported by knative-serving>=1.12
+      #   grpc:
+      #     port: 8085
+      ## NOTE: can't use grpc probes with knative-serving <1.12, so we will
+      ## probe the health endpoint for the http server instead
+      readinessProbe: # Use exec probes instad of httpGet since the probes' port gets rewritten to the containerPort
+        exec:
+          command:
+            - curl
+            - --fail
+            - localhost:8080/health
+      livenessProbe: # http liveness
+        exec:
+          command:
+            - curl
+            - --fail
+            - localhost:8080/health
       # resources: # configure as required
       #   requests:
       #     cpu: 8
