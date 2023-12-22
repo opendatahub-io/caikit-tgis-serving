@@ -46,14 +46,6 @@ objects:
         ports:
           - containerPort: 8080
             protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: "/health"
-            port: 8080
-        readinessProbe:
-          httpGet:
-            path: "/health"
-            port: 8080
 parameters:
 - name: CPU_REQUEST
   description: CPU request for the container
