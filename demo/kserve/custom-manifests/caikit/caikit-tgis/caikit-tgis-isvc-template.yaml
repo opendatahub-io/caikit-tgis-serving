@@ -17,8 +17,7 @@ spec:
     model:
       modelFormat:
         name: caikit
-      # Replace with the actual name of the deployed ServingRuntime
-      runtime: <NameOfTheServingRuntime>
+      runtime: caikit-tgis-runtime
       storageUri: proto://path/to/model # single model here
       # Example, using a pvc:
       # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
