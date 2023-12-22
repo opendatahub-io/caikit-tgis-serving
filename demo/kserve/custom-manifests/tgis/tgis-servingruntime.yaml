@@ -12,7 +12,7 @@ spec:
       image: quay.io/opendatahub/text-generation-inference:stable
       command: ["text-generation-launcher"]
       args:
-        - "--model-name=/mnt/models/"
+        - "--model-name=/mnt/models/<model>"
         - "--port=3000"
         - "--grpc-port=8033"
       env:
@@ -23,6 +23,13 @@ spec:
       #     cpu: 8
       #     memory: 16Gi
       ports:
-        - containerPort: 8033
-          name: h2c
+        - containerPort: 3000
           protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 3000
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 3000
