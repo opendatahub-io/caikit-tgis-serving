@@ -13,6 +13,8 @@ model_management:
           # - local
     tgis-auto:
       type: TGIS-AUTO
+      config:
+        test_connections: true
   initializers:
     default:
       type: LOCAL
@@ -22,7 +24,7 @@ model_management:
             config:
               connection:
                 hostname: tgis:8033
-              test_connections: true
+                test_connections: true
 
 log:
   formatter: pretty
