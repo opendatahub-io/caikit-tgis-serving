@@ -32,7 +32,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    MINIO_NS=minio
    ```
 
-   ```
+   ```bash
    oc new-project ${MINIO_NS}
    oc apply -f ./custom-manifests/minio/minio.yaml -n ${MINIO_NS}
    sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/minio-secret.yaml | tee ./minio-secret-current.yaml | oc -n ${MINIO_NS} apply -f -
@@ -45,7 +45,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    Default protocol is HTTP (e.g., curl commands).
    If you want to use gRPC set INF_PROTO to "-grpc" value, either skip the following command lines.
 
-   ```
+   ```bash
    INF_PROTO="-grpc"
    ```
 
@@ -61,7 +61,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
       By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
 
    ```bash
-   oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime"$INF_PROTO".yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit-tgis/caikit-tgis-servingruntime"$INF_PROTO".yaml -n ${TEST_NS}
    ```
 
    d. Deploy the MinIO data connection and service account.
@@ -73,40 +73,14 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    e. Deploy the inference service.
 
-   The [ISVC template file](/demo/kserve/custom-manifests/caikit/caikit-tgis-isvc-template.yaml) shown below contains all that is needed to set up the Inference Service
-
-   ```bash
-   apiVersion: serving.kserve.io/v1beta1
-   kind: InferenceService
-   metadata:
-     annotations:
-       serving.knative.openshift.io/enablePassthrough: "true"
-       sidecar.istio.io/inject: "true"
-       sidecar.istio.io/rewriteAppHTTPProbers: "true"
-     # The following <caikit-tgis-isvc-name> should be set to the
-     # actual name of the inference service. (e.g., caikit-tgis-isvc
-     # for HTTP and caikit-tgis-isvc-grpc for gRPC)
-     name: <caikit-tgis-isvc-name>
-   spec:
-     predictor:
-       # replace in following  <NameOfAServiceAccount> with the name
-       # of a ServiceAccount that has the secret for accessing the model
-       serviceAccountName: <NameOfAServiceAccount>
-       model:
-         modelFormat:
-           name: caikit
-         runtime: caikit-tgis-runtime
-         storageUri: proto://path/to/model # single model here
-         # Example, using a pvc:
-         # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
-         # Target directory must contain a config.yml
-   ```
+   The [ISVC template file](/demo/kserve/custom-manifests/caikit-tgis/caikit-tgis-isvc-template.yaml) shown below contains all that is needed to set up the Inference Service
 
    Before using it, the following details have to be added: 
 
-   - `<caikit-tgis-isvc-name>` should be replaced by the name of the inference
+   - `<caikit-tgis-isvc-name>` should be replaced by the name of the inference service
    - `<NameOfAServiceAccount>` should be replaced by the actual name of the Service Account
    - `proto://path/to/model` should be replaced by the actual path to the model that will run the inferences
+   - `<NameOfTheServingRuntime` should be replaced by the name of the ServingRuntime
 
    Note:  If you followed all the steps to this point, the following code will
    create the needed Inference Service using the Minio with the flan-t5-small
@@ -123,151 +97,151 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
    oc get isvc/$ISVC_NAME -n ${TEST_NS}
    ```
 
-3. Perform inference using HTTP or either gRPC (
+3. Perform inference using either using HTTP or gRPC
 
-    Compute KSVC_HOSTNAME:
+   Compute KSVC_HOSTNAME:
+
    ```bash
    export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
    ```
 
-    3-http. Perform inference with HTTP. This example uses cURL.
+   - http only. Perform inference with HTTP. This example uses cURL.
 
-      a. Run the following `curl` command for all tokens in a single call:
+     a. Run the following `curl` command for all tokens in a single call:
 
-      ```bash
-      curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
-      ```
+     ```bash
+     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
+     ```
 
-      The response should be similar to the following:
+     The response should be similar to the following:
 
-      ```json
-      {
-        "generated_token_count": "5",
-        "text": "74 degrees F",
-        "stop_reason": "EOS_TOKEN",
-        "producer_id": {
-          "name": "Text Generation",
-          "version": "0.1.0"
-        }
-      }
-      ```
+     ```json
+     {
+       "generated_token_count": "5",
+       "text": "74 degrees F",
+       "stop_reason": "EOS_TOKEN",
+       "producer_id": {
+         "name": "Text Generation",
+         "version": "0.1.0"
+       }
+     }
+     ```
 
-      b. Run `curl` to generate a token stream.
+     b. Run `curl` to generate a token stream.
 
-      ```bash
-      curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
-      ```
+     ```bash
+     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
+     ```
 
-      The response should be similar to the following:
+     The response should be similar to the following:
 
-      ```json
-      {
-        "details": {
+     ```json
+     {
+       "details": {
 
-        }
-      },
-      {
-        "tokens": [
-          {
-            "text": "▁",
-            "logprob": -1.599083423614502
-          }
-        ],
-        "details": {
-          "generated_tokens": 1
-        }
-      }
-      {
-        "generated_text": "74",
-        "tokens": [
-          {
-            "text": "74",
-            "logprob": -3.3622500896453857
-          }
-        ],
-        "details": {
-          "generated_tokens": 2
-        }
-      }
-      ....
-      ```
+       }
+     },
+     {
+       "tokens": [
+         {
+           "text": "▁",
+           "logprob": -1.599083423614502
+         }
+       ],
+       "details": {
+         "generated_tokens": 1
+       }
+     }
+     {
+       "generated_text": "74",
+       "tokens": [
+         {
+           "text": "74",
+           "logprob": -3.3622500896453857
+         }
+       ],
+       "details": {
+         "generated_tokens": 2
+       }
+     }
+     ...
+     ```
 
+   - gRPC only. Perform inference with Remote Procedure Call (gPRC) commands. This example uses the [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line utility.
 
-    3-gRPC. Perform inference with Remote Procedure Call (gPRC) commands. This example uses the [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line utility.
+     a. Determine whether the HTTP2 protocol is enabled in the cluster.
 
-      a. Determine whether the HTTP2 protocol is enabled in the cluster.
+     ```bash
+     oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
+     ```
 
-      ```bash
-      oc get ingresses.config/cluster -ojson | grep ingress.operator.openshift.io/default-enable-http2
-      ```
+     If the annotation is set to true, skip to Step 3c.
 
-      If the annotation is set to true, skip to Step 3c.
+     b. If the annotation is set to either false or not present, enable it.
 
-      b. If the annotation is set to either false or not present, enable it.
+     ```bash
+     oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
+     ```
 
-      ```bash
-      oc annotate ingresses.config/cluster ingress.operator.openshift.io/default-enable-http2=true
-      ```
+     c. Run the following `grpcurl` command for all tokens in a single call:
 
-      c. Run the following `grpcurl` command for all tokens in a single call:
+     ```bash
+     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+     ```
 
-      ```bash
-      grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
-      ```
+     The response should be similar to the following:
 
-      The response should be similar to the following:
+     ```json
+     {
+       "generated_token_count": "5",
+       "text": "74 degrees F",
+       "stop_reason": "EOS_TOKEN",
+       "producer_id": {
+         "name": "Text Generation",
+         "version": "0.1.0"
+       }
+     }
+     ```
 
-      ```json
-      {
-        "generated_token_count": "5",
-        "text": "74 degrees F",
-        "stop_reason": "EOS_TOKEN",
-        "producer_id": {
-          "name": "Text Generation",
-          "version": "0.1.0"
-        }
-      }
-      ```
+     d. Run `grpcurl` to generate a token stream.
 
-      d. Run `grpcurl` to generate a token stream.
+     ```bash
+     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
+     ```
 
-      ```bash
-      grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
-      ```
+     The response should be similar to the following:
 
-      The response should be similar to the following:
+     ```json
+     {
+       "details": {
 
-      ```json
-      {
-        "details": {
-
-        }
-      },
-      {
-        "tokens": [
-          {
-            "text": "▁",
-            "logprob": -1.599083423614502
-          }
-        ],
-        "details": {
-          "generated_tokens": 1
-        }
-      }
-      {
-        "generated_text": "74",
-        "tokens": [
-          {
-            "text": "74",
-            "logprob": -3.3622500896453857
-          }
-        ],
-        "details": {
-          "generated_tokens": 2
-        }
-      }
-      ....
-      ```
+       }
+     },
+     {
+       "tokens": [
+         {
+           "text": "▁",
+           "logprob": -1.599083423614502
+         }
+       ],
+       "details": {
+         "generated_tokens": 1
+       }
+     }
+     {
+       "generated_text": "74",
+       "tokens": [
+         {
+           "text": "74",
+           "logprob": -3.3622500896453857
+         }
+       ],
+       "details": {
+         "generated_tokens": 2
+       }
+     }
+     ...
+     ```
 
 4. Remove the LLM model
 
