@@ -30,6 +30,12 @@ spec:
         - containerPort: 8085
           name: h2c
           protocol: TCP
+      # readinessProbe: # NOTE: grpc probes are only supported by knative-serving>=1.12
+      #   grpc:
+      #     port: 8085
+      # livenessProbe: # NOTE: grpc probes are only supported by knative-serving>=1.12
+      #   grpc:
+      #     port: 8085
       # resources: # configure as required
       #   requests:
       #     cpu: 8
