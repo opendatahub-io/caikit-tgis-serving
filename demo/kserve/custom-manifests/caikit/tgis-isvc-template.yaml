@@ -1,0 +1,22 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  # The following <tgis-isvc-name> should be set to the
+  # actual name of the inference service. (e.g., tgis-grpc-isvc)
+  name: <tgis-grpc-isvc-name>
+spec:
+  predictor:
+    # replace in following  <NameOfAServiceAccount> with the name
+    # of a ServiceAccount that has the secret for accessing the model
+    serviceAccountName: <NameOfAServiceAccount>
+    model:
+      modelFormat:
+        name: pytorch
+      runtime: tgis-runtime-grpc
+      storageUri: proto://path/to/model # single model here
+      # Example, using a pvc:
+      # storageUri: pvc://path/to/model

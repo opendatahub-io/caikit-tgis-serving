@@ -1,0 +1,58 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: opendatahub
+  template: tgis-serving-grpc
+metadata:
+  annotations:
+    description: Text Generation Inference Server (TGIS) is a high performance inference engine that deploys and serves Large Language Models.
+    openshift.io/display-name: TGIS Standalone ServingRuntime for KServe
+    openshift.io/provider-display-name: Red Hat, Inc.
+    tags: rhods,rhoai,kserve,servingruntime
+    template.openshift.io/documentation-url: https://github.com/opendatahub-io/text-generation-inference
+    template.openshift.io/long-description: This template defines resources needed to deploy TGIS standalone servingruntime with KServe in Red Hat OpenShift AI
+    template.openshift.io/support-url: https://access.redhat.com
+  labels:
+    app: opendatahub
+  name: tgis-serving-grpc-template
+objects:
+- apiVersion: serving.kserve.io/v1alpha1
+  kind: ServingRuntime
+  metadata:
+    name: tgis-runtime-grpc
+  spec:
+    multiModel: false
+    supportedModelFormats:
+      - autoSelect: true
+        name: pytorch
+    containers:
+      - name: kserve-container
+        image: ${TGIS_CONTAINER_IMAGE}
+        command: ["text-generation-launcher"]
+        args: 
+          - "--model-name=/mnt/models/"
+          - "--port=3000"
+          - "--grpc-port=8033"
+        env:
+          - name: TRANSFORMERS_CACHE
+            value: /tmp/transformers_cache
+        resources: 
+           requests:
+             cpu: ${CPU_REQUEST}
+             memory: ${MEMORY_REQUEST}
+        ports:
+        - containerPort: 8033
+          name: h2c
+          protocol: TCP
+parameters:
+- name: CPU_REQUEST
+  description: CPU request for the container
+  value: "4"
+- name: MEMORY_REQUEST
+  description: Memory request for the container
+  value: "8Gi"
+- name: TGIS_CONTAINER_IMAGE
+  description: Container image for the runtime
+  value: quay.io/opendatahub/text-generation-inference:stable
+
+          
