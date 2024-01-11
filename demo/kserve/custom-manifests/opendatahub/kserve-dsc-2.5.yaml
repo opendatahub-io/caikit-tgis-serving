@@ -13,11 +13,17 @@ spec:
     codeflare:
       managementState: Removed
     dashboard:
-      managementState: Removed
+      managementState: Managed
     datasciencepipelines:
       managementState: Removed
     kserve:
       managementState: Managed
+      serving:
+        ingressGateway:
+          certificate:
+            type: SelfSigned
+        managementState: Managed
+        name: knative-serving
     modelmeshserving:
       managementState: Removed
     ray:
