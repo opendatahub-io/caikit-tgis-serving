@@ -23,9 +23,17 @@ spec:
       #   requests:
       #     cpu: 8
       #     memory: 16Gi
-      livenessProbe:
-        grpc:
-          port: 8085
       readinessProbe:
-        httpGet:
-          port: 8085
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - readiness
+      livenessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - liveness

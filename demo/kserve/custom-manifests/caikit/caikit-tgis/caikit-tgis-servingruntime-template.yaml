@@ -46,14 +46,20 @@ objects:
         ports:
           - containerPort: 8080
             protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: "/health"
-            port: 8080
         readinessProbe:
-          httpGet:
-            path: "/health"
-            port: 8080
+          exec:
+            command:
+              - python
+              - -m
+              - caikit_health_probe
+              - readiness
+        livenessProbe:
+          exec:
+            command:
+              - python
+              - -m
+              - caikit_health_probe
+              - liveness
 parameters:
 - name: CPU_REQUEST
   description: CPU request for the container
