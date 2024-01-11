@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-
 import caikit_nlp
 import argparse
 
 
 def main():
     parser = argparse.ArgumentParser(prog="convert.py")
-    parser.add_argument("--model-path", help="Path of the base HuggingFace model", )
-    parser.add_argument("--model-save-path", help="Path to save the Caikit format model to")
+    parser.add_argument(
+        "--model-path",
+        help='Path of the base HuggingFace model. If the ALLOW_DOWNLOADS env var is set, this can be a HuggingFace hub model e.g. "google/flan-t5-small"',
+    )
+    parser.add_argument(
+        "--model-save-path", help="Path to save the Caikit format model to"
+    )
 
     args = parser.parse_args()
 
