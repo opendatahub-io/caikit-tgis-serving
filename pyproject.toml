@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "~3.9"
 caikit-tgis-backend = "0.1.29"
-caikit-nlp = "0.4.1"
+caikit-nlp = "0.4.2"
 # pytorch release's metadata is missing the cublas/cuda dependencies, which breaks
 # poetry installs, hence we need to explicitly define these.
 # See https://github.com/pytorch/pytorch/issues/100974
