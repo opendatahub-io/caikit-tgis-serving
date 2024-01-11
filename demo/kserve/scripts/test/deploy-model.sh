@@ -52,15 +52,15 @@ oc get ns ${TEST_NS}
 if [[ $? ==  1 ]]
 then
     oc new-project ${TEST_NS}
-   
-    oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime"${INF_PROTO}".yaml -n ${TEST_NS}
+
+    oc apply -f ./custom-manifests/caikit/caikit-tgis/caikit-tgis-servingruntime"${INF_PROTO}".yaml -n ${TEST_NS}
 
     oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 
     oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
 
     ###  create the isvc.   First step: create the yaml file
     ISVC_NAME=caikit-tgis-isvc"${INF_PROTO}"
-    oc apply -f ./custom-manifests/caikit/"$ISVC_NAME".yaml -n ${TEST_NS}
+    oc apply -f ./custom-manifests/caikit/caikit-tgis/"$ISVC_NAME".yaml -n ${TEST_NS}
 
     # Resources needed to enable metrics for the model 
     # The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`

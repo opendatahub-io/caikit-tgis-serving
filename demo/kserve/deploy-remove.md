@@ -61,7 +61,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
       By default, it requests 4CPU and 8Gi of memory. You can adjust these values as needed.
 
    ```bash
-   oc apply -f ./custom-manifests/caikit-tgis/caikit-tgis-servingruntime"$INF_PROTO".yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis/caikit-tgis-servingruntime"$INF_PROTO".yaml -n ${TEST_NS}
    ```
 
    d. Deploy the MinIO data connection and service account.
@@ -88,7 +88,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    ```bash
    ISVC_NAME=caikit-tgis-isvc$INF_PROTO
-   oc apply -f ./custom-manifests/caikit/"$ISVC_NAME".yaml -n ${TEST_NS}
+   oc apply -f ./custom-manifests/caikit/caikit-tgis/"$ISVC_NAME".yaml -n ${TEST_NS}
    ```
 
    f. Verify that the inference service's `READY` state is `True`.
