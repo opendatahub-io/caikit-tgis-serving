@@ -12,7 +12,7 @@ metadata:
   name: rhods-operator
   namespace: redhat-ods-operator
 spec:
-  channel: alpha
+  channel: stable
   installPlanApproval: Automatic
   name: rhods-operator
   source: redhat-operators
