@@ -316,17 +316,17 @@ transformers = ">=4.32.0"
 
 [[package]]
 name = "caikit-tgis-backend"
-version = "0.1.29"
+version = "0.1.30"
 description = "Caikit module backend for models run in TGIS"
 optional = false
 python-versions = "~=3.8"
 files = [
-    {file = "caikit-tgis-backend-0.1.29.tar.gz", hash = "sha256:6d84c1352892332da8d01ae688436d2e0cb4f021df44217fa4b926edf66cb918"},
-    {file = "caikit_tgis_backend-0.1.29-py3-none-any.whl", hash = "sha256:b1bee0b7e5b1e54e72fa3e216d7b69933055527fc390c10cf18b5f3b208da14d"},
+    {file = "caikit-tgis-backend-0.1.30.tar.gz", hash = "sha256:449b3a1b395749cc929f5e6e784c48b9fe19a794428ddfbf076dd0f2f23ddbe7"},
+    {file = "caikit_tgis_backend-0.1.30-py3-none-any.whl", hash = "sha256:edff22d6b57745f01f457cf517e1d256a96de00d1f119f2030063a0eb81bc342"},
 ]
 
 [package.dependencies]
-caikit = ">=0.16.0,<0.26.0"
+caikit = ">=0.16.0,<0.27.0"
 grpcio = ">=1.35.0,<2.0"
 requests = ">=2.28.2,<3"
 
@@ -3431,4 +3431,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "1f3da6407c922d2a6ee7ceeea7a1cb56fef7bb517486ef0fe793bc4e7e27041a"
+content-hash = "0cd7c9042f9cbb56b3411fe40efe38dde4dcba2a38ea857cd2c75137fb283d4e"
