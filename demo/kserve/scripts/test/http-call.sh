@@ -3,17 +3,19 @@ set -o pipefail
 set -o nounset
 set -o errtrace
 set -u  ### any reference to an unset variable will be considered as an error and will immediately stop execution
+
+
 # set -x   #Uncomment this to debug script.
 
-# Performs inference using gRPC
+# Performs inference using HTTP
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
 source "$(dirname "$(realpath "$0")")/../utils.sh"
 
 echo
-echo "Wait until grpc runtime is READY"
+echo "Wait until http runtime is READY"
 
-ISVC_NAME=caikit-tgis-isvc-grpc
+ISVC_NAME=caikit-tgis-isvc
 wait_for_pods_ready "serving.kserve.io/inferenceservice=${ISVC_NAME}" "${TEST_NS}"
 oc wait --for=condition=ready pod -l serving.kserve.io/inferenceservice=${ISVC_NAME} -n ${TEST_NS} --timeout=300s
 
@@ -24,11 +26,12 @@ echo
 export KSVC_HOSTNAME=$(oc get ksvc "${ISVC_NAME}"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
 
 ### Invoke the inferences:
-grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+
+curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
 
 echo
 echo "Testing streams of token"
 echo
 
-grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
+curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
 

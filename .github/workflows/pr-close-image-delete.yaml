@@ -1,20 +1,19 @@
 name: Delete quay image on PR closed
 on:
   pull_request_target:
-    types: [ closed ]
+    types: [closed]
     branches:
-      - 'main'
+      - "main"
     paths-ignore:
-      - 'LICENSE'
-      - '**/.gitignore'
-      - '**.md'
-      - '**.adoc'
-      - '*.txt'
-      - 'Makefile'
-      - '.github/**'
-      - 'docs/**'
-      - 'demo/**'
-             
+      - "LICENSE"
+      - "**/.gitignore"
+      - "**.md"
+      - "**.adoc"
+      - "*.txt"
+      - "Makefile"
+      - ".github/**"
+      - "docs/**"
+      - "demo/**"
 
 env:
   QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO: ${{ secrets.QUAY_ODH_CAIKIT_TGIS_SERVING_IMAGE_REPO }}
@@ -26,7 +25,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-depth: "0"
       - name: Install skopeo
         shell: bash
         run: |
@@ -38,7 +37,7 @@ jobs:
           QUAY_TOKEN: ${{ secrets.QUAY_ROBOT_TOKEN }}
           QUAY_ROBOT_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
         run: |
-         skopeo login quay.io -u "$QUAY_ROBOT_USERNAME" -p "$QUAY_TOKEN"
+          skopeo login quay.io -u "$QUAY_ROBOT_USERNAME" -p "$QUAY_TOKEN"
       - name: Delete PR image
         shell: bash
         env:

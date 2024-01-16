@@ -1,6 +1,6 @@
 # Caikit-TGIS-Serving
 
-Caikit-TGIS-Serving is a combined image that allows data scientists to perform Large Learning Model (LLM) inference.
+Caikit-TGIS-Serving is a combined image that allows data scientists to perform Large Language Model (LLM) inference.
 
 The Caikit-TGIS-Serving stack consists of these components:
 * **[Text Generation Inference Server (TGIS)](https://github.com/opendatahub-io/text-generation-inference)**: The serving backend that loads the models and provides the inference engine.
@@ -30,7 +30,9 @@ The procedures for installing and deploying the Caikit-TGIS-Serving stack have b
 
 **Procedures** 
 
-There are two ways to install the KServe/Caikit/TGIS stack:
+As of Red Hat OpenShift Data Science version 2.5.0, you can follow the official docs [here](https://access.redhat.com/documentation/en-us/red_hat_openshift_ai_self-managed/2.5/html/working_on_data_science_projects/serving-large-language-models_serving-large-language-models) for up-to-date installation instructions.
+
+For RHODS<2.5.0 and ODH, there are two ways to install the KServe/Caikit/TGIS stack:
 * [Step-by-step command installation](/demo/kserve/install-manual.md)
 * [Script-based installation](/demo/kserve/scripts/README.md)
 

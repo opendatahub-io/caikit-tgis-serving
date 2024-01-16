@@ -7,22 +7,22 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.9"
-caikit-tgis-backend = {git = "https://github.com/caikit/caikit-tgis-backend", rev = "8e68757299ee98fdaf48adadf33f25055b34cb36"}
-caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "4be54cf8820e0cfb2f32a26f39b80f870fb07a9f"}
+caikit-tgis-backend = "0.1.29"
+caikit-nlp = "0.4.2"
 # pytorch release's metadata is missing the cublas/cuda dependencies, which breaks
 # poetry installs, hence we need to explicitly define these.
 # See https://github.com/pytorch/pytorch/issues/100974
-nvidia-cublas-cu12 = "12.1.3.1"
-nvidia-cuda-cupti-cu12 = "12.1.105"
+nvidia-cublas-cu12 = "12.3.4.1"
+nvidia-cuda-cupti-cu12 = "12.3.101"
 nvidia-cuda-nvrtc-cu12 = "12.3.52"
 nvidia-cuda-runtime-cu12 = "12.3.52"
-nvidia-cudnn-cu12 = "8.9.2.26"
-nvidia-cufft-cu12 = "11.0.11.19"
-nvidia-curand-cu12 = "10.3.2.106"
-nvidia-cusolver-cu12 = "11.5.3.52"
+nvidia-cudnn-cu12 = "8.9.6.50"
+nvidia-cufft-cu12 = "11.0.12.1"
+nvidia-curand-cu12 = "10.3.4.52"
+nvidia-cusolver-cu12 = "11.5.4.101"
 nvidia-cusparse-cu12 = "12.1.3.153"
-nvidia-nccl-cu12 = "2.18.1"
-nvidia-nvtx-cu12 = "12.1.105"
+nvidia-nccl-cu12 = "2.19.3"
+nvidia-nvtx-cu12 = "12.3.101"
 
 
 [build-system]

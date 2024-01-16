@@ -1,38 +1,44 @@
-# Bootstrap process (optional)
+# Bootstrap process
 
-Caikit requires equires a Caikit-formatted model. Below are the instructions from converting a model to a Caikit-formatted one.
+Caikit requires requires a Caikit-formatted model which can be converted from a Hugging Face model using the [caikit-nlp](https://github.com/opendatahub-io/caikit-nlp) module.
 
-1. Clone the model repository (or have the model folder in a directory). In the below example, Bloom-560m model repo is cloned.
+## Converting Hugging Face Hub models to Caikit Format
 
-```bash
-yum -y install git git-lfs
-git lfs install
-git clone https://huggingface.co/bigscience/bloom-560m
-```
-
-2. Create a virtual environment with Python 3.9 and install `caikit-nlp`
+1. Create a virtual environment with Python 3.9 and install `caikit-nlp`:
 
 ```bash
-python3 -m venv -p python3.9 venv
-source venv/bin/activate
-python3.9 -m pip install git+https://github.com/caikit/caikit-nlp.git
+python3.9 -m venv venv
+source ./venv/bin/activate
+pip install caikit-nlp
 ```
 
-3. (Optional) Clone the `caikit-tgis-serving` repo, if not already available.
+2. If the model has not already been downloaded, setting the environment variable `ALLOW_DOWNLOADS=1` will allow direct downloads of models from Hugging Face Hub:
 
 ```bash
-git clone https://github.com/opendatahub-io/caikit-tgis-serving.git
+export ALLOW_DOWNLOADS=1
 ```
 
-4. Invoke the conversion script located in /utils of caikit-tgis-serving repo.
+Run the following python snippet.
 
-```bash
-caikit-tgis-serving/utils/convert.py --model-path ./bloom-560m/ --model-save-path ./bloom-560m-caikit
+```python
+import caikit_nlp
+
+model_name="google/flan-t5-small" # modify as required
+converted_model_path=f"{model_name}-caikit"
+
+caikit_nlp.text_generation.TextGeneration.bootstrap(model_name).save(converted_model_path)
+print(f"Model saved to {converted_model_path}")
 ```
 
-5. Move the model folder (ie. `/bloom-560m-caikit`) into desired storage (ie. S3, MinIO, PVC or other)
-6. Do **not** include the model folder name/directory directly in `InferenceService`, but rather point to the directory where the model folder is located. Let's say the `bloom-560m-caikit` directory is located at: `example-models/llm/models/bloom-560m-caikit/`, then `storageUri` value in the InferenceService CR should look like:
+Note: If the model has already been downloaded locally, it will be sufficient to change `model_name` with the path to the model.
 
-```bash
-storageUri: s3://example-models/llm/models
-```
+## Serving the model
+
+1. Move the converted model folder (ie. `/bloom-560m-caikit`) into desired storage (ie. S3, MinIO, PVC or other)
+
+2. Edit the `InferenceService` manifest so that it points to the desidered storage.
+   Do **not** include the model folder name/directory directly in `InferenceService`, but rather point to the directory where the model folder is located. Let's say the `bloom-560m-caikit` directory is located at: `example-models/llm/models/bloom-560m-caikit/`, then `storageUri` value in the InferenceService CR should look like:
+
+   ```yaml
+   storageUri: s3://example-models/llm/models
+   ```

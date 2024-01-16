@@ -5,21 +5,15 @@ set -o errtrace
 # set -x   #Uncomment this to debug script.
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
-export TEST_NS_HTTP=${TEST_NS}"-http"
-export TEST_NS_GRPC=${TEST_NS}"-grpc"
 
-# Delete the Knative gateways
-oc delete -f custom-manifests/serverless/gateways.yaml
-oc delete ServiceMeshControlPlane minimal -n istio-system
-
-oc delete -f custom-manifests/serverless/knativeserving-istio.yaml
-oc delete -f custom-manifests/serverless/operators.yaml
-
-oc delete -f custom-manifests/service-mesh/default-smmr.yaml  
+oc delete ServiceMeshControlPlane,pod --all -n istio-system --force --grace-period=0
+oc delete KnativeServing,pod --all -n knative-serving --force --grace-period=0
 oc delete ns knative-serving
-oc delete -f custom-manifests/service-mesh/smcp.yaml
+
 oc delete ns istio-system
+
 oc delete -f custom-manifests/service-mesh/operators.yaml
+oc delete -f custom-manifests/serverless/operators.yaml
 
 if [[ -n "${BASE_DIR+x}"  ]] && [[ -n "${BASE_CERT_DIR+x}" ]]
 then
@@ -47,16 +41,10 @@ oc delete csv OperatorGroup serverless-operators -n openshift-serverless
 oc delete project istio-system
 oc delete project knative-serving
 oc delete project knative-eventing
+oc delete project openshift-serverless
 
-oc get ns ${TEST_NS_HTTP}}
+oc get ns ${TEST_NS}
 if [[ $? ==  0 ]]
 then
-    oc delete project $TEST_NS_HTTP
+    oc delete project $TEST_NS
 fi
-
-oc get ns ${TEST_NS_GRPC}}
-if [[ $? ==  0 ]]
-then
-    oc delete project $TEST_NS_GRPC
-fi
-

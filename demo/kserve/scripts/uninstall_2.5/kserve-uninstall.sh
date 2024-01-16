@@ -7,8 +7,6 @@ set -o errtrace
 # Uninstalls the minio namespace as well as protocol specific namespaces such as kserve-demo-http or hserve-demo-grpc
 
 source "$(dirname "$(realpath "$0")")/../env.sh"
-TEST_NS_HTTP=${TEST_NS}"-http"
-TEST_NS_GRPC=${TEST_NS}"-grpc"
 
 if [[ ! -n "${TARGET_OPERATOR+x}" ]]
   then
@@ -30,16 +28,14 @@ export TARGET_OPERATOR_NS=$(getOpNS ${TARGET_OPERATOR_TYPE})
 
 oc delete validatingwebhookconfiguration inferencegraph.serving.kserve.io  inferenceservice.serving.kserve.io 
 oc delete mutatingwebhookconfiguration inferenceservice.serving.kserve.io
-oc delete isvc,pod --all -n ${TEST_NS_HTTP} --force --grace-period=0
-oc delete isvc,pod --all -n ${TEST_NS_GRPC} --force --grace-period=0
+oc delete isvc,pod --all -n ${TEST_NS} --force --grace-period=0
 
 echo "It would take around around 3~4 mins"
-oc delete ns ${TEST_NS_HTTP} ${TEST_NS_GRPC} ${MINIO_NS} --force --grace-period=0
-oc delete secret wildcard-certs -n istio-system
+oc delete ns ${TEST_NS} ${MINIO_NS} --force --grace-period=0
 
 oc delete DataScienceCluster --all -n "${KSERVE_OPERATOR_NS}"
 sleep 15
-oc delete sub "${KSERVE_OPERATOR_NS}-operator" -n ${TARGET_OPERATOR_NS}
+oc delete sub "${TARGET_OPERATOR_TYPE}-operator" -n ${TARGET_OPERATOR_NS}
   
 if [[ ${TARGET_OPERATOR} == "brew" ]];
 then  

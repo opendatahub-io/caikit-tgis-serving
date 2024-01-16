@@ -1,7 +1,7 @@
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
-  name: caikit-tgis-runtime
+  name: caikit-tgis-runtime-grpc
 spec:
   multiModel: false
   supportedModelFormats:
@@ -22,12 +22,13 @@ spec:
       #     memory: 16Gi
     - name: transformer-container
       image: quay.io/opendatahub/caikit-tgis-serving:stable
-      command: ["python", "-m", "caikit.runtime.http_server"]
+      command: ["python", "-m", "caikit.runtime.grpc_server"]
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
       ports:
-        - containerPort: 8080
+        - containerPort: 8085
+          name: h2c
           protocol: TCP
       # resources: # configure as required
       #   requests:

@@ -1,6 +1,5 @@
 approvers:
-  - anishasthana
-  - danielezonca
+  - dtrifiro
   - heyselbi
   - israel-hdez
   - Jooho
@@ -9,8 +8,8 @@ approvers:
   - vaibhavjainwiz
 
 reviewers:
-  - anishasthana
-  - danielezonca
+approvers:
+  - dtrifiro
   - heyselbi
   - israel-hdez
   - Jooho

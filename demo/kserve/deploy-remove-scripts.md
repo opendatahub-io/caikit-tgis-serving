@@ -14,19 +14,31 @@ Note: If you prefer to deploy and remove an LLM model by using step-by-step comm
 
 **Procedure**
 
-1. Deploy a sample LLM model.
+1. Deploy a sample LLM model 
 
+   For HTTP:
    ~~~
    ./scripts/test/deploy-model.sh
    ~~~
 
-2. Perform inference with a gRPC call.
+   For gRPC:
+   ~~~
+   ./scripts/test/deploy-model.sh grpc
+   ~~~
 
+2. Perform inference:
+
+   For HTTP:
+   ~~~
+   ./scripts/test/http-call.sh
+   ~~~
+
+   For gRPC:
    ~~~
    ./scripts/test/grpc-call.sh
    ~~~
 
-3. Delete the sample model and the MinIO namespace.
+3. Delete the sample model:
 
    ~~~
    ./scripts/test/delete-model.sh

@@ -4,7 +4,7 @@ set -o nounset
 set -o errtrace
 # set -x   #Uncomment this to debug script.
 
-# Deploys model for HTTP (default) or gRPC if "grpc" is passed as argument
+source "$(dirname "$(realpath "$0")")/../env.sh"
 
 # Check if at most one argument is passed
 if [ "$#" -gt 1 ]; then
@@ -13,21 +13,7 @@ if [ "$#" -gt 1 ]; then
 fi
 
 # Default values that fit the default 'http' protocol:
-INF_PROTO=""
-
-# If we have an argument, check that it is either "http" or "grpc"
-if [ "$#" -eq 1 ]; then
-    if [ "$1" = "http" ]; then
-	:  ### nothing to be done
-    elif [ "$1" = "grpc" ]; then
-	INF_PROTO="-grpc"
-    else
-	echo "Error: Argument must be either 'http' or 'grpc'."
-	exit 1
-    fi
-fi
-
-source "$(dirname "$(realpath "$0")")/../env.sh"
+INF_PROTO="http"
 
 # Deploy Minio
 ACCESS_KEY_ID=THEACCESSKEY
@@ -51,25 +37,34 @@ sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yam
 oc get ns ${TEST_NS}
 if [[ $? ==  1 ]]
 then
-    oc new-project ${TEST_NS}
-   
-    oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime"${INF_PROTO}".yaml -n ${TEST_NS}
-
-    oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 
-    oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
-
-    ###  create the isvc.   First step: create the yaml file
-    ISVC_NAME=caikit-tgis-isvc"${INF_PROTO}"
-    oc apply -f ./custom-manifests/caikit/"$ISVC_NAME".yaml -n ${TEST_NS}
-
-    # Resources needed to enable metrics for the model 
-    # The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`
-    # The metrics service in this repo is configured to work with the example model. If you are deploying a different model or using a different model name, change the label accordingly.
-
-    ### TBD: Following 2 line should take into account the changed names 
-    # oc apply -f custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
-    # oc apply -f custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
+    echo "Create test namespace: ${TEST_NS}"
+    oc new-project ${TEST_NS}    
 else
   echo 
   echo "* ${TEST_NS} exist. Please remove the namespace or use another namespace name"
+fi
+
+oc get isvc caikit-tgis-isvc --no-headers >/dev/null
+if [[ $? ==  1 ]] 
+then
+  echo "HTTP ISVC is creating"
+
+  oc apply -f ./custom-manifests/caikit/caikit-tgis-servingruntime-${INF_PROTO}.yaml -n ${TEST_NS}
+
+  oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 
+  oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
+
+  ###  create the isvc.   First step: create the yaml file
+  ISVC_NAME=caikit-tgis-isvc-${INF_PROTO}
+  oc apply -f ./custom-manifests/caikit/$ISVC_NAME.yaml -n ${TEST_NS}
+
+  # Resources needed to enable metrics for the model 
+  # The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`
+  # The metrics service in this repo is configured to work with the example model. If you are deploying a different model or using a different model name, change the label accordingly.
+
+  ### TBD: Following 2 line should take into account the changed names 
+  # oc apply -f custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
+  # oc apply -f custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
+else
+  echo "* The ISVC already exist. Please remove the isvc or create other isvc"
 fi
