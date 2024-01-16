@@ -48,39 +48,39 @@ oc wait --for=condition=ready pod -l name=knative-openshift-ingress -n openshift
 oc wait --for=condition=ready pod -l name=knative-operator -n openshift-serverless --timeout=300s
 
 
-echo
-light_info "[INFO] Deploy odh operator"
-echo
+# echo
+# light_info "[INFO] Deploy odh operator"
+# echo
 
-# Create brew catalogsource
-if [[ ${deploy_odh_operator} == "true" ]]
-then
-  if [[ ${TARGET_OPERATOR} == "brew" ]];
-  then
-    echo
-    light_info "[INFO] Create catalogsource for brew registry"
-    echo
-    sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
+# # Create brew catalogsource
+# if [[ ${deploy_odh_operator} == "true" ]]
+# then
+#   if [[ ${TARGET_OPERATOR} == "brew" ]];
+#   then
+#     echo
+#     light_info "[INFO] Create catalogsource for brew registry"
+#     echo
+#     sed "s/<%brew_tag%>/$BREW_TAG/g" custom-manifests/brew/catalogsource.yaml |oc apply -f -
 
-    wait_for_pods_ready "olm.catalogSource=rhods-catalog-dev" "openshift-marketplace"
-    oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
-  fi
+#     wait_for_pods_ready "olm.catalogSource=rhods-catalog-dev" "openshift-marketplace"
+#     oc wait --for=condition=ready pod -l olm.catalogSource=rhods-catalog-dev -n openshift-marketplace --timeout=60s  
+#   fi
 
-  # Deploy odh/rhods operator
-  OPERATOR_LABEL="control-plane=controller-manager"
-  if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
-  then
-    OPERATOR_LABEL="name=rhods-operator"
-    oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
-    oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS}" 2 60    
-  fi
-  oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
+#   # Deploy odh/rhods operator
+#   OPERATOR_LABEL="control-plane=controller-manager"
+#   if [[ ${TARGET_OPERATOR_TYPE} == "rhods" ]];
+#   then
+#     OPERATOR_LABEL="name=rhods-operator"
+#     oc create ns ${TARGET_OPERATOR_NS} -oyaml --dry-run=client | oc apply -f-  
+#     oc::wait::object::availability "oc get project ${TARGET_OPERATOR_NS}" 2 60    
+#   fi
+#   oc create -f custom-manifests/opendatahub/${TARGET_OPERATOR}-operators-2.x.yaml
 
-  wait_for_pods_ready "${OPERATOR_LABEL}" "${TARGET_OPERATOR_NS}"
-  oc wait --for=condition=ready pod -l ${OPERATOR_LABEL} -n ${TARGET_OPERATOR_NS} --timeout=300s 
+#   wait_for_pods_ready "${OPERATOR_LABEL}" "${TARGET_OPERATOR_NS}"
+#   oc wait --for=condition=ready pod -l ${OPERATOR_LABEL} -n ${TARGET_OPERATOR_NS} --timeout=300s 
 
-else
-  light_info "DEPLOY_ODH_OPERATOR set ${deploy_odh_operator}. Skip deploy odh/rhods operator" 
-fi
+# else
+#   light_info "DEPLOY_ODH_OPERATOR set ${deploy_odh_operator}. Skip deploy odh/rhods operator" 
+# fi
 
 success "[SUCCESS] Successfully installed ServiceMesh, Serverless, OpenDataHub(OpenShiftAI) operators" 
