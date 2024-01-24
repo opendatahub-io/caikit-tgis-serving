@@ -73,7 +73,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
    e. Deploy the inference service.
 
-   The [ISVC template file](/demo/kserve/custom-manifests/caikit-tgis/caikit-tgis-isvc-template.yaml) shown below contains all that is needed to set up the Inference Service
+   The [ISVC template file](/demo/kserve/custom-manifests/caikit/caikit-tgis/caikit-tgis-isvc-template.yaml) shown below contains all that is needed to set up the Inference Service
 
    Before using it, the following details have to be added: 
 
