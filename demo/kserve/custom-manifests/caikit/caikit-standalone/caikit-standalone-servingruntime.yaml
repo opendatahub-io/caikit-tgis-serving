@@ -11,10 +11,16 @@ spec:
   containers:
     - name: kserve-container
       image: quay.io/opendatahub/caikit-nlp:stable
-      command: ["python", "-m", "caikit.runtime.http_server"]
+      command: ["python", "-m", "caikit.runtime"]
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
+        - name: RUNTIME_GRPC_ENABLED
+          value: "false"
+        - name: RUNTIME_HTTP_ENABLED
+          value: "true"
       ports:
         - containerPort: 8080
           protocol: TCP
