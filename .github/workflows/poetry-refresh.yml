@@ -1,0 +1,35 @@
+name: poetry update
+
+on:
+  schedule:
+    - cron: "20 4 * * 1" # once a week
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: poetry update
+        run: |
+          make refresh-poetry-lock-files
+
+      - name: Check if anything changed
+        id: git_status
+        run: |
+          git status --untracked-files=all
+          echo 'changes<<EOF' >> $GITHUB_OUTPUT
+          git diff >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Create PR
+        if: ${{ steps.git_status.outputs.changes != '' }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ github.token }}
+          commit-message: poetry refresh
+          title: poetry refresh
+          body: |
+            Automated poetry update using `make refresh-poetry-lock-files`
