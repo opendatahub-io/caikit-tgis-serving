@@ -295,13 +295,13 @@ runtime-http = ["fastapi[all] (>=0.100,<1)", "requests (>=2.28.2,<3)", "sse-star
 
 [[package]]
 name = "caikit-nlp"
-version = "0.4.2"
+version = "0.4.3"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit-nlp-0.4.2.tar.gz", hash = "sha256:9c26768b20520e39b6e36140f40b0e062a6e071f7b46bce5dccd1ee3d968d696"},
-    {file = "caikit_nlp-0.4.2-py3-none-any.whl", hash = "sha256:efcfd05ec6bac43419c08be3e98fe299ad5634005575dd2b8d76fedd955a6bad"},
+    {file = "caikit-nlp-0.4.3.tar.gz", hash = "sha256:1169172f5ab8f78aeb045a3d3a100ae1364bae0f0fc24393233e24737ba2e890"},
+    {file = "caikit_nlp-0.4.3-py3-none-any.whl", hash = "sha256:b23a6468133eaf7fd55793bdf5f547c3131d071125483fde4a13b93339cd1150"},
 ]
 
 [package.dependencies]
@@ -312,13 +312,13 @@ datasets = ">=2.4.0"
 huggingface-hub = "*"
 numpy = ">=1.22.4"
 pandas = ">=1.5.0"
-peft = "0.6.0"
+peft = ">=0.7.1,<0.8.0"
 scikit-learn = ">=1.1"
 scipy = ">=1.8.1"
 tokenizers = ">=0.13.3"
 torch = ">=2.0.1"
 tqdm = ">=4.65.0"
-transformers = ">=4.32.0"
+transformers = ">=4.36.0"
 
 [[package]]
 name = "caikit-tgis-backend"
@@ -1710,17 +1710,18 @@ xml = ["lxml (>=4.8.0)"]
 
 [[package]]
 name = "peft"
-version = "0.6.0"
+version = "0.7.1"
 description = "Parameter-Efficient Fine-Tuning (PEFT)"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "peft-0.6.0-py3-none-any.whl", hash = "sha256:d7fb6335beb20074f70d464aa1f2bb1ddca0875126316320a2781b04364f72a6"},
-    {file = "peft-0.6.0.tar.gz", hash = "sha256:6c381208f705cd38f2cc91dc2943ac4df2615680bd75d7320d010f8f2e48e65d"},
+    {file = "peft-0.7.1-py3-none-any.whl", hash = "sha256:a1b7dc222254ce2161b32b88cc6f2bd7387712d20c478c98c586c59112112e46"},
+    {file = "peft-0.7.1.tar.gz", hash = "sha256:cd8fd190e1aacfdcb6c70df4e13c3e3b0006b1e9cc16ecf0a9804632edfcecd3"},
 ]
 
 [package.dependencies]
 accelerate = ">=0.21.0"
+huggingface-hub = ">=0.17.0"
 numpy = ">=1.17"
 packaging = ">=20.0"
 psutil = "*"
@@ -1734,7 +1735,7 @@ transformers = "*"
 dev = ["black (>=22.0,<23.0)", "hf-doc-builder", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
 docs-specific = ["hf-doc-builder"]
 quality = ["black (>=22.0,<23.0)", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
-test = ["black (>=22.0,<23.0)", "datasets", "diffusers (<0.21.0)", "hf-doc-builder", "parameterized", "pytest", "pytest-cov", "pytest-xdist", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
+test = ["black (>=22.0,<23.0)", "datasets", "diffusers (<0.21.0)", "hf-doc-builder", "parameterized", "pytest", "pytest-cov", "pytest-xdist", "ruff (>=0.0.241)", "scipy", "urllib3 (<=2.0.0)"]
 
 [[package]]
 name = "prometheus-client"
@@ -3498,4 +3499,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "a87968d1553cca25482f7961c576706b6bf15d8aa450adaf2a9a0615670b415c"
+content-hash = "789eab96dfd12e7369c1dcbd4ae2c7252ada7d5668e201d7a36bc931fbaf97b1"
