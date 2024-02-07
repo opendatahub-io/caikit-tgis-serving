@@ -10,10 +10,15 @@ metadata:
   name: caikit-standalone-isvc-grpc
 spec:
   predictor:
-    serviceAccountName: sa
+    # replace in following  <NameOfAServiceAccount> with the name
+    # of a ServiceAccount that has the secret for accessing the model
+    serviceAccountName: <NameOfAServiceAccount>
     model:
-      # https://github.com/kserve/modelmesh-serving/blob/main/docs/predictors/setup-storage.md#3-add-a-storage-entry-to-the-storage-config-secret
       modelFormat:
         name: caikit
-      runtime: caikit-standalone-runtime-grpc
+      # Replace with the actual name of the deployed ServingRuntime
+      runtime: <NameOfTheServingRuntime>
       storageUri: s3://modelmesh-example-models/llm/models/flan-t5-small-caikit # single model here: target directory must contain a config.yml
+      # Example, using a pvc:
+      # storageUri: pvc://caikit-pvc/flan-t5-small-caikit/
+      # Target directory must contain a config.yml
