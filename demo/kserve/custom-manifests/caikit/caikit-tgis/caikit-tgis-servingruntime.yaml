@@ -23,6 +23,8 @@ spec:
     - name: transformer-container
       image: quay.io/opendatahub/caikit-tgis-serving:stable
       env:
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
         - name: TRANSFORMERS_CACHE
