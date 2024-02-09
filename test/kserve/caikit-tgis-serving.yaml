@@ -1,0 +1,68 @@
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  name: caikit-tgis-isvc
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: caikit
+      runtime: caikit-tgis-runtime
+      storageUri: pvc://caikit-claim/flan-t5-small-caikit/
+---
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: caikit-tgis-runtime
+  annotations:
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+spec:
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: caikit
+  containers:
+    - name: kserve-container
+      image: quay.io/opendatahub/text-generation-inference:fast
+      imagePullPolicy: IfNotPresent
+      command:
+        [
+          "text-generation-launcher",
+          "--model-name=/mnt/models/artifacts/",
+          "--max-batch-size=256",
+          "--max-concurrent-requests=64",
+        ]
+      env:
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
+        - name: RUNTIME_GRPC_ENABLED
+          value: "false"
+        - name: RUNTIME_HTTP_ENABLED
+          value: "true"
+    - name: transformer-container
+      image: quay.io/opendatahub/caikit-tgis-serving:fast
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - readiness
+      livenessProbe:
+        exec:
+          command:
+            - python
+            - -m
+            - caikit_health_probe
+            - liveness
+        initialDelaySeconds: 5
