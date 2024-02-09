@@ -47,29 +47,33 @@ else
 fi
 sed "s/<minio_ns>/$MINIO_NS/g" ./custom-manifests/minio/serviceaccount-minio.yaml | tee ${BASE_DIR}/serviceaccount-minio-current.yaml 
 
-# Test if ${TEST_NS} namespace already exists:
-oc get ns ${TEST_NS}
-if [[ $? ==  1 ]]
+if ! oc get ns ${TEST_NS}
 then
     oc new-project ${TEST_NS}
-
-    oc apply -f ./custom-manifests/caikit/caikit-tgis/caikit-tgis-servingruntime"${INF_PROTO}".yaml -n ${TEST_NS}
-
-    oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS} 
-    oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
-
-    ###  create the isvc.   First step: create the yaml file
-    ISVC_NAME=caikit-tgis-isvc"${INF_PROTO}"
-    oc apply -f ./custom-manifests/caikit/caikit-tgis/"$ISVC_NAME".yaml -n ${TEST_NS}
-
-    # Resources needed to enable metrics for the model 
-    # The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`
-    # The metrics service in this repo is configured to work with the example model. If you are deploying a different model or using a different model name, change the label accordingly.
-
-    ### TBD: Following 2 line should take into account the changed names 
-    # oc apply -f custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
-    # oc apply -f custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
 else
-  echo 
-  echo "* ${TEST_NS} exist. Please remove the namespace or use another namespace name"
+  echo "* ${TEST_NS} already exists."
 fi
+
+ISVC_NAME=caikit-tgis-isvc"${INF_PROTO}"
+
+if ! oc get isvc ${ISVC_NAME} --no-headers >/dev/null; then
+  echo "* The ISVC ${ISVC_NAME} already exists. Please remove it."
+  exit 1
+fi
+
+echo "Creating ISVC ${ISVC_NAME}"
+oc apply -f ./custom-manifests/caikit/caikit-tgis/caikit-tgis-servingruntime"${INF_PROTO}".yaml -n ${TEST_NS}
+
+oc apply -f ${BASE_DIR}/minio-secret-current.yaml -n ${TEST_NS}
+oc apply -f ${BASE_DIR}/serviceaccount-minio-current.yaml -n ${TEST_NS}
+
+###  create the isvc
+oc apply -f ./custom-manifests/caikit/caikit-tgis/"$ISVC_NAME".yaml -n ${TEST_NS}
+
+# Resources needed to enable metrics for the model
+# The metrics service needs the correct label in the `matchLabel` field. The expected value of this label is `<isvc-name>-predictor-default`
+# The metrics service in this repo is configured to work with the example model. If you are deploying a different model or using a different model name, change the label accordingly.
+
+### TBD: Following 2 line should take into account the changed names
+# oc apply -f custom-manifests/metrics/caikit-metrics-service.yaml -n ${TEST_NS}
+# oc apply -f custom-manifests/metrics/caikit-metrics-servicemonitor.yaml -n ${TEST_NS}
