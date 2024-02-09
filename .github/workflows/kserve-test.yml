@@ -1,4 +1,4 @@
-name: "Kserve Test"
+name: "Kserve Smoke Test"
 
 on:
   schedule:
@@ -19,7 +19,7 @@ env:
 
 jobs:
   smoke-test:
-    name: Smoke Test
+    name: Kserve Smoke Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,17 +102,17 @@ jobs:
             fi
           done
 
+      - name: Install caikit-nlp-client
+        run: |
+          pip install caikit-nlp-client
+
       - name: Perform test inference (http)
         run: |
-          ISVC_URL=$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')
+          export ISVC_URL="$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
+          export ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
           echo "Querying ISVC at: ${ISVC_URL}"
-
-          ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
 
           # We can't query the service via hostname, we need to add the entry to /etc/hosts
           echo "${LOADBALANCER_IP} ${ISVC_HOSTNAME}" | sudo tee -a /etc/hosts
 
-          curl -v  \
-             -H "Content-Type: application/json" \
-             -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' \
-             ${ISVC_URL}/api/v1/task-text-generation
+          python test/smoke-test.py

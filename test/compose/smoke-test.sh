@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eo pipefail
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 if ! command -v docker-compose &>/dev/null; then
 	echo "This requires docker-compose" 2>&1
@@ -37,7 +37,7 @@ docker-compose up -d
 pip install caikit-nlp-client
 
 echo -e "\n=== Testing endpoints..."
-if ! python smoke-test.py; then
+if ! python ../smoke-test.py; then
 	echo -e "\n=== Container logs"
 	docker-compose logs
 	echo -e "\n=== 👎 Test failed\n"
