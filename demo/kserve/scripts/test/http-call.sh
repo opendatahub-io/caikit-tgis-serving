@@ -2,8 +2,7 @@
 set -o pipefail
 set -o nounset
 set -o errtrace
-set -u  ### any reference to an unset variable will be considered as an error and will immediately stop execution
-
+set -u ### any reference to an unset variable will be considered as an error and will immediately stop execution
 
 # set -x   #Uncomment this to debug script.
 
@@ -23,15 +22,14 @@ echo
 echo "Testing all token in a single call"
 echo
 
-export KSVC_HOSTNAME=$(oc get ksvc "${ISVC_NAME}"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+ISVC_URL=$(oc get isvc "${ISVC_NAME}" -n ${TEST_NS} -o jsonpath='{.status.components.predictor.url}')
 
 ### Invoke the inferences:
 
-curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
+curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' "${ISVC_URL}/api/v1/task/text-generation"
 
 echo
 echo "Testing streams of token"
 echo
 
-curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
-
+curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' "${ISVC_URL}/api/v1/task/server-streaming-text-generation"
