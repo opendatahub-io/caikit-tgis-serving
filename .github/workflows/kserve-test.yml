@@ -1,0 +1,118 @@
+name: "Kserve Test"
+
+on:
+  schedule:
+    - cron: "20 4 * * 1" # once a week
+  workflow_dispatch:
+
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "!docs"
+  #     - "!demo"
+
+  # pull_request:
+
+env:
+  KIND_CLUSTER_NAME: "kserve-testing"
+  ISVC_NAME: "caikit-tgis-isvc"
+
+jobs:
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.5.0
+        with:
+          cluster_name: ${{ env.KIND_CLUSTER_NAME }}
+
+      - name: Install kserve
+        run: |
+          # Use the hack/quick_install.sh script from the kserve repo
+          curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.11.1.1/hack/quick_install.sh | bash
+
+      - name: Prepare metallb load balancer
+        run: |
+          # Follows the guide at https://kind.sigs.k8s.io/docs/user/loadbalancer/
+          kubectl apply -f "https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml"
+          kubectl wait --namespace metallb-system \
+             --for=condition=ready pod \
+             --selector=app=metallb \
+             --timeout=90s
+
+          # get the actual subnet prefix and patch it in the manifest
+          subnet_range=$(docker network inspect -f 'json' kind | jq -r '.[0].IPAM.Config[0].Subnet')
+          echo "Subnet range: ${subnet_range}"
+          curl -sO "https://kind.sigs.k8s.io/examples/loadbalancer/metallb-config.yaml"
+          subnet_prefix="$(echo $subnet_range | cut -d . -f -2)"
+          sed -i s/172.19/${subnet_prefix}/g metallb-config.yaml
+
+          kubectl apply -f metallb-config.yaml
+          kubectl get IPAddressPool -n metallb-system
+          echo "LOADBALANCER_IP=$(kubectl get IPAddressPool -n metallb-system -o jsonpath='{.items[0].spec.addresses[0]}' | cut -d- -f1)" > $GITHUB_ENV
+          echo "Set env var: LOADBALANCER_IP=$LOADBALANCER_IP"
+
+      - name: Setup testing namespace
+        run: |
+          source demo/kserve/scripts/env.sh
+          kubectl create namespace ${TEST_NS}
+          kubectl config set-context "kind-${KIND_CLUSTER_NAME}" --namespace ${TEST_NS}
+
+      - name: Setup flan-t5-small model volume
+        run: |
+          kubectl apply -f test/kserve/setup.yaml
+          max_retries=10
+          wait_time=60s
+          until kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/setup-flan-t5-small --timeout ${wait_time}; do
+            echo "Current status:"
+            kubectl describe pod,pv,pvc
+            max_retries=$((max_retries-1))
+            if [[ $max_retries -le 0 ]]; then
+              echo "Failed to setup model"
+              kubectl logs pod/setup-flan-t5-small --all-containers
+              exit 1
+            fi
+          done
+
+      - name: Deploy ServingRuntime/InferenceService
+        run: |
+          kubectl apply -f test/kserve/caikit-tgis-serving.yaml
+          max_retries=10
+          wait_time=60s
+          until kubectl wait isvc/${ISVC_NAME} --for=condition=Ready --timeout=${wait_time}; do
+            echo "Current status:"
+            kubectl describe isvc,servingruntime,pod
+            max_retries=$((max_retries-1))
+            if [[ $max_retries -le 0 ]]; then
+              exit 1
+            fi
+          done
+
+      - name: Perform test inference (http)
+        run: |
+          ISVC_URL=$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')
+          echo "Querying ISVC at: ${ISVC_URL}"
+
+          ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
+
+          # We can't query the service via hostname, we need to add the entry to /etc/hosts
+          echo "${LOADBALANCER_IP} ${ISVC_HOSTNAME}" | sudo tee -a /etc/hosts
+
+          curl -v  \
+             -H "Content-Type: application/json" \
+             -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' \
+             ${ISVC_URL}/api/v1/task-text-generation

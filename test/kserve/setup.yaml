@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: caikit-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: setup-flan-t5-small
+spec:
+  volumes:
+    - name: model-volume
+      persistentVolumeClaim:
+        claimName: caikit-claim
+  restartPolicy: Never
+  initContainers:
+    - name: fix-volume-permissions
+      image: busybox
+      command: ["sh"]
+      args: ["-c", "chown -R 1001:1001 /mnt/models"]
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
+  containers:
+    - name: download-model
+      image: quay.io/opendatahub/caikit-tgis-serving:fast
+      command: ["python", "-c"]
+      args: [
+          'import caikit_nlp;
+          caikit_nlp.text_generation.TextGeneration.bootstrap(
+          "google/flan-t5-small"
+          ).save(
+          "/mnt/models/flan-t5-small-caikit"
+          )',
+        ]
+      env:
+        - name: ALLOW_DOWNLOADS
+          value: "1"
+        - name: TRANSFORMERS_CACHE
+          value: "/tmp"
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
