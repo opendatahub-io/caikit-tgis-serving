@@ -39,32 +39,42 @@ jobs:
         uses: helm/kind-action@v1.5.0
         with:
           cluster_name: ${{ env.KIND_CLUSTER_NAME }}
+          config: test/kserve/kind_config.yaml
 
       - name: Install kserve
         run: |
           # Use the hack/quick_install.sh script from the kserve repo
           curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.11.1.1/hack/quick_install.sh | bash
 
-      - name: Prepare metallb load balancer
+      - name: Patch Istio Ingressway
         run: |
-          # Follows the guide at https://kind.sigs.k8s.io/docs/user/loadbalancer/
-          kubectl apply -f "https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml"
-          kubectl wait --namespace metallb-system \
-             --for=condition=ready pod \
-             --selector=app=metallb \
-             --timeout=90s
-
-          # get the actual subnet prefix and patch it in the manifest
-          subnet_range=$(docker network inspect -f 'json' kind | jq -r '.[0].IPAM.Config[0].Subnet')
-          echo "Subnet range: ${subnet_range}"
-          curl -sO "https://kind.sigs.k8s.io/examples/loadbalancer/metallb-config.yaml"
-          subnet_prefix="$(echo $subnet_range | cut -d . -f -2)"
-          sed -i s/172.19/${subnet_prefix}/g metallb-config.yaml
-
-          kubectl apply -f metallb-config.yaml
-          kubectl get IPAddressPool -n metallb-system
-          echo "LOADBALANCER_IP=$(kubectl get IPAddressPool -n metallb-system -o jsonpath='{.items[0].spec.addresses[0]}' | cut -d- -f1)" > $GITHUB_ENV
-          echo "Set env var: LOADBALANCER_IP=$LOADBALANCER_IP"
+          # bind the istio ingressway ports on the host so that we can access its services
+          kubectl patch deployments.apps -o yaml -n istio-system istio-ingressgateway -p '{
+            "spec":
+              {"template":
+                {"spec":
+                  {"containers":
+                    [
+                      {
+                        "name":
+                        "istio-proxy",
+                        "ports":
+                          [
+                            {
+                              "containerPort":8080,
+                              "hostPort":80
+                            },
+                            {
+                              "containerPort":8443,
+                              "hostPort":443
+                            }
+                          ]
+                      }
+                    ]
+                  }
+                }
+              }
+          }'
 
       - name: Setup testing namespace
         run: |
@@ -113,6 +123,6 @@ jobs:
           echo "Querying ISVC at: ${ISVC_URL}"
 
           # We can't query the service via hostname, we need to add the entry to /etc/hosts
-          echo "${LOADBALANCER_IP} ${ISVC_HOSTNAME}" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 ${ISVC_HOSTNAME}" | sudo tee -a /etc/hosts
 
           python test/smoke-test.py
