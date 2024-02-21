@@ -12,20 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@v1.3.1
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          tool-cache: false
+          python-version: 3.9
 
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
+      - name: install poetry
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade poetry
 
       - name: Refresh poetry lock files
+        id: poetry-update
         run: |
-          make refresh-poetry-lock-files
+          poetry update
 
       - name: Check diff
         id: diff
@@ -44,4 +44,8 @@ jobs:
           commit-message: update dendencies
           title: update dependencies
           body: |
-            Update dependencies using `make refresh-poetry-lock-files`
+            Update dependencies using `poetry update`:
+
+            ```console
+            ${{ steps.poetry-update.outputs.stdout }}
+            ```
