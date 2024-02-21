@@ -17,15 +17,21 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: install poetry
+      - name: Install poetry
         run: |
           pip install --upgrade pip
           pip install --upgrade poetry
 
+      - name: Setup virtualenv
+        run: |
+          poetry install
+
       - name: Refresh poetry lock files
         id: poetry-update
         run: |
-          poetry update
+          echo 'log<<EOF' >> $GITHUB_OUTPUT
+          poetry update | tee -a >(cat >> $GITHUB_OUTPUT)
+          echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Check diff
         id: diff
@@ -47,5 +53,5 @@ jobs:
             Update dependencies using `poetry update`:
 
             ```console
-            ${{ steps.poetry-update.outputs.stdout }}
+            ${{ steps.poetry-update.outputs.log }}
             ```
