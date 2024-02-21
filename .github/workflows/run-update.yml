@@ -1,0 +1,36 @@
+name: "Update poetry lockfiles"
+
+on:
+  schedule:
+    - cron: "20 4 * * 1" # once a week
+  workflow_dispatch:
+
+jobs:
+  poetry-update:
+    name: Update dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refresh poetry lock files
+        run: |
+          make refresh-poetry-lock-files
+
+      - name: Check diff
+        id: diff
+        shell: bash
+        run: |
+          git status --untracked-files=all
+          echo 'diff<<EOF' >> $GITHUB_OUTPUT
+          git diff >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Create PR
+        if: ${{ steps.diff.outputs.diff != '' }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ github.token }}
+          commit-message: update dendencies
+          title: update dependencies
+          body: |
+            Update dependencies using `make refresh-poetry-lock-files`
