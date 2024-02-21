@@ -10,16 +10,6 @@ default:
 		.
 
 
-refresh-poetry-lock-files: default
-	$(ENGINE) run --user root -it --rm \
-		--volume $$(pwd):/app:z \
-		--workdir /app  \
-		$(CAIKIT_IMAGE):dev \
-		/bin/bash -c " \
-			pip install poetry && \
-			poetry update \
-		"
-
 shell: default
 	$(ENGINE) run -it --rm \
 		--name caikit-tgis-serving-test-$$(git rev-parse --short HEAD) \
