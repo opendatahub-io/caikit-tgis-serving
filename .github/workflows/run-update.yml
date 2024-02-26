@@ -49,6 +49,8 @@ jobs:
           token: ${{ github.token }}
           commit-message: update dendencies
           title: update dependencies
+          labels: |
+            dependencies
           body: |
             Update dependencies using `poetry update`:
 
