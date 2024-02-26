@@ -244,13 +244,13 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "caikit"
-version = "0.26.11"
+version = "0.26.12"
 description = "AI toolkit that enables AI users to consume stable task-specific model APIs and enables AI developers build algorithms and models in a modular/composable framework"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "caikit-0.26.11-py3-none-any.whl", hash = "sha256:fba8c1a40c7d4c1401adcd7a19fc13854953583f3164922fab500535ae82d21e"},
-    {file = "caikit-0.26.11.tar.gz", hash = "sha256:1b9b3ab49aecd7628f7241c0f3f9005f4bc4a3c6889b4e7660639bd98d917f66"},
+    {file = "caikit-0.26.12-py3-none-any.whl", hash = "sha256:0549a5ce6baa22afab57f863114ac217a357f5ba7e1bc87d8e133c36780e73fa"},
+    {file = "caikit-0.26.12.tar.gz", hash = "sha256:0460942fadb11f8a974fbde150997bde4d6a91e299b79178516a91347731c598"},
 ]
 
 [package.dependencies]
@@ -284,8 +284,8 @@ all = ["caikit[interfaces-ts,interfaces-vision,runtime-client,runtime-grpc,runti
 all-dev = ["caikit[all,dev-build,dev-docs,dev-fmt,dev-test]"]
 dev-build = ["flit (==3.9.0)"]
 dev-docs = ["sphinx (>=4.0.2,<8.0)", "sphinx-autoapi (>=2.1.0)", "sphinx-rtd-theme (>=1.2.1,<2.1.0)"]
-dev-fmt = ["pre-commit (>=3.0.4,<4.0)", "pydeps (>=1.12.12,<2)", "ruff (==0.2.1)"]
-dev-proto3 = ["caikit[all-dev]", "grpcio (>=1.35.0,<1.49)", "grpcio-health-checking (>=1.35.0,<1.49)", "grpcio-reflection (>=1.35.0,<1.49)", "protobuf (>=3.19.0,<3.20)"]
+dev-fmt = ["pre-commit (>=3.0.4,<4.0)", "pydeps (>=1.12.12,<2)", "ruff (==0.2.2)"]
+dev-proto3 = ["caikit[all-dev]", "grpcio (>=1.35.0,<1.63)", "grpcio-health-checking (>=1.35.0,<1.63)", "grpcio-reflection (>=1.35.0,<1.63)", "protobuf (>=3.19.0,<3.20)"]
 dev-test = ["caikit[interfaces-ts-pyspark,interfaces-vision,runtime-client]", "pytest (>=6.2.5,<8.0)", "pytest-asyncio (>=0.21.0,<0.22)", "pytest-cov (>=2.10.1,<5.0)", "pytest-html (>=3.1.1,<5.0)", "tls-test-tools (>=0.1.1)", "wheel (>=0.38.4)"]
 interfaces-ts = ["pandas (>=1.4.3,<2)"]
 interfaces-ts-pyspark = ["caikit[interfaces-ts]", "pyarrow (>=8.0.0,<16)", "pyspark (>=3.3,<3.6)"]
@@ -3522,4 +3522,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "d8ff54443a9ee219c17b4308dd7719a31a2b67c8b8059f4e9737a4da5f581330"
+content-hash = "d3f1dbf6f3a8359c22e941900440f5fea68f4a22fc027f281841949affafbc80"
