@@ -5,13 +5,13 @@ on:
     - cron: "20 4 * * 1" # once a week
   workflow_dispatch:
 
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "!docs"
-  #     - "!demo"
+  push:
+    branches: [main]
+    paths:
+      - "!docs"
+      - "!demo"
 
-  # pull_request:
+  pull_request:
 
 env:
   KIND_CLUSTER_NAME: "kserve-testing"
