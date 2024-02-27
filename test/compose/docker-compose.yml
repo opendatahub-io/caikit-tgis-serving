@@ -1,6 +1,6 @@
 services:
   caikit:
-    image: quay.io/opendatahub/caikit-tgis-serving:dev
+    image: caikit-tgis-serving:dev
     platform: linux/amd64
     build: ../..
     volumes:
