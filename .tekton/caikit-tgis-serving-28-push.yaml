@@ -7,7 +7,7 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "rhoai-2.8"
+      == "rhoai-2.8" && (!".tekton/*.*".pathChanged() || ".tekton/caikit-tgis-serving-28-push.yaml".pathChanged())
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: caikit-tgis-serving
@@ -22,7 +22,7 @@ spec:
   - name: git-url
     value: '{{source_url}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/rhoai-tenant/caikit-tgis-serving/caikit-tgis-serving-28:{{revision}}
+    value: quay.io/modh/caikit-tgis-serving:{{revision}}
   - name: path-context
     value: .
   - name: revision
