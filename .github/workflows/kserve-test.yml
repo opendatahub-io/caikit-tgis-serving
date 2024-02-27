@@ -17,9 +17,40 @@ env:
   KIND_CLUSTER_NAME: "kserve-testing"
   ISVC_NAME: "caikit-tgis-isvc"
   TEST_NS: "kserve-demo"
+  DEV_IMAGE: "caikit-tgis-serving:dev"
 
 jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and export
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: ${{ env.DEV_IMAGE }}
+          # outputs: type=oci,dest=/tmp/image.tar
+          outputs: type=docker,dest=/tmp/image.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: caikit-tgis-serving
+          path: /tmp/image.tar
+
   smoke-test:
+    needs: build-image
+
     name: Kserve Smoke Test
     runs-on: ubuntu-latest
     steps:
@@ -31,9 +62,18 @@ jobs:
           cluster_name: ${{ env.KIND_CLUSTER_NAME }}
           namespace: ${{ env.TEST_NS }}
 
+      - name: Download built image
+        uses: actions/download-artifact@v4
+
+      - name: Load built image into kind
+        run: |
+          kind load image-archive --name ${{ env.KIND_CLUSTER_NAME }} caikit-tgis-serving/image.tar
+
       - name: Setup flan-t5-small model volume
         run: |
-          kubectl apply -f test/kserve/setup.yaml
+          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|' test/kserve/setup.yaml | \
+            kubectl apply -f -
+
           max_retries=10
           wait_time=60s
           until kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/setup-flan-t5-small --timeout ${wait_time}; do
@@ -50,7 +90,9 @@ jobs:
 
       - name: Deploy ServingRuntime/InferenceService
         run: |
-          kubectl apply -f test/kserve/caikit-tgis-serving.yaml
+          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|' test/kserve/caikit-tgis-serving.yaml | \
+            kubectl apply -f -
+
           max_retries=10
           wait_time=60s
           until kubectl wait isvc/${ISVC_NAME} --for=condition=Ready --timeout=${wait_time}; do
