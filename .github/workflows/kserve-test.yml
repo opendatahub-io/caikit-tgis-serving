@@ -48,7 +48,42 @@ jobs:
           name: caikit-tgis-serving
           path: /tmp/image.tar
 
-  smoke-test:
+  compose-smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+
+    needs: build-image
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: caikit-tgis-serving
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load --input /tmp/image.tar
+
+      - name: Pull tgis image
+        run: |
+          docker pull quay.io/opendatahub/text-generation-inference:stable
+
+      - name: Test image
+        run: |
+          cd test/compose
+          bash -x smoke-test.sh
+        env:
+          CI: true
+
+  kserve-smoke-test:
     needs: build-image
 
     name: Kserve Smoke Test

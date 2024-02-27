@@ -1,4 +1,4 @@
-CAIKIT_IMAGE=quay.io/opendatahub/caikit-tgis-serving
+CAIKIT_IMAGE=caikit-tgis-serving
 ENGINE ?= podman
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 .PHONY: default refresh-poetry-lock-files
