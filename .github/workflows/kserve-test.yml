@@ -16,6 +16,7 @@ on:
 env:
   KIND_CLUSTER_NAME: "kserve-testing"
   ISVC_NAME: "caikit-tgis-isvc"
+  TEST_NS: "kserve-demo"
 
 jobs:
   smoke-test:
@@ -24,63 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          tool-cache: false
-
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.9.0
+      - name: Setup kind/kserve
+        uses: dtrifiro/setup-kserve@v0.0.2
         with:
           cluster_name: ${{ env.KIND_CLUSTER_NAME }}
-          config: test/kserve/kind_config.yaml
-
-      - name: Install kserve
-        run: |
-          # Use the hack/quick_install.sh script from the kserve repo
-          curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.11.1.1/hack/quick_install.sh | bash
-
-      - name: Patch Istio Ingressway
-        run: |
-          # bind the istio ingressway ports on the host so that we can access its services
-          kubectl patch deployments.apps -o yaml -n istio-system istio-ingressgateway -p '{
-            "spec":
-              {"template":
-                {"spec":
-                  {"containers":
-                    [
-                      {
-                        "name":
-                        "istio-proxy",
-                        "ports":
-                          [
-                            {
-                              "containerPort":8080,
-                              "hostPort":80
-                            },
-                            {
-                              "containerPort":8443,
-                              "hostPort":443
-                            }
-                          ]
-                      }
-                    ]
-                  }
-                }
-              }
-          }'
-
-      - name: Setup testing namespace
-        run: |
-          source demo/kserve/scripts/env.sh
-          kubectl create namespace ${TEST_NS}
-          kubectl config set-context "kind-${KIND_CLUSTER_NAME}" --namespace ${TEST_NS}
+          namespace: ${{ env.TEST_NS }}
 
       - name: Setup flan-t5-small model volume
         run: |
