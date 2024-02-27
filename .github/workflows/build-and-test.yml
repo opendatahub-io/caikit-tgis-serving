@@ -107,7 +107,7 @@ jobs:
 
       - name: Setup flan-t5-small model volume
         run: |
-          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|' test/kserve/setup.yaml | \
+          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|g' test/kserve/setup.yaml | \
             kubectl apply -f -
 
           max_retries=10
@@ -126,7 +126,7 @@ jobs:
 
       - name: Deploy ServingRuntime/InferenceService
         run: |
-          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|' test/kserve/caikit-tgis-serving.yaml | \
+          sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|g' test/kserve/caikit-tgis-serving.yaml | \
             kubectl apply -f -
 
           max_retries=10
