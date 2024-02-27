@@ -318,8 +318,8 @@ transformers = ">=4.32.0"
 [package.source]
 type = "git"
 url = "https://github.com/caikit/caikit-nlp"
-reference = "0.3.3"
-resolved_reference = "2a30fc94e3bb66acb6e2eda8d2ce34f3bd86be60"
+reference = "release-0.3"
+resolved_reference = "35da653e9c6251fba3c91f05d6405c6493c9c4a4"
 
 [[package]]
 name = "caikit-tgis-backend"
@@ -3524,4 +3524,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "a3d5212e6f03e0ffaa036424548798f0df5983d1c67f609d1a1bb0f1637e5266"
+content-hash = "589e88bf6bd825fc89a8bc36e6b7e557600153b3be120305e04eac6453c36a00"

@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "~3.9"
 caikit = "*"
-caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "0.3.3"}
+caikit-nlp = {git = "https://github.com/caikit/caikit-nlp", rev = "release-0.3"}
 caikit-tgis-backend = "*"
 
 [build-system]
