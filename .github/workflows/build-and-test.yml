@@ -17,7 +17,10 @@ env:
   KIND_CLUSTER_NAME: "kserve-testing"
   ISVC_NAME: "caikit-tgis-isvc"
   TEST_NS: "kserve-demo"
-  DEV_IMAGE: "caikit-tgis-serving:dev"
+  # note: knative serving will try to resolve the image tag unless the registry is kind.local
+  # See the deployment configmap:
+  #   registries-skipping-tag-resolving: "kind.local,ko.local,dev.local"
+  DEV_IMAGE: "kind.local/caikit-tgis-serving:dev"
 
 jobs:
   build-image:
