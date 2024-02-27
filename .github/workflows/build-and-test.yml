@@ -1,4 +1,4 @@
-name: "Kserve Smoke Test"
+name: "Build and Test"
 
 on:
   schedule:
@@ -21,6 +21,7 @@ env:
 
 jobs:
   build-image:
+    name: "Build image"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
