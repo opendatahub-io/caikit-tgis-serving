@@ -108,6 +108,11 @@ jobs:
         run: |
           kind load image-archive --name ${{ env.KIND_CLUSTER_NAME }} caikit-tgis-serving/image.tar
 
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+
       - name: Setup flan-t5-small model volume
         run: |
           sed 's|quay.io/opendatahub/caikit-tgis-serving:fast|${{ env.DEV_IMAGE }}|g' test/kserve/setup.yaml | \
