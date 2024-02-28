@@ -56,7 +56,7 @@ fi
 
 ISVC_NAME=caikit-tgis-isvc"${INF_PROTO}"
 
-if ! oc get isvc ${ISVC_NAME} --no-headers >/dev/null; then
+if oc get isvc ${ISVC_NAME} --no-headers >/dev/null; then
   echo "* The ISVC ${ISVC_NAME} already exists. Please remove it."
   exit 1
 fi
