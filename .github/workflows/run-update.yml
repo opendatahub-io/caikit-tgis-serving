@@ -1,0 +1,59 @@
+name: "Update poetry lockfiles"
+
+on:
+  schedule:
+    - cron: "20 4 * * 1" # once a week
+  workflow_dispatch:
+
+jobs:
+  poetry-update:
+    name: Update dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install poetry
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade poetry
+
+      - name: Setup virtualenv
+        run: |
+          poetry install
+
+      - name: Refresh poetry lock files
+        id: poetry-update
+        run: |
+          echo 'log<<EOF' >> $GITHUB_OUTPUT
+          poetry update | tee -a >(cat >> $GITHUB_OUTPUT)
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Check diff
+        id: diff
+        shell: bash
+        run: |
+          git status --untracked-files=all
+          echo 'diff<<EOF' >> $GITHUB_OUTPUT
+          git diff >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Create PR
+        if: ${{ steps.diff.outputs.diff != '' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          commit-message: update dendencies
+          title: update dependencies
+          labels: |
+            dependencies
+          body: |
+            Update dependencies using `poetry update`:
+
+            ```console
+            ${{ steps.poetry-update.outputs.log }}
+            ```

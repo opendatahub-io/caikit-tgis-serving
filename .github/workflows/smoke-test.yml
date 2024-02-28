@@ -15,9 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+
       - name: Build image
         run: |
-          cd test
+          cd test/compose
           docker-compose build
           # Note: caikit's and tgis images are fairly large, and if we include cached
           # layers, we easily cross the 25GB mark, hence we'll clean up as much
@@ -30,7 +36,7 @@ jobs:
           docker pull quay.io/opendatahub/text-generation-inference:stable
       - name: Test image
         run: |
-          cd test
+          cd test/compose
           bash -x smoke-test.sh
         env:
           CI: true

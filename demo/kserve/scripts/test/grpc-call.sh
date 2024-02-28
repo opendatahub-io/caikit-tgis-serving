@@ -2,7 +2,7 @@
 set -o pipefail
 set -o nounset
 set -o errtrace
-set -u  ### any reference to an unset variable will be considered as an error and will immediately stop execution
+set -u ### any reference to an unset variable will be considered as an error and will immediately stop execution
 # set -x   #Uncomment this to debug script.
 
 # Performs inference using gRPC
@@ -21,14 +21,13 @@ echo
 echo "Testing all token in a single call"
 echo
 
-export KSVC_HOSTNAME=$(oc get ksvc "${ISVC_NAME}"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+export ISVC_HOSTNAME=$(oc get isvc "${ISVC_NAME}"-predictor -n ${TEST_NS} -o jsonpath='{.status.components.predictor.url}' | cut -d'/' -f3)
 
 ### Invoke the inferences:
-grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${ISVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
 
 echo
 echo "Testing streams of token"
 echo
 
-grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
-
+grpcurl -insecure -d '{"text": "At what temperature does Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${ISVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict

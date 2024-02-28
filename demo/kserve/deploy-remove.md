@@ -99,10 +99,10 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
 
 3. Perform inference using either using HTTP or gRPC
 
-   Compute KSVC_HOSTNAME:
+   Compute ISVC_HOSTNAME:
 
    ```bash
-   export KSVC_HOSTNAME=$(oc get ksvc "$ISVC_NAME"-predictor -n ${TEST_NS} -o jsonpath='{.status.url}' | cut -d'/' -f3)
+   export ISVC_URL=$(oc get isvc "$ISVC_NAME" -n ${TEST_NS} -o jsonpath='{.status.components.predictor.url}')
    ```
 
    - http only. Perform inference with HTTP. This example uses cURL.
@@ -110,7 +110,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
      a. Run the following `curl` command for all tokens in a single call:
 
      ```bash
-     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/text-generation
+     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' ${ISVC_URL}/api/v1/task/text-generation
      ```
 
      The response should be similar to the following:
@@ -130,7 +130,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
      b. Run `curl` to generate a token stream.
 
      ```bash
-     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' https://${KSVC_HOSTNAME}/api/v1/task/server-streaming-text-generation
+     curl -kL -H 'Content-Type: application/json' -d '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does Nitrogen boil?"}' ${ISVC_URL}/api/v1/task/server-streaming-text-generation
      ```
 
      The response should be similar to the following:
@@ -186,7 +186,8 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
      c. Run the following `grpcurl` command for all tokens in a single call:
 
      ```bash
-     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
+     export ISVC_HOSTNAME=$(oc get isvc "$ISVC_NAME" -n ${TEST_NS} -o jsonpath='{.status.components.predictor.url}' | cut -d'/' -f 3-)
+     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${ISVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/TextGenerationTaskPredict
      ```
 
      The response should be similar to the following:
@@ -206,7 +207,7 @@ Note: The **flan-t5-small** LLM model has been containerized into an S3 MinIO bu
      d. Run `grpcurl` to generate a token stream.
 
      ```bash
-     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${KSVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
+     grpcurl -insecure -d '{"text": "At what temperature does liquid Nitrogen boil?"}' -H "mm-model-id: flan-t5-small-caikit" ${ISVC_HOSTNAME}:443 caikit.runtime.Nlp.NlpService/ServerStreamingTextGenerationTaskPredict
      ```
 
      The response should be similar to the following:

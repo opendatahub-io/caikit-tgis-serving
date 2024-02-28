@@ -11,7 +11,7 @@ ENV POETRY_VIRTUALENVS_IN_PROJECT=1
 WORKDIR /caikit
 COPY pyproject.toml .
 COPY poetry.lock .
-RUN pip install poetry && poetry lock --no-update && poetry install
+RUN pip install poetry && poetry install --no-root
 
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as deploy
