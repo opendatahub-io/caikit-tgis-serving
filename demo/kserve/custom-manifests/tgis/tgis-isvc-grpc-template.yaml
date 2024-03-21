@@ -5,8 +5,6 @@ metadata:
     serving.knative.openshift.io/enablePassthrough: "true"
     sidecar.istio.io/inject: "true"
     sidecar.istio.io/rewriteAppHTTPProbers: "true"
-  labels:
-    protocol: "grpconly" # workaround for https://issues.redhat.com/browse/RHOAIENG-165
   # The following <tgis-isvc-name> should be set to the
   # actual name of the inference service. (e.g., tgis-grpc-isvc)
   name: <tgis-grpc-isvc-name>
