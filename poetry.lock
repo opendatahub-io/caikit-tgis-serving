@@ -244,20 +244,20 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "caikit"
-version = "0.26.15"
+version = "0.26.16"
 description = "AI toolkit that enables AI users to consume stable task-specific model APIs and enables AI developers build algorithms and models in a modular/composable framework"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "caikit-0.26.15-py3-none-any.whl", hash = "sha256:13720fd1cbd0d5d10b3f68dffb7a780e662d3ac46a78e960e1615510ea9bfb92"},
-    {file = "caikit-0.26.15.tar.gz", hash = "sha256:687223fd1b12c6a238e859e0afb5823595531bbe09994cb79028628b86e92e56"},
+    {file = "caikit-0.26.16-py3-none-any.whl", hash = "sha256:0a9c16ae9cafbe178bca7ff7cdd346d97a0a9863698d912c52a1e027d8110f8b"},
+    {file = "caikit-0.26.16.tar.gz", hash = "sha256:0e2f862237ee16aea39a0593b9a2649ab6eee5c5f1fe24b92ce443d0a51fbd64"},
 ]
 
 [package.dependencies]
 alchemy-config = ">=1.1.1,<2.0.0"
 alchemy-logging = ">=1.0.4,<2.0.0"
 anytree = ">=2.7.0,<3.0"
-docstring-parser = ">=0.14.1,<0.16.0"
+docstring-parser = ">=0.14.1,<0.17.0"
 fastapi = {version = ">=0.100,<1", extras = ["all"], optional = true, markers = "extra == \"runtime-http\""}
 grpcio = ">=1.35.0,<1.55.0 || >1.55.0,<2.0"
 grpcio-health-checking = {version = ">=1.35.0,<2.0", optional = true, markers = "extra == \"runtime-grpc\""}
@@ -267,7 +267,7 @@ importlib-metadata = ">=6.8.0,<8.0.0"
 munch = ">=2.5.0,<5.0"
 numpy = ">=1.22.2,<2"
 prometheus-client = {version = ">=0.12.0,<1.0", optional = true, markers = "extra == \"runtime-grpc\""}
-protobuf = ">=3.19.0,<5"
+protobuf = ">=3.19.0,<6"
 psutil = ">=5,<6"
 py-grpc-prometheus = {version = ">=0.7.0,<0.9", optional = true, markers = "extra == \"runtime-grpc\""}
 py-to-proto = ">=0.5.0,<0.6.0"
@@ -286,7 +286,7 @@ dev-build = ["flit (==3.9.0)"]
 dev-docs = ["sphinx (>=4.0.2,<8.0)", "sphinx-autoapi (>=2.1.0)", "sphinx-rtd-theme (>=1.2.1,<2.1.0)"]
 dev-fmt = ["pre-commit (>=3.0.4,<4.0)", "pydeps (>=1.12.12,<2)", "ruff (==0.3.4)"]
 dev-proto3 = ["caikit[all-dev]", "grpcio (>=1.35.0,<1.63)", "grpcio-health-checking (>=1.35.0,<1.63)", "grpcio-reflection (>=1.35.0,<1.63)", "protobuf (>=3.19.0,<3.20)"]
-dev-test = ["caikit[interfaces-ts-pyspark,interfaces-vision,runtime-client]", "pytest (>=6.2.5,<8.0)", "pytest-asyncio (>=0.21.0,<0.22)", "pytest-cov (>=2.10.1,<5.0)", "pytest-html (>=3.1.1,<5.0)", "tls-test-tools (>=0.1.1)", "wheel (>=0.38.4)"]
+dev-test = ["caikit[interfaces-ts-pyspark,interfaces-vision,runtime-client]", "pytest (>=6.2.5,<8.0)", "pytest-asyncio (>=0.21.0,<0.22)", "pytest-cov (>=2.10.1,<6.0)", "pytest-html (>=3.1.1,<5.0)", "tls-test-tools (>=0.1.1)", "wheel (>=0.38.4)"]
 interfaces-ts = ["pandas (>=1.4.3,<2)"]
 interfaces-ts-pyspark = ["caikit[interfaces-ts]", "pyarrow (>=8.0.0,<16)", "pyspark (>=3.3,<3.6)"]
 interfaces-vision = ["pillow (>=6.2.1,<11.0)"]
@@ -3719,4 +3719,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "e494225f024c2500b990b126ba0f319794b1d51c6746cbf2ccf4171eb93bc60a"
+content-hash = "9cbc011a6c36c3fdbc9817b5c5ebed510f20e07e276bc8edec2f10e705585f6f"
