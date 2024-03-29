@@ -45,13 +45,13 @@ objects:
               command:
                 - curl
                 - localhost:3000/health
-            initialDelaySeconds: 5
+            initialDelaySeconds: ${PROBES_INITIAL_DELAY_SECONDS}
           livenessProbe:
             exec:
               command:
                 - curl
                 - localhost:3000/health
-            initialDelaySeconds: 5
+            initialDelaySeconds: ${PROBES_INITIAL_DELAY_SECONDS}
           ports:
             - containerPort: 8033
               name: h2c
@@ -66,3 +66,6 @@ parameters:
   - name: TGIS_CONTAINER_IMAGE
     description: Container image for the runtime
     value: quay.io/opendatahub/text-generation-inference:stable
+  - name: PROBES_INITIAL_DELAY_SECONDS
+    description: Time to wait before performing initial probes. Useful when loading large models.
+    value: 5
