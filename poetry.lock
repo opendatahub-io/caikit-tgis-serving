@@ -244,13 +244,13 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "caikit"
-version = "0.26.16"
+version = "0.26.18"
 description = "AI toolkit that enables AI users to consume stable task-specific model APIs and enables AI developers build algorithms and models in a modular/composable framework"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "caikit-0.26.16-py3-none-any.whl", hash = "sha256:0a9c16ae9cafbe178bca7ff7cdd346d97a0a9863698d912c52a1e027d8110f8b"},
-    {file = "caikit-0.26.16.tar.gz", hash = "sha256:0e2f862237ee16aea39a0593b9a2649ab6eee5c5f1fe24b92ce443d0a51fbd64"},
+    {file = "caikit-0.26.18-py3-none-any.whl", hash = "sha256:cd2bb844c1721ed338245e792d92109eef839c71c6ed08bdda37641431c31136"},
+    {file = "caikit-0.26.18.tar.gz", hash = "sha256:0f4391d530797be294ffcda293cf884d570ee969445bab339bb182d3139e9d1d"},
 ]
 
 [package.dependencies]
@@ -284,7 +284,7 @@ all = ["caikit[interfaces-ts,interfaces-vision,runtime-client,runtime-grpc,runti
 all-dev = ["caikit[all,dev-build,dev-docs,dev-fmt,dev-test]"]
 dev-build = ["flit (==3.9.0)"]
 dev-docs = ["sphinx (>=4.0.2,<8.0)", "sphinx-autoapi (>=2.1.0)", "sphinx-rtd-theme (>=1.2.1,<2.1.0)"]
-dev-fmt = ["pre-commit (>=3.0.4,<4.0)", "pydeps (>=1.12.12,<2)", "ruff (==0.3.4)"]
+dev-fmt = ["pre-commit (>=3.0.4,<4.0)", "pydeps (>=1.12.12,<2)", "ruff (==0.3.5)"]
 dev-proto3 = ["caikit[all-dev]", "grpcio (>=1.35.0,<1.63)", "grpcio-health-checking (>=1.35.0,<1.63)", "grpcio-reflection (>=1.35.0,<1.63)", "protobuf (>=3.19.0,<3.20)"]
 dev-test = ["caikit[interfaces-ts-pyspark,interfaces-vision,runtime-client]", "pytest (>=6.2.5,<8.0)", "pytest-asyncio (>=0.21.0,<0.22)", "pytest-cov (>=2.10.1,<6.0)", "pytest-html (>=3.1.1,<5.0)", "tls-test-tools (>=0.1.1)", "wheel (>=0.38.4)"]
 interfaces-ts = ["pandas (>=1.4.3,<2)"]
@@ -3721,4 +3721,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9"
-content-hash = "9cbc011a6c36c3fdbc9817b5c5ebed510f20e07e276bc8edec2f10e705585f6f"
+content-hash = "5a6caede5f194d691cdaf8777562a54755ccb28cd86607d36f0538de87dcf841"
