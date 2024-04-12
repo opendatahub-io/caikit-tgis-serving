@@ -35,6 +35,7 @@ spec:
             - -m
             - caikit_health_probe
             - readiness
+        initialDelaySeconds: 5 # might require larger values for large models
       livenessProbe:
         exec:
           command:
@@ -42,3 +43,4 @@ spec:
             - -m
             - caikit_health_probe
             - liveness
+        initialDelaySeconds: 5

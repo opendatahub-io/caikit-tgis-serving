@@ -47,7 +47,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ github.token }}
-          commit-message: update dendencies
+          commit-message: update dependencies
           title: update dependencies
           labels: |
             dependencies

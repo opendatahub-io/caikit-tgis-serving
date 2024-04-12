@@ -61,6 +61,8 @@ objects:
                 - -m
                 - caikit_health_probe
                 - readiness
+            initialDelaySeconds: ${PROBES_INITIAL_DELAY_SECONDS}
+
           livenessProbe:
             exec:
               command:
@@ -68,6 +70,8 @@ objects:
                 - -m
                 - caikit_health_probe
                 - liveness
+            initialDelaySeconds: ${PROBES_INITIAL_DELAY_SECONDS}
+
 parameters:
   - name: CPU_REQUEST
     description: CPU request for the container
@@ -81,3 +85,6 @@ parameters:
   - name: TGIS_CONTAINER_IMAGE
     description: Container image for the runtime
     value: quay.io/opendatahub/text-generation-inference:stable
+  - name: PROBES_INITIAL_DELAY_SECONDS
+    description: Time to wait before performing initial probes. Useful when loading large models.
+    value: 5
