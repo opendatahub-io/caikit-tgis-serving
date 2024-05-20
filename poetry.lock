@@ -283,13 +283,13 @@ runtime-http = ["fastapi[all] (>=0.100,<1)", "requests (>=2.28.2,<3)", "sse-star
 
 [[package]]
 name = "caikit-nlp"
-version = "0.4.10"
+version = "0.4.11"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit_nlp-0.4.10-py3-none-any.whl", hash = "sha256:aece113faecd008f300063767761d988ad035ef0bb36b80223ce0d88d972a709"},
-    {file = "caikit_nlp-0.4.10.tar.gz", hash = "sha256:06668a325ca8f69e5ef64585bc60d65a0992ad2625be66798c15cd9b594d750c"},
+    {file = "caikit_nlp-0.4.11-py3-none-any.whl", hash = "sha256:88b9dffb460b4be0bd23520a1d1d6e3e0cf945243359e132288716864b826bfa"},
+    {file = "caikit_nlp-0.4.11.tar.gz", hash = "sha256:da22b0a3f6e14d601e46bed49cdb48a8a66a45985b72b1175e0f581da0670f34"},
 ]
 
 [package.dependencies]
@@ -3760,4 +3760,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "c3fb8e720bd9f0f4111c8e10f59eb54032bfa9fe96e7c922176de44a9b7389cf"
+content-hash = "7e35923326ea71b048bca4693a1b5b9779fbe0e839169dacb41b9c1506005e8c"
