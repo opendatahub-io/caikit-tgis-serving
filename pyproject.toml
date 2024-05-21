@@ -7,8 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11"
-caikit = "0.26.18"
-caikit-nlp = "0.4.9"
+caikit = "0.26.23"
+caikit-nlp = "0.4.10"
 caikit-tgis-backend = "0.1.31"
 
 [build-system]

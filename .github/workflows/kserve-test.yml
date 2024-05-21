@@ -1,0 +1,130 @@
+name: "Kserve Smoke Test"
+
+on:
+  schedule:
+    - cron: "20 4 * * 1" # once a week
+  workflow_dispatch:
+
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "!docs"
+  #     - "!demo"
+
+  # pull_request:
+
+env:
+  KIND_CLUSTER_NAME: "kserve-testing"
+  ISVC_NAME: "caikit-tgis-isvc"
+
+jobs:
+  smoke-test:
+    name: Kserve Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.9.0
+        with:
+          cluster_name: ${{ env.KIND_CLUSTER_NAME }}
+          config: test/kserve/kind_config.yaml
+
+      - name: Install kserve
+        run: |
+          # Use the hack/quick_install.sh script from the kserve repo
+          curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.11.1.1/hack/quick_install.sh | bash
+
+      - name: Patch Istio Ingressway
+        run: |
+          # bind the istio ingressway ports on the host so that we can access its services
+          kubectl patch deployments.apps -o yaml -n istio-system istio-ingressgateway -p '{
+            "spec":
+              {"template":
+                {"spec":
+                  {"containers":
+                    [
+                      {
+                        "name":
+                        "istio-proxy",
+                        "ports":
+                          [
+                            {
+                              "containerPort":8080,
+                              "hostPort":80
+                            },
+                            {
+                              "containerPort":8443,
+                              "hostPort":443
+                            }
+                          ]
+                      }
+                    ]
+                  }
+                }
+              }
+          }'
+
+      - name: Setup testing namespace
+        run: |
+          source demo/kserve/scripts/env.sh
+          kubectl create namespace ${TEST_NS}
+          kubectl config set-context "kind-${KIND_CLUSTER_NAME}" --namespace ${TEST_NS}
+
+      - name: Setup flan-t5-small model volume
+        run: |
+          kubectl apply -f test/kserve/setup.yaml
+          max_retries=10
+          wait_time=60s
+          until kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/setup-flan-t5-small --timeout ${wait_time}; do
+            echo "Current status:"
+            kubectl describe pod,pv,pvc
+            max_retries=$((max_retries-1))
+            if [[ $max_retries -le 0 ]]; then
+              echo "Failed to setup model"
+              kubectl logs pod/setup-flan-t5-small --all-containers
+              exit 1
+            fi
+            echo "-------------------"
+          done
+
+      - name: Deploy ServingRuntime/InferenceService
+        run: |
+          kubectl apply -f test/kserve/caikit-tgis-serving.yaml
+          max_retries=10
+          wait_time=60s
+          until kubectl wait isvc/${ISVC_NAME} --for=condition=Ready --timeout=${wait_time}; do
+            echo "Current status:"
+            kubectl describe isvc,servingruntime,pod
+            max_retries=$((max_retries-1))
+            if [[ $max_retries -le 0 ]]; then
+              exit 1
+            fi
+            echo "-------------------"
+          done
+
+      - name: Install caikit-nlp-client
+        run: |
+          pip install caikit-nlp-client
+
+      - name: Perform test inference (http)
+        run: |
+          export ISVC_URL="$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
+          export ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
+          echo "Querying ISVC at: ${ISVC_URL}"
+
+          # We can't query the service via hostname, we need to add the entry to /etc/hosts
+          echo "127.0.0.1 ${ISVC_HOSTNAME}" | sudo tee -a /etc/hosts
+
+          python test/smoke-test.py
