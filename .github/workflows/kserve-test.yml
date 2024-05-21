@@ -36,7 +36,7 @@ jobs:
           swap-storage: true
 
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.9.0
+        uses: helm/kind-action@v1.10.0
         with:
           cluster_name: ${{ env.KIND_CLUSTER_NAME }}
           config: test/kserve/kind_config.yaml
