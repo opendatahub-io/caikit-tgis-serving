@@ -10,7 +10,6 @@ python = "~3.11"
 caikit = "0.26.25"
 caikit-nlp = "0.4.11"
 caikit-tgis-backend = "0.1.31"
-grpcio="1.63.0" # temporarily pinned due caikit incompatibility with grpc>=1.64 
 
 [build-system]
 requires = ["poetry-core"]
