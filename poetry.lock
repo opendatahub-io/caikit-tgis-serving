@@ -284,18 +284,18 @@ runtime-http = ["fastapi[all] (>=0.100,<1)", "requests (>=2.28.2,<3)", "sse-star
 
 [[package]]
 name = "caikit-nlp"
-version = "0.4.11"
+version = "0.4.13"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit_nlp-0.4.11-py3-none-any.whl", hash = "sha256:88b9dffb460b4be0bd23520a1d1d6e3e0cf945243359e132288716864b826bfa"},
-    {file = "caikit_nlp-0.4.11.tar.gz", hash = "sha256:da22b0a3f6e14d601e46bed49cdb48a8a66a45985b72b1175e0f581da0670f34"},
+    {file = "caikit_nlp-0.4.13-py3-none-any.whl", hash = "sha256:8d3cf4af11a20d28c5b85d58b902a3f1056ecbce298b83edd7195f6d20458063"},
+    {file = "caikit_nlp-0.4.13.tar.gz", hash = "sha256:e13348b65f55175e0cc7e77c81fb46d840c565cddbe0b51fd555a308ea7419c3"},
 ]
 
 [package.dependencies]
 accelerate = ">=0.22.0"
-caikit = {version = ">=0.26.17,<0.27.0", extras = ["runtime-grpc", "runtime-http"]}
+caikit = {version = ">=0.26.27,<0.27.0", extras = ["runtime-grpc", "runtime-http"]}
 caikit-tgis-backend = ">=0.1.27,<0.2.0"
 datasets = ">=2.4.0"
 grpcio = ">=1.62.2"
@@ -3775,4 +3775,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "c2a089e95274d3d9714beb7692ee374f9cb2aa0dd218c46f14fcde48fd417645"
+content-hash = "4db3dfbb4b9078cd83e88b924de53e180309e32d0c02709cf8ffd1860f4016d0"
