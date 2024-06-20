@@ -15,8 +15,8 @@ spec:
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
-        - name: TRANSFORMERS_CACHE
-          value: /tmp/transformers_cache
+        - name: HF_HOME
+          value: /tmp/hf_home
         - name: RUNTIME_GRPC_ENABLED
           value: "true"
         - name: RUNTIME_HTTP_ENABLED
