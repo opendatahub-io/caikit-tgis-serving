@@ -231,13 +231,13 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "caikit"
-version = "0.26.33"
+version = "0.26.34"
 description = "AI toolkit that enables AI users to consume stable task-specific model APIs and enables AI developers build algorithms and models in a modular/composable framework"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "caikit-0.26.33-py3-none-any.whl", hash = "sha256:4db13b068123ac541a759eb708ef5a6d795f115eaf54d3ce7bbfe1d710524ab6"},
-    {file = "caikit-0.26.33.tar.gz", hash = "sha256:afb84321dc171b4601864f786d159e3be03fa621efbf005b8165a8acb14e9dd6"},
+    {file = "caikit-0.26.34-py3-none-any.whl", hash = "sha256:eaf4f8009f5d153923a4a2ff6547075babb5e641849a15d1108635bdd041d5a6"},
+    {file = "caikit-0.26.34.tar.gz", hash = "sha256:b11f76f23fdbae145ba05132db584791e00d2abdb4515ca7b259929dd04501bc"},
 ]
 
 [package.dependencies]
@@ -3783,4 +3783,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "e72bf14c76a2501e3122fcb71d1c71c11223fcbf64b4f65731d64a4c2bc925ce"
+content-hash = "08a99174fb407a4c03d351faa42ee72f9a663da6182adfb426ed25675738373e"
