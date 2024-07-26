@@ -10,13 +10,13 @@ spec:
       name: caikit
   containers:
     - name: kserve-container
-      image: quay.io/opendatahub/caikit-nlp:stable
+      image: quay.io/opendatahub/caikit-nlp:fast
       command: ["python", "-m", "caikit.runtime"]
       env:
         - name: RUNTIME_LOCAL_MODELS_DIR
           value: /mnt/models
-        - name: TRANSFORMERS_CACHE
-          value: /tmp/transformers_cache
+        - name: HF_HOME
+          value: /tmp/hf_home
         - name: RUNTIME_GRPC_ENABLED
           value: "false"
         - name: RUNTIME_HTTP_ENABLED
