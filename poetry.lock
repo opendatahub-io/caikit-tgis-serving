@@ -286,13 +286,13 @@ runtime-trace = ["opentelemetry-exporter-otlp (>=1.24.0,<2)", "opentelemetry-sdk
 
 [[package]]
 name = "caikit-nlp"
-version = "0.4.18"
+version = "0.5.1"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit_nlp-0.4.18-py3-none-any.whl", hash = "sha256:4ab39f3e6c725e3576244427e33d4fed733256dc84853f286621705edfad5518"},
-    {file = "caikit_nlp-0.4.18.tar.gz", hash = "sha256:c74425d0eb07ba8c07ed4e97dbfef4ec4c0bb9d019de74730d098d3dcdbf233f"},
+    {file = "caikit_nlp-0.5.1-py3-none-any.whl", hash = "sha256:a74044a3ba6830880d6c6f17719dd7e9bf316ab202562f6417212c6ed31fca3e"},
+    {file = "caikit_nlp-0.5.1.tar.gz", hash = "sha256:07100b085fd9324c841402de5b57b0eda0af2d79cb7c805480faf0cb26f00e22"},
 ]
 
 [package.dependencies]
@@ -3854,4 +3854,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "72d5a3d3385e32bcb920b90db23c2b6dec80c8be90b4e826a3e4548d50b5744d"
+content-hash = "de10af2b567e653ea0ac713ca2173b061a8afd493e50a2c1e46a9fa36a3bd5ef"
