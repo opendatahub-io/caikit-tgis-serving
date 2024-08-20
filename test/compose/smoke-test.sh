@@ -4,8 +4,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 IMAGE="caikit-tgis-serving:dev"
 
-if ! command -v docker-compose &>/dev/null; then
-	echo "This requires docker-compose" 2>&1
+if ! command -v docker compose &>/dev/null; then
+	echo "This requires docker compose" 2>&1
 	exit 1
 fi
 
@@ -39,18 +39,18 @@ if [[ -n $CI ]]; then # Free up some space on CI
 	rm -rf ~/.cache/huggingface
 fi
 
-docker-compose up -d
+docker compose up -d
 
 pip install caikit-nlp-client
 
 echo -e "\n=== Testing endpoints..."
 if ! python ../smoke-test.py; then
 	echo -e "\n=== Container logs"
-	docker-compose logs
+	docker compose logs
 	echo -e "\n=== 👎 Test failed\n"
-	docker-compose down
+	docker compose down
 	exit 1
 fi
 
 echo -e "\n=== 👍 Test successful!\n"
-cd ${SCRIPT_DIR} && docker-compose down
+cd ${SCRIPT_DIR} && docker compose down
