@@ -58,7 +58,7 @@ async def main():
     inference_service_url = os.getenv("ISVC_URL")
 
     if not inference_service_url:
-        print("No inference service, assuming docker-compose test")
+        print("No inference service, assuming docker compose test")
         return await asyncio.gather(
             test_grpc(),
             test_http(),
