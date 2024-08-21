@@ -44,7 +44,7 @@ jobs:
       - name: Install kserve
         run: |
           # Use the hack/quick_install.sh script from the kserve repo
-          curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.11.1.1/hack/quick_install.sh | bash
+          curl https://raw.githubusercontent.com/opendatahub-io/kserve/v0.12.1.4/hack/quick_install.sh | bash
 
       - name: Patch Istio Ingressway
         run: |
