@@ -24,6 +24,7 @@ WORKDIR /caikit
 
 COPY --from=poetry-builder /caikit/.venv /caikit/.venv
 COPY caikit.yml /caikit/config/caikit.yml
+COPY --chown=1001:0 --chmod=554 utils/wait-modelcar.sh .
 
 ENV VIRTUAL_ENV=/caikit/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -38,4 +39,5 @@ USER caikit
 ENV CONFIG_FILES=/caikit/config/caikit.yml
 VOLUME ["/caikit/config/"]
 
+ENTRYPOINT ["/caikit/wait-modelcar.sh"]
 CMD ["python",  "-m", "caikit.runtime"]
