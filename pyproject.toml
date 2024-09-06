@@ -9,7 +9,7 @@ readme = "README.md"
 python = "~3.11"
 caikit = "0.26.40"
 caikit-nlp = "0.5.5"
-caikit-tgis-backend = "0.1.37"
+caikit-tgis-backend = "0.1.38"
 
 [build-system]
 requires = ["poetry-core"]
