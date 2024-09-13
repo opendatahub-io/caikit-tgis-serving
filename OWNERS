@@ -1,22 +1,21 @@
 approvers:
   - danielezonca
-  - davidesalerno
-  - dtrifiro
-  - heyselbi
-  - israel-hdez
-  - Jooho
-  - rpancham
-  - spolti
   - terrytangyuan
+  - dtrifiro
+  - NickLucche
+  - heyselbi
+  - RH-steve-grubb
+  - rpancham
   - vaibhavjainwiz
-  - VedantMahabaleshwarkar
   - Xaenalt
-  - z103cb
+  - tarukumar
+  - Raghul-M
 reviewers:
   - dtrifiro
+  - NickLucche
   - heyselbi
+  - RH-steve-grubb
   - rpancham
-  - terrytangyuan
   - vaibhavjainwiz
   - Xaenalt
-  - z103cb
+  - tarukumar
