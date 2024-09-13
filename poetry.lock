@@ -313,18 +313,18 @@ runtime-trace = ["opentelemetry-exporter-otlp (>=1.24.0,<2)", "opentelemetry-sdk
 
 [[package]]
 name = "caikit-nlp"
-version = "0.5.5"
+version = "0.5.7"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit_nlp-0.5.5-py3-none-any.whl", hash = "sha256:d81f0ffe840aa6631913e8426aadca24b3c3f0e361e7892dbfe3763e3341b6f3"},
-    {file = "caikit_nlp-0.5.5.tar.gz", hash = "sha256:4e5ef67b92d319500a3057573f9d0dbd97ea9be187e7492eae02cfd635d6ce16"},
+    {file = "caikit_nlp-0.5.7-py3-none-any.whl", hash = "sha256:89d90166e2aff4d2c8e330833d14313a63d914f016f62f1cfedcda3219f54d9e"},
+    {file = "caikit_nlp-0.5.7.tar.gz", hash = "sha256:b201dd6835eb2516b8ea76ee3d6354126b4a6ff8ca6fde458524db55987a6354"},
 ]
 
 [package.dependencies]
 accelerate = ">=0.22.0"
-caikit = {version = ">=0.26.34,<0.27.0", extras = ["runtime-grpc", "runtime-http"]}
+caikit = {version = ">=0.26.34,<0.28.0", extras = ["runtime-grpc", "runtime-http"]}
 caikit-tgis-backend = ">=0.1.36,<0.2.0"
 datasets = ">=2.4.0"
 grpcio = ">=1.62.2"
@@ -3819,4 +3819,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "b8a4c088e93146c5b03881bc50372a86c5dda42052e8c994262b1449c4855b16"
+content-hash = "e8ed6c1987f177d55f7b6485c835a997e2fdc218ea2488555b6fa4c59d7510ad"
