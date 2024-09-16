@@ -7,9 +7,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11"
-caikit = "0.26.40"
-caikit-nlp = "0.5.5"
-caikit-tgis-backend = "0.1.37"
+caikit = "0.27.6"
+caikit-nlp = "0.5.7"
+caikit-tgis-backend = "0.1.38"
 
 [build-system]
 requires = ["poetry-core"]
