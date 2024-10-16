@@ -41,6 +41,9 @@ fi
 
 docker compose up -d
 
+python -m venv .venv
+source .venv/bin/activate
+
 pip install caikit-nlp-client
 
 echo -e "\n=== Testing endpoints..."
