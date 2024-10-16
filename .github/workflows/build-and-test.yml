@@ -160,7 +160,7 @@ jobs:
         run: |
           source .venv/bin/activate
 
-          export ISVC_URL="$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
+          export ISVC_URL="$(kubectl get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
           export ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
           echo "Querying ISVC at: ${ISVC_URL}"
 
