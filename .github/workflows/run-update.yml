@@ -51,6 +51,7 @@ jobs:
           title: update dependencies
           labels: |
             dependencies
+            ok-to-test
           body: |
             Update dependencies using `poetry update`:
 
