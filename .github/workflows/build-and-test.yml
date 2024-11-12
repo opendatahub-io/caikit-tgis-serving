@@ -151,11 +151,16 @@ jobs:
 
       - name: Install caikit-nlp-client
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
+
           pip install caikit-nlp-client
 
       - name: Perform test inference (http)
         run: |
-          export ISVC_URL="$(oc get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
+          source .venv/bin/activate
+
+          export ISVC_URL="$(kubectl get isvc ${ISVC_NAME} -o jsonpath='{.status.components.predictor.url}')"
           export ISVC_HOSTNAME=$(echo $ISVC_URL | cut -d/ -f3-)
           echo "Querying ISVC at: ${ISVC_URL}"
 
