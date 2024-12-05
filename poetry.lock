@@ -313,13 +313,13 @@ runtime-trace = ["opentelemetry-exporter-otlp (>=1.24.0,<2)", "opentelemetry-sdk
 
 [[package]]
 name = "caikit-nlp"
-version = "0.5.8"
+version = "0.5.9"
 description = "Caikit NLP"
 optional = false
 python-versions = "~=3.9"
 files = [
-    {file = "caikit_nlp-0.5.8-py3-none-any.whl", hash = "sha256:fc0b8a831319ba38a45ec498d431f68dcf975e5f6f6bccf7a96f87ba3cb655ad"},
-    {file = "caikit_nlp-0.5.8.tar.gz", hash = "sha256:61d9045cfce1a66fe3d20267bdc8beace62287f461f09c43dfd7e59615290d57"},
+    {file = "caikit_nlp-0.5.9-py3-none-any.whl", hash = "sha256:044fc15eaadd1e4f3678137ef38dad38e977d537fe2fd82c312e076ab2021abd"},
+    {file = "caikit_nlp-0.5.9.tar.gz", hash = "sha256:904a495a1114738a09507c54e61a6f4f4121ca288b1fc33e2f2979f437f0fcf1"},
 ]
 
 [package.dependencies]
@@ -3998,4 +3998,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "6f8db8390683b030ed776b920afa8479f1cd8b8440d3e98eac6f6feaf46a9790"
+content-hash = "b4e00e8d6020c5e49deb3edf7dfa4a2f874c99edebc81eb79391069eebe39f65"
