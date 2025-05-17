@@ -6,7 +6,7 @@ authors = ["Daniele Trifirò <dtrifiro@redhat.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = "~3.13.0"
 caikit = "0.27.7"
 caikit-nlp = "0.5.13"
 caikit-tgis-backend = "0.1.38"
