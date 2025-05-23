@@ -34,17 +34,24 @@ jobs:
         with:
           tool-cache: false
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and export
+      - name: Build and export multi-arch image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           tags: ${{ env.DEV_IMAGE }}
+          platforms: linux/amd64,linux/s390x
           # outputs: type=oci,dest=/tmp/image.tar
           outputs: type=docker,dest=/tmp/image.tar
+          provenance: false
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

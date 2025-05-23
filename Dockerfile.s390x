@@ -1,0 +1,40 @@
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as poetry-builder
+
+RUN microdnf -y update && \
+    microdnf -y install \
+        git wget shadow-utils python3.11 python3.11-pip python-wheel gcc gcc-c++ && \
+    pip3.11 install --no-cache-dir --upgrade pip wheel && \
+    microdnf clean all
+
+WORKDIR /caikit
+RUN microdnf update -y
+RUN wget -q -O miniconda.sh \
+    https://repo.anaconda.com/miniconda/Miniconda3-py311_24.11.1-0-Linux-s390x.sh && \
+    chmod 755 miniconda.sh && \
+    echo 'export PATH=/opt/conda3/bin:$PATH' > /etc/profile.d/conda.sh && \
+    /bin/bash miniconda.sh -b -p /opt/conda3 && \
+    rm miniconda.sh && \
+    . /etc/profile.d/conda.sh 
+
+ENV PATH /opt/conda3/bin:$PATH
+RUN ln -s /opt/conda3 /opt/conda
+RUN conda config --add channels defaults
+RUN conda install numpy==1.26.4 pandas==2.2.3 scikit-learn==1.6.1 pytorch==2.5.1 pyarrow==19.0.0 pillow
+COPY grpcio-1.72.0.dev0-cp311-cp311-linux_s390x.whl /caikit
+RUN pip install grpcio-1.72.0.dev0-cp311-cp311-linux_s390x.whl
+COPY requirements.txt /caikit
+RUN pip install -r requirements.txt
+
+COPY caikit.yml /caikit/config/caikit.yml
+
+RUN groupadd --system caikit --gid 1001 && \
+    adduser --system --uid 1001 --gid 0 --groups caikit \
+    --create-home --home-dir /caikit --shell /sbin/nologin \
+    --comment "Caikit User" caikit
+
+USER caikit
+
+ENV CONFIG_FILES=/caikit/config/caikit.yml
+VOLUME ["/caikit/config/"]
+
+CMD ["python",  "-m", "caikit.runtime"]
