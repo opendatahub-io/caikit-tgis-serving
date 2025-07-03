@@ -2,7 +2,8 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as poetry-builder
 
 RUN microdnf -y update && \
     microdnf -y install \
-        git shadow-utils python3.11-pip python-wheel && \
+        git shadow-utils python3.11-pip python-wheel \
+        gcc python3.11-devel && \
     pip3.11 install --no-cache-dir --upgrade pip wheel && \
     microdnf clean all
 
