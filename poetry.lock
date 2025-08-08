@@ -356,18 +356,18 @@ transformers = ">=4.48.3,<4.50.0"
 
 [[package]]
 name = "caikit-tgis-backend"
-version = "0.1.38"
+version = "0.1.39"
 description = "Caikit module backend for models run in TGIS"
 optional = false
 python-versions = "~=3.8"
 groups = ["main"]
 files = [
-    {file = "caikit_tgis_backend-0.1.38-py3-none-any.whl", hash = "sha256:03c68e9552fd1b5e93bbecce4734f72aeb09c44d28a12ac16cf9a6fa331e53e3"},
-    {file = "caikit_tgis_backend-0.1.38.tar.gz", hash = "sha256:bf37b9886c66856821d8bd5f643ca022397bc776e52bfddd5c7df32bcf16fb56"},
+    {file = "caikit_tgis_backend-0.1.39-py3-none-any.whl", hash = "sha256:3af9d24e8a00d776480365c7b89de7830725daef424570c8cb8e009f83115796"},
+    {file = "caikit_tgis_backend-0.1.39.tar.gz", hash = "sha256:942ff2854a536899f0b26ccafb840a826e7e02875d92b930cd6e4f0e5556611a"},
 ]
 
 [package.dependencies]
-caikit = ">=0.16.0,<0.28.0"
+caikit = ">=0.16.0,<0.29.0"
 grpcio = ">=1.35.0,<2.0"
 requests = ">=2.28.2,<3"
 
@@ -4054,4 +4054,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "~3.11"
-content-hash = "4230cbcfc5f684afd123e8b66648610e3d88545076fb09fdf7cb9ff99f7f36c5"
+content-hash = "0da84e2a7ba7800c5f9756e0937af756d69999bbbab35f228f4eacc3147b62a8"
