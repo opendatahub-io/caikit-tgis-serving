@@ -67,7 +67,7 @@ jobs:
           tool-cache: false
 
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: caikit-tgis-serving
           path: /tmp
@@ -102,7 +102,7 @@ jobs:
           namespace: ${{ env.TEST_NS }}
 
       - name: Download built image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
 
       - name: Load built image into kind
         run: |
