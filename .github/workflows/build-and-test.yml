@@ -47,7 +47,7 @@ jobs:
           outputs: type=docker,dest=/tmp/image.tar
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: caikit-tgis-serving
           path: /tmp/image.tar
