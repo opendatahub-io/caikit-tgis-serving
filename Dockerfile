@@ -2,23 +2,23 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as poetry-builder
 
 RUN microdnf -y update && \
     microdnf -y install \
-        git shadow-utils python3.11-pip python-wheel \
-        gcc python3.11-devel && \
-    pip3.11 install --no-cache-dir --upgrade pip wheel && \
-    microdnf clean all
+        git shadow-utils python3.12-pip python-wheel \
+        gcc python3.12-devel && \
+    pip3.12 install --no-cache-dir --upgrade pip wheel && \
+        microdnf clean all
 
 ENV POETRY_VIRTUALENVS_IN_PROJECT=1
 
 WORKDIR /caikit
 COPY pyproject.toml .
 COPY poetry.lock .
-RUN pip3.11 install poetry && poetry install --no-root
+RUN pip3.12 install poetry && poetry install --no-root
 
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as deploy
 RUN microdnf -y update && \
     microdnf -y install \
-        shadow-utils python3.11 && \
+        shadow-utils python3.12 && \
     microdnf clean all
 
 WORKDIR /caikit
