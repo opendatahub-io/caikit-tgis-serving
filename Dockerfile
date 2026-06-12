@@ -32,7 +32,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN /caikit/.venv/bin/pip install --no-cache-dir "urllib3>=2.6.0"
 
 RUN /caikit/.venv/bin/pip install --no-cache-dir \
-    "fastapi>=0.134.0" "starlette>=1.0.1" "aiohttp>=3.13.3,<4.0.0"
+    "fastapi>=0.134.0" "starlette>=1.0.1" "aiohttp>=3.13.3,<4.0.0" "python-dotenv==1.2.2"
 
 RUN groupadd --system caikit --gid 1001 && \
     adduser --system --uid 1001 --gid 0 --groups caikit \
