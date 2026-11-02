@@ -29,10 +29,11 @@ COPY caikit.yml /caikit/config/caikit.yml
 ENV VIRTUAL_ENV=/caikit/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN /caikit/.venv/bin/pip install --no-cache-dir "urllib3>=2.7.0"
+RUN /caikit/.venv/bin/pip install --no-cache-dir "urllib3>=2.8.0"
 
 RUN /caikit/.venv/bin/pip install --no-cache-dir \
-    "fastapi>=0.134.0" "starlette>=1.3.1" "aiohttp>=3.14.3,<4.0.0" "python-dotenv==1.2.2" "ujson>=5.12.1"
+    "fastapi>=0.134.0" "starlette>=1.3.1" "aiohttp>=3.14.3,<4.0.0" "python-dotenv==1.2.2" "ujson>=5.12.1" \
+    "certifi>=2026.10.23" "pillow>=13.0.0" "fsspec>=2026.6.0" "anyio>=4.14.2" "dnspython>=2.9.0" "filelock>=4.2.1"
 
 RUN groupadd --system caikit --gid 1001 && \
     adduser --system --uid 1001 --gid 0 --groups caikit \
