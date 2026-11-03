@@ -29,6 +29,11 @@ COPY caikit.yml /caikit/config/caikit.yml
 ENV VIRTUAL_ENV=/caikit/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# Security overrides on top of the poetry venv. The resolved poetry graph
+# (caikit 0.28.1 -> datasets 3.3.2) caps some packages below the versions
+# RHAI CVE trackers require (datasets caps fsspec<=2024.12.0), and fastapi
+# >= 0.141 no longer pulls ujson through its extras. poetry.lock is kept
+# aligned with these pins wherever the dependency graph allows.
 RUN /caikit/.venv/bin/pip install --no-cache-dir "urllib3>=2.8.0"
 
 RUN /caikit/.venv/bin/pip install --no-cache-dir \
