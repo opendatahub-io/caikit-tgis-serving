@@ -10,6 +10,9 @@ python = ">=3.11,<3.13"
 caikit = "0.28.1"
 caikit-nlp = "0.5.14"
 caikit-tgis-backend = "0.1.39"
+# Keep protobuf on the 4.x line that grpcio/caikit are built against.
+# fastapi >= 0.162 drags protobuf 6 via its opentelemetry chain.
+protobuf = ">=4.25.8,<5"
 
 [build-system]
 requires = ["poetry-core"]
